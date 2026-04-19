@@ -1,42 +1,62 @@
 /**
  * Footer — Minimal editorial footer
- * Design: "Atelier Dolce" — thin rules, editorial typography, warm tones
+ * Palette: brand-brown #5A3A2E background, cream text
+ * Warm, understated, never heavy
  */
 import { Link } from "wouter";
 
 export default function Footer() {
   return (
-    <footer className="bg-espresso text-ivory/80 py-16 md:py-24 px-6 md:px-10">
-      <div className="max-w-6xl mx-auto">
+    <footer
+      className="py-16 md:py-24 px-6 md:px-10"
+      style={{ backgroundColor: "oklch(0.34 0.05 45)" }}
+    >
+      <div className="max-w-5xl mx-auto">
         {/* Brand */}
         <div className="mb-12">
           <h2
-            className="text-2xl md:text-3xl font-light tracking-editorial text-ivory"
-            style={{ fontFamily: "var(--font-display)" }}
+            className="text-xl md:text-2xl font-light"
+            style={{
+              fontFamily: "var(--font-display)",
+              letterSpacing: "0.2em",
+              color: "oklch(0.94 0.015 80)",
+            }}
           >
             QUEEN ST BB
           </h2>
-          <div className="editorial-rule mt-4 !bg-ivory/30" />
+          <div
+            className="mt-4"
+            style={{
+              width: "40px",
+              height: "1px",
+              backgroundColor: "oklch(0.94 0.015 80 / 0.2)",
+            }}
+          />
         </div>
 
         {/* Links Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 mb-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-10 mb-16">
           <div>
             <h3
-              className="text-[11px] font-medium uppercase tracking-editorial text-ivory/50 mb-4"
-              style={{ fontFamily: "var(--font-body)" }}
+              className="text-[10px] font-medium uppercase mb-4"
+              style={{
+                fontFamily: "var(--font-body)",
+                letterSpacing: "0.18em",
+                color: "oklch(0.94 0.015 80 / 0.4)",
+              }}
             >
               Collections
             </h3>
             <ul className="space-y-2">
               {["Tiramisu", "Gelato", "Objects"].map((item) => (
                 <li key={item}>
-                  <Link
-                    href={`/${item.toLowerCase()}`}
-                  >
+                  <Link href={`/${item.toLowerCase()}`}>
                     <span
-                      className="text-sm font-light text-ivory/70 hover:text-ivory transition-colors duration-300"
-                      style={{ fontFamily: "var(--font-body)" }}
+                      className="text-sm font-light transition-colors duration-300 hover:opacity-100"
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        color: "oklch(0.94 0.015 80 / 0.6)",
+                      }}
                     >
                       {item}
                     </span>
@@ -48,8 +68,12 @@ export default function Footer() {
 
           <div>
             <h3
-              className="text-[11px] font-medium uppercase tracking-editorial text-ivory/50 mb-4"
-              style={{ fontFamily: "var(--font-body)" }}
+              className="text-[10px] font-medium uppercase mb-4"
+              style={{
+                fontFamily: "var(--font-body)",
+                letterSpacing: "0.18em",
+                color: "oklch(0.94 0.015 80 / 0.4)",
+              }}
             >
               Experience
             </h3>
@@ -61,8 +85,11 @@ export default function Footer() {
                 <li key={item.href}>
                   <Link href={item.href}>
                     <span
-                      className="text-sm font-light text-ivory/70 hover:text-ivory transition-colors duration-300"
-                      style={{ fontFamily: "var(--font-body)" }}
+                      className="text-sm font-light transition-colors duration-300 hover:opacity-100"
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        color: "oklch(0.94 0.015 80 / 0.6)",
+                      }}
                     >
                       {item.label}
                     </span>
@@ -74,8 +101,12 @@ export default function Footer() {
 
           <div>
             <h3
-              className="text-[11px] font-medium uppercase tracking-editorial text-ivory/50 mb-4"
-              style={{ fontFamily: "var(--font-body)" }}
+              className="text-[10px] font-medium uppercase mb-4"
+              style={{
+                fontFamily: "var(--font-body)",
+                letterSpacing: "0.18em",
+                color: "oklch(0.94 0.015 80 / 0.4)",
+              }}
             >
               Business
             </h3>
@@ -87,8 +118,11 @@ export default function Footer() {
                 <li key={item.href}>
                   <Link href={item.href}>
                     <span
-                      className="text-sm font-light text-ivory/70 hover:text-ivory transition-colors duration-300"
-                      style={{ fontFamily: "var(--font-body)" }}
+                      className="text-sm font-light transition-colors duration-300 hover:opacity-100"
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        color: "oklch(0.94 0.015 80 / 0.6)",
+                      }}
                     >
                       {item.label}
                     </span>
@@ -100,8 +134,12 @@ export default function Footer() {
 
           <div>
             <h3
-              className="text-[11px] font-medium uppercase tracking-editorial text-ivory/50 mb-4"
-              style={{ fontFamily: "var(--font-body)" }}
+              className="text-[10px] font-medium uppercase mb-4"
+              style={{
+                fontFamily: "var(--font-body)",
+                letterSpacing: "0.18em",
+                color: "oklch(0.94 0.015 80 / 0.4)",
+              }}
             >
               Support
             </h3>
@@ -109,8 +147,11 @@ export default function Footer() {
               <li>
                 <Link href="/customer-care">
                   <span
-                    className="text-sm font-light text-ivory/70 hover:text-ivory transition-colors duration-300"
-                    style={{ fontFamily: "var(--font-body)" }}
+                    className="text-sm font-light transition-colors duration-300 hover:opacity-100"
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      color: "oklch(0.94 0.015 80 / 0.6)",
+                    }}
                   >
                     Customer Care
                   </span>
@@ -121,18 +162,29 @@ export default function Footer() {
         </div>
 
         {/* Bottom */}
-        <div className="border-t border-ivory/10 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div
+          className="pt-6 flex flex-col md:flex-row items-center justify-between gap-4"
+          style={{ borderTop: "1px solid oklch(0.94 0.015 80 / 0.1)" }}
+        >
           <p
-            className="text-[11px] font-light text-ivory/40 tracking-wide"
-            style={{ fontFamily: "var(--font-body)" }}
+            className="text-[10px] font-light"
+            style={{
+              fontFamily: "var(--font-body)",
+              letterSpacing: "0.1em",
+              color: "oklch(0.94 0.015 80 / 0.3)",
+            }}
           >
             &copy; {new Date().getFullYear()} Queen St BB. All rights reserved.
           </p>
           <p
-            className="text-[11px] font-light text-ivory/40 tracking-wide"
-            style={{ fontFamily: "var(--font-body)" }}
+            className="text-[10px] font-light"
+            style={{
+              fontFamily: "var(--font-body)",
+              letterSpacing: "0.1em",
+              color: "oklch(0.94 0.015 80 / 0.3)",
+            }}
           >
-            Crafted with care in the atelier
+            Crafted with care
           </p>
         </div>
       </div>

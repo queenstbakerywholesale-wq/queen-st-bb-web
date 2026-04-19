@@ -1,43 +1,45 @@
 /**
- * Objects — Editorial lifestyle & curated products page
- * Design: "Atelier Dolce" — still life editorial, warm materiality
+ * Objects — Minimal shop layout
+ * Palette: brand-brown, parchment, cocoa, linen
+ * Clean, premium presentation — focus on product and spacing
  */
 import { motion } from "framer-motion";
 import PageLayout from "@/components/PageLayout";
 
-const HERO = "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-objects-aKrCAfQFaFKVp7bwFWiYN7.webp";
+const HERO =
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-objects-aKrCAfQFaFKVp7bwFWiYN7.webp";
 
 const objects = [
   {
     category: "Ceramics",
     items: [
-      { name: "Atelier Espresso Cup", detail: "Hand-thrown stoneware, ivory glaze" },
-      { name: "Dessert Plate — Terracotta", detail: "Artisan ceramic, matte finish" },
-      { name: "Serving Bowl — Marble", detail: "Carrara marble, hand-polished" },
+      { name: "Atelier Espresso Cup", detail: "Hand-thrown stoneware, ivory glaze", price: "$48" },
+      { name: "Dessert Plate — Terracotta", detail: "Artisan ceramic, matte finish", price: "$62" },
+      { name: "Serving Bowl — Marble", detail: "Carrara marble, hand-polished", price: "$185" },
     ],
   },
   {
     category: "Textiles",
     items: [
-      { name: "Linen Napkin Set", detail: "Belgian linen, natural dye" },
-      { name: "Apron — Atelier Edition", detail: "Washed cotton, brass hardware" },
+      { name: "Linen Napkin Set", detail: "Belgian linen, natural dye", price: "$38" },
+      { name: "Apron — Atelier Edition", detail: "Washed cotton, brass hardware", price: "$95" },
     ],
   },
   {
     category: "Confections",
     items: [
-      { name: "Chocolate Collection", detail: "Single-origin, hand-tempered" },
-      { name: "Biscotti Gift Box", detail: "Almond & pistachio, wrapped in tissue" },
-      { name: "House Blend Coffee", detail: "Medium roast, notes of caramel & hazelnut" },
+      { name: "Chocolate Collection", detail: "Single-origin, hand-tempered", price: "$42" },
+      { name: "Biscotti Gift Box", detail: "Almond & pistachio, wrapped in tissue", price: "$36" },
+      { name: "House Blend Coffee", detail: "Medium roast, caramel & hazelnut notes", price: "$28" },
     ],
   },
 ];
 
-const fadeUp = {
-  initial: { opacity: 0, y: 30 },
+const fade = {
+  initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, margin: "-50px" },
-  transition: { duration: 0.7 },
+  transition: { duration: 0.6 },
 };
 
 export default function Objects() {
@@ -47,25 +49,28 @@ export default function Objects() {
       heroTitle="Objects"
       heroSubtitle="Curated for the everyday ritual"
     >
-      {/* Editorial Introduction */}
-      <section className="py-20 md:py-32 px-6 md:px-10">
-        <div className="max-w-3xl mx-auto text-center">
-          <motion.div {...fadeUp}>
+      {/* Introduction */}
+      <section className="py-20 md:py-28 px-6 md:px-10">
+        <div className="max-w-2xl mx-auto text-center">
+          <motion.div {...fade}>
             <div className="editorial-rule mx-auto mb-8" />
             <p
-              className="text-lg md:text-xl font-light leading-relaxed text-espresso/80"
-              style={{ fontFamily: "var(--font-display)" }}
+              className="text-lg md:text-xl font-light leading-[1.8]"
+              style={{
+                fontFamily: "var(--font-display)",
+                color: "oklch(0.34 0.05 45 / 0.8)",
+              }}
             >
               A carefully curated selection of objects that extend the Queen St BB
-              experience into your home. Each piece is chosen for its craft,
-              materiality, and ability to elevate the everyday.
+              experience into your home. Each piece chosen for its craft,
+              materiality, and quiet beauty.
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Object Categories */}
-      <section className="pb-20 md:pb-32 px-6 md:px-10">
+      {/* Product Grid — minimal shop layout */}
+      <section className="pb-20 md:pb-28 px-6 md:px-10">
         <div className="max-w-5xl mx-auto">
           {objects.map((category, ci) => (
             <motion.div
@@ -73,40 +78,83 @@ export default function Objects() {
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: ci * 0.15 }}
-              className={`py-12 md:py-16 ${
-                ci < objects.length - 1 ? "border-b border-border" : ""
-              }`}
+              transition={{ duration: 0.6, delay: ci * 0.1 }}
+              className="mb-16 md:mb-20 last:mb-0"
             >
-              <h2
-                className="text-[11px] font-medium uppercase tracking-editorial text-terracotta mb-8"
-                style={{ fontFamily: "var(--font-body)" }}
-              >
-                {category.category}
-              </h2>
+              {/* Category Header */}
+              <div className="flex items-center gap-4 mb-10">
+                <span
+                  className="text-[10px] font-medium uppercase"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    letterSpacing: "0.2em",
+                    color: "oklch(0.45 0.06 45 / 0.5)",
+                  }}
+                >
+                  {category.category}
+                </span>
+                <div
+                  className="flex-1 h-[1px]"
+                  style={{ backgroundColor: "oklch(0.84 0.025 72 / 0.4)" }}
+                />
+              </div>
 
-              <div className="space-y-6">
+              {/* Items — clean grid with generous spacing */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
                 {category.items.map((item, ii) => (
                   <motion.div
                     key={item.name}
-                    initial={{ opacity: 0, x: -15 }}
-                    whileInView={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, y: 15 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: ii * 0.08 }}
-                    className="flex flex-col md:flex-row md:items-baseline justify-between group"
+                    className="group"
                   >
+                    {/* Product placeholder — clean matte box */}
+                    <div
+                      className="aspect-[4/5] mb-5 overflow-hidden"
+                      style={{ backgroundColor: "oklch(0.91 0.02 75)" }}
+                    >
+                      <div className="w-full h-full flex items-center justify-center">
+                        <span
+                          className="text-[10px] font-light uppercase"
+                          style={{
+                            fontFamily: "var(--font-body)",
+                            letterSpacing: "0.15em",
+                            color: "oklch(0.72 0.03 65)",
+                          }}
+                        >
+                          {category.category}
+                        </span>
+                      </div>
+                    </div>
                     <h3
-                      className="text-xl md:text-2xl font-light text-espresso group-hover:text-terracotta transition-colors duration-300"
-                      style={{ fontFamily: "var(--font-display)" }}
+                      className="text-base md:text-lg font-light mb-1 group-hover:opacity-60 transition-opacity duration-400"
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        color: "oklch(0.34 0.05 45)",
+                      }}
                     >
                       {item.name}
                     </h3>
                     <p
-                      className="text-sm font-light text-espresso/50 mt-1 md:mt-0"
-                      style={{ fontFamily: "var(--font-body)" }}
+                      className="text-[11px] font-light mb-2"
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        color: "oklch(0.34 0.05 45 / 0.45)",
+                      }}
                     >
                       {item.detail}
                     </p>
+                    <span
+                      className="text-sm font-light"
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        color: "oklch(0.45 0.06 45)",
+                      }}
+                    >
+                      {item.price}
+                    </span>
                   </motion.div>
                 ))}
               </div>
@@ -115,13 +163,19 @@ export default function Objects() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 md:py-32 px-6 md:px-10 bg-cream">
+      {/* Quote */}
+      <section
+        className="py-20 md:py-28 px-6 md:px-10"
+        style={{ backgroundColor: "oklch(0.91 0.02 75)" }}
+      >
         <div className="max-w-2xl mx-auto text-center">
-          <motion.div {...fadeUp}>
+          <motion.div {...fade}>
             <p
-              className="text-2xl md:text-3xl font-light text-espresso leading-snug italic"
-              style={{ fontFamily: "var(--font-display)" }}
+              className="text-xl md:text-2xl font-light italic leading-[1.7]"
+              style={{
+                fontFamily: "var(--font-display)",
+                color: "oklch(0.34 0.05 45)",
+              }}
             >
               "The objects we choose shape the rituals we keep."
             </p>

@@ -1,12 +1,15 @@
 /**
- * Customer Care — Editorial support page
- * Design: "Atelier Dolce" — warm, minimal, editorial FAQ/contact
+ * Customer Care — FAQ layout + Contact form
+ * Palette: brand-brown, parchment, cocoa, linen
+ * Calm, reassuring tone
  */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import PageLayout from "@/components/PageLayout";
 
-const HERO = "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-main-DCvSGXsexKPMwmhrmBHewa.webp";
+const HERO =
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-main-DCvSGXsexKPMwmhrmBHewa.webp";
 
 const faqs = [
   {
@@ -37,37 +40,43 @@ const faqs = [
   {
     question: "How do I inquire about wholesale or franchise?",
     answer:
-      "Please visit our Wholesale & Franchise page or contact us directly at wholesale@queenstbb.com. We review all partnership inquiries personally.",
+      "Please visit our Wholesale & Franchise page or contact us directly. We review all partnership inquiries personally.",
   },
 ];
 
-const fadeUp = {
-  initial: { opacity: 0, y: 30 },
+const fade = {
+  initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, margin: "-50px" },
-  transition: { duration: 0.7 },
+  transition: { duration: 0.6 },
 };
 
 function FAQItem({ question, answer }: { question: string; answer: string }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="border-b border-border">
+    <div style={{ borderBottom: "1px solid oklch(0.84 0.025 72 / 0.5)" }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full py-6 md:py-8 flex items-baseline justify-between text-left group"
+        className="w-full py-6 md:py-7 flex items-baseline justify-between text-left group"
       >
         <h3
-          className="text-lg md:text-xl font-light text-espresso group-hover:text-terracotta transition-colors duration-300 pr-8"
-          style={{ fontFamily: "var(--font-display)" }}
+          className="text-base md:text-lg font-light pr-8 transition-opacity duration-300 group-hover:opacity-60"
+          style={{
+            fontFamily: "var(--font-display)",
+            color: "oklch(0.34 0.05 45)",
+          }}
         >
           {question}
         </h3>
         <motion.span
           animate={{ rotate: isOpen ? 45 : 0 }}
           transition={{ duration: 0.3 }}
-          className="text-lg text-espresso/40 flex-shrink-0"
-          style={{ fontFamily: "var(--font-body)" }}
+          className="text-lg flex-shrink-0"
+          style={{
+            fontFamily: "var(--font-body)",
+            color: "oklch(0.34 0.05 45 / 0.35)",
+          }}
         >
           +
         </motion.span>
@@ -82,8 +91,11 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
             className="overflow-hidden"
           >
             <p
-              className="pb-6 md:pb-8 text-sm font-light text-espresso/60 leading-relaxed max-w-2xl"
-              style={{ fontFamily: "var(--font-body)" }}
+              className="pb-6 md:pb-7 text-sm font-light leading-[1.8] max-w-2xl"
+              style={{
+                fontFamily: "var(--font-body)",
+                color: "oklch(0.34 0.05 45 / 0.55)",
+              }}
             >
               {answer}
             </p>
@@ -95,39 +107,71 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
 }
 
 export default function CustomerCare() {
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast.success("Message sent. We will respond within 24 hours.");
+    setForm({ name: "", email: "", message: "" });
+  };
+
+  const inputStyle: React.CSSProperties = {
+    fontFamily: "var(--font-body)",
+    backgroundColor: "transparent",
+    borderBottom: "1px solid oklch(0.84 0.025 72)",
+    color: "oklch(0.34 0.05 45)",
+    fontSize: "14px",
+    fontWeight: 300,
+  };
+
   return (
     <PageLayout
       heroImage={HERO}
       heroTitle="Customer Care"
       heroSubtitle="We're here to help"
     >
-      {/* Introduction */}
-      <section className="py-20 md:py-32 px-6 md:px-10">
-        <div className="max-w-3xl mx-auto text-center">
-          <motion.div {...fadeUp}>
+      {/* Introduction — calm, reassuring */}
+      <section className="py-20 md:py-28 px-6 md:px-10">
+        <div className="max-w-2xl mx-auto text-center">
+          <motion.div {...fade}>
             <div className="editorial-rule mx-auto mb-8" />
             <p
-              className="text-lg md:text-xl font-light leading-relaxed text-espresso/80"
-              style={{ fontFamily: "var(--font-display)" }}
+              className="text-lg md:text-xl font-light leading-[1.8]"
+              style={{
+                fontFamily: "var(--font-display)",
+                color: "oklch(0.34 0.05 45 / 0.8)",
+              }}
             >
               Your experience matters to us. Whether you have a question about
               our collections, need assistance with a booking, or simply want to
-              learn more about Queen St BB, we're here to help.
+              learn more, we are here to help.
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="pb-20 md:pb-32 px-6 md:px-10">
+      {/* FAQ Section */}
+      <section
+        className="py-16 md:py-24 px-6 md:px-10"
+        style={{ backgroundColor: "oklch(0.91 0.02 75)" }}
+      >
         <div className="max-w-3xl mx-auto">
-          <motion.h2
-            {...fadeUp}
-            className="text-[11px] font-medium uppercase tracking-editorial text-terracotta mb-10 text-center"
-            style={{ fontFamily: "var(--font-body)" }}
-          >
-            Frequently Asked Questions
-          </motion.h2>
+          <motion.div {...fade} className="mb-10 text-center">
+            <span
+              className="text-[10px] font-medium uppercase block"
+              style={{
+                fontFamily: "var(--font-body)",
+                letterSpacing: "0.2em",
+                color: "oklch(0.45 0.06 45 / 0.5)",
+              }}
+            >
+              Frequently Asked Questions
+            </span>
+          </motion.div>
 
           <div>
             {faqs.map((faq, i) => (
@@ -136,7 +180,7 @@ export default function CustomerCare() {
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.06 }}
+                transition={{ duration: 0.4, delay: i * 0.05 }}
               >
                 <FAQItem question={faq.question} answer={faq.answer} />
               </motion.div>
@@ -145,46 +189,181 @@ export default function CustomerCare() {
         </div>
       </section>
 
-      {/* Contact */}
-      <section className="py-20 md:py-32 px-6 md:px-10 bg-cream">
+      {/* Contact Form */}
+      <section className="py-20 md:py-28 px-6 md:px-10">
+        <div className="max-w-xl mx-auto">
+          <motion.div {...fade}>
+            <span
+              className="text-[10px] font-medium uppercase block mb-6 text-center"
+              style={{
+                fontFamily: "var(--font-body)",
+                letterSpacing: "0.2em",
+                color: "oklch(0.45 0.06 45 / 0.5)",
+              }}
+            >
+              Send Us a Message
+            </span>
+            <div className="editorial-rule mx-auto mb-12" />
+
+            <form onSubmit={handleSubmit} className="space-y-8">
+              <div>
+                <label
+                  className="text-[10px] font-medium uppercase block mb-2"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    letterSpacing: "0.15em",
+                    color: "oklch(0.34 0.05 45 / 0.5)",
+                  }}
+                >
+                  Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  className="w-full py-3 px-0 outline-none"
+                  style={inputStyle}
+                  placeholder="Your name"
+                />
+              </div>
+
+              <div>
+                <label
+                  className="text-[10px] font-medium uppercase block mb-2"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    letterSpacing: "0.15em",
+                    color: "oklch(0.34 0.05 45 / 0.5)",
+                  }}
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  className="w-full py-3 px-0 outline-none"
+                  style={inputStyle}
+                  placeholder="your@email.com"
+                />
+              </div>
+
+              <div>
+                <label
+                  className="text-[10px] font-medium uppercase block mb-2"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    letterSpacing: "0.15em",
+                    color: "oklch(0.34 0.05 45 / 0.5)",
+                  }}
+                >
+                  Message
+                </label>
+                <textarea
+                  rows={5}
+                  required
+                  value={form.message}
+                  onChange={(e) => setForm({ ...form, message: e.target.value })}
+                  className="w-full py-3 px-0 outline-none resize-none"
+                  style={inputStyle}
+                  placeholder="How can we help?"
+                />
+              </div>
+
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  className="text-[10px] font-medium uppercase py-3 px-10 transition-all duration-400 hover:opacity-70"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    letterSpacing: "0.2em",
+                    backgroundColor: "oklch(0.34 0.05 45)",
+                    color: "oklch(0.94 0.015 80)",
+                  }}
+                >
+                  Send Message
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Contact Info */}
+      <section
+        className="py-16 md:py-20 px-6 md:px-10"
+        style={{ backgroundColor: "oklch(0.91 0.02 75)" }}
+      >
         <div className="max-w-2xl mx-auto text-center">
-          <motion.div {...fadeUp}>
-            <h2
-              className="text-[11px] font-medium uppercase tracking-editorial text-terracotta mb-8"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
-              Contact Us
-            </h2>
-            <p
-              className="text-2xl md:text-3xl font-light text-espresso leading-snug mb-8"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              We'd love to hear from you
-            </p>
-
-            <div className="space-y-4">
-              <a
-                href="mailto:hello@queenstbb.com"
-                className="block text-sm font-light text-espresso/70 hover:text-terracotta transition-colors duration-300"
-                style={{ fontFamily: "var(--font-body)" }}
-              >
-                hello@queenstbb.com
-              </a>
-              <p
-                className="text-sm font-light text-espresso/50"
-                style={{ fontFamily: "var(--font-body)" }}
-              >
-                Queen Street, Brisbane, QLD
-              </p>
-              <p
-                className="text-sm font-light text-espresso/50"
-                style={{ fontFamily: "var(--font-body)" }}
-              >
-                Open daily, 8:00 AM — 10:00 PM
-              </p>
+          <motion.div {...fade}>
+            <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
+              <div>
+                <span
+                  className="text-[10px] font-medium uppercase block mb-2"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    letterSpacing: "0.15em",
+                    color: "oklch(0.45 0.06 45 / 0.5)",
+                  }}
+                >
+                  Email
+                </span>
+                <a
+                  href="mailto:hello@queenstbb.com"
+                  className="text-sm font-light transition-opacity duration-300 hover:opacity-60"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    color: "oklch(0.34 0.05 45)",
+                  }}
+                >
+                  hello@queenstbb.com
+                </a>
+              </div>
+              <div>
+                <span
+                  className="text-[10px] font-medium uppercase block mb-2"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    letterSpacing: "0.15em",
+                    color: "oklch(0.45 0.06 45 / 0.5)",
+                  }}
+                >
+                  Location
+                </span>
+                <p
+                  className="text-sm font-light"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    color: "oklch(0.34 0.05 45)",
+                  }}
+                >
+                  Queen Street, Brisbane
+                </p>
+              </div>
+              <div>
+                <span
+                  className="text-[10px] font-medium uppercase block mb-2"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    letterSpacing: "0.15em",
+                    color: "oklch(0.45 0.06 45 / 0.5)",
+                  }}
+                >
+                  Hours
+                </span>
+                <p
+                  className="text-sm font-light"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    color: "oklch(0.34 0.05 45)",
+                  }}
+                >
+                  Daily, 8 AM — 10 PM
+                </p>
+              </div>
             </div>
-
-            <div className="editorial-rule mx-auto mt-8" />
           </motion.div>
         </div>
       </section>

@@ -1,11 +1,13 @@
 /**
  * Tiramisu — Editorial product page
- * Design: "Atelier Dolce" — cinematic imagery, editorial text blocks, warm palette
+ * Palette: brand-brown #5A3A2E, parchment, cocoa, linen
+ * Cinematic imagery, editorial text blocks, warm matte tones
  */
 import { motion } from "framer-motion";
 import PageLayout from "@/components/PageLayout";
 
-const HERO = "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-tiramisu-5h2ZTWStaR9kXHw97oAsV7.webp";
+const HERO =
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-tiramisu-5h2ZTWStaR9kXHw97oAsV7.webp";
 
 const flavours = [
   {
@@ -30,11 +32,11 @@ const flavours = [
   },
 ];
 
-const fadeUp = {
-  initial: { opacity: 0, y: 30 },
+const fade = {
+  initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, margin: "-50px" },
-  transition: { duration: 0.7 },
+  transition: { duration: 0.6 },
 };
 
 export default function Tiramisu() {
@@ -44,60 +46,88 @@ export default function Tiramisu() {
       heroTitle="Tiramisu"
       heroSubtitle="The art of layered indulgence"
     >
-      {/* Editorial Introduction */}
-      <section className="py-20 md:py-32 px-6 md:px-10">
-        <div className="max-w-3xl mx-auto text-center">
-          <motion.div {...fadeUp}>
+      {/* Introduction */}
+      <section className="py-20 md:py-28 px-6 md:px-10">
+        <div className="max-w-2xl mx-auto text-center">
+          <motion.div {...fade}>
             <div className="editorial-rule mx-auto mb-8" />
             <p
-              className="text-lg md:text-xl font-light leading-relaxed text-espresso/80"
-              style={{ fontFamily: "var(--font-display)" }}
+              className="text-lg md:text-xl font-light leading-[1.8]"
+              style={{
+                fontFamily: "var(--font-display)",
+                color: "oklch(0.34 0.05 45 / 0.8)",
+              }}
             >
-              Each tiramisu is crafted by hand in our atelier, layered with intention
-              and served as a moment of quiet indulgence. We source mascarpone from
-              Lombardy, espresso from a single-origin roaster, and cocoa from
-              Valrhona's finest reserves.
+              Each tiramisu is crafted by hand in our atelier, layered with
+              intention and served as a moment of quiet indulgence. We source
+              mascarpone from Lombardy, espresso from a single-origin roaster,
+              and cocoa from Valrhona's finest reserves.
             </p>
           </motion.div>
         </div>
       </section>
 
       {/* Flavour Collection */}
-      <section className="pb-20 md:pb-32 px-6 md:px-10">
+      <section className="pb-20 md:pb-28 px-6 md:px-10">
         <div className="max-w-5xl mx-auto">
-          <motion.h2
-            {...fadeUp}
-            className="text-[11px] font-medium uppercase tracking-editorial text-terracotta mb-12 text-center"
-            style={{ fontFamily: "var(--font-body)" }}
-          >
-            The Collection
-          </motion.h2>
+          <motion.div {...fade} className="text-center mb-12">
+            <span
+              className="text-[10px] font-medium uppercase block"
+              style={{
+                fontFamily: "var(--font-body)",
+                letterSpacing: "0.2em",
+                color: "oklch(0.45 0.06 45 / 0.5)",
+              }}
+            >
+              The Collection
+            </span>
+          </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-border">
+          <div
+            className="grid grid-cols-1 md:grid-cols-2"
+            style={{ gap: "1px", backgroundColor: "oklch(0.84 0.025 72 / 0.4)" }}
+          >
             {flavours.map((flavour, i) => (
               <motion.div
                 key={flavour.name}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: i * 0.1 }}
-                className="bg-ivory p-8 md:p-12 group hover:bg-cream transition-colors duration-500"
+                transition={{ duration: 0.6, delay: i * 0.08 }}
+                className="p-8 md:p-12 group transition-colors duration-500"
+                style={{ backgroundColor: "oklch(0.94 0.015 80)" }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor = "oklch(0.91 0.02 75)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = "oklch(0.94 0.015 80)")
+                }
               >
                 <span
-                  className="text-[10px] font-medium uppercase tracking-editorial text-terracotta/60 block mb-4"
-                  style={{ fontFamily: "var(--font-body)" }}
+                  className="text-[10px] font-medium uppercase block mb-4"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    letterSpacing: "0.18em",
+                    color: "oklch(0.45 0.06 45 / 0.45)",
+                  }}
                 >
                   {flavour.note}
                 </span>
                 <h3
-                  className="text-2xl md:text-3xl font-light text-espresso mb-3 group-hover:text-terracotta transition-colors duration-300"
-                  style={{ fontFamily: "var(--font-display)" }}
+                  className="text-2xl md:text-3xl font-light mb-3 transition-opacity duration-300 group-hover:opacity-70"
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    color: "oklch(0.34 0.05 45)",
+                  }}
                 >
                   {flavour.name}
                 </h3>
                 <p
-                  className="text-sm font-light text-espresso/60 leading-relaxed"
-                  style={{ fontFamily: "var(--font-body)" }}
+                  className="text-sm font-light leading-relaxed"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    color: "oklch(0.34 0.05 45 / 0.55)",
+                  }}
                 >
                   {flavour.description}
                 </p>
@@ -107,13 +137,19 @@ export default function Tiramisu() {
         </div>
       </section>
 
-      {/* Editorial Quote */}
-      <section className="py-20 md:py-32 px-6 md:px-10 bg-cream">
+      {/* Quote */}
+      <section
+        className="py-20 md:py-28 px-6 md:px-10"
+        style={{ backgroundColor: "oklch(0.91 0.02 75)" }}
+      >
         <div className="max-w-2xl mx-auto text-center">
-          <motion.div {...fadeUp}>
+          <motion.div {...fade}>
             <p
-              className="text-2xl md:text-3xl lg:text-4xl font-light text-espresso leading-snug italic"
-              style={{ fontFamily: "var(--font-display)" }}
+              className="text-xl md:text-2xl lg:text-3xl font-light italic leading-[1.6]"
+              style={{
+                fontFamily: "var(--font-display)",
+                color: "oklch(0.34 0.05 45)",
+              }}
             >
               "Tiramisu is not a dessert. It is a ritual — a layered meditation
               on patience and pleasure."

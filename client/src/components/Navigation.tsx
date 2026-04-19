@@ -1,7 +1,8 @@
 /**
- * Navigation — Minimal editorial header inspired by Miu Miu
- * Design: "Atelier Dolce" — thin serif brand name, uppercase nav links with editorial tracking
- * Transparent overlay on homepage, solid on inner pages
+ * Navigation — Minimal editorial header
+ * Palette: brand-brown #5A3A2E, parchment, cocoa
+ * Transparent overlay → solid parchment on scroll
+ * Clean, understated, never bulky
  */
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
@@ -14,6 +15,10 @@ const navLinks = [
   { label: "Objects", href: "/objects" },
   { label: "Wholesale", href: "/wholesale" },
   { label: "Cake Booking", href: "/cake-booking" },
+];
+
+const allLinks = [
+  ...navLinks,
   { label: "About", href: "/about" },
   { label: "Customer Care", href: "/customer-care" },
 ];
@@ -30,47 +35,69 @@ export default function Navigation({ variant = "solid" }: NavigationProps) {
   const isTransparent = variant === "transparent";
 
   useEffect(() => {
-    if (variant !== "transparent") return;
     const handleScroll = () => {
-      setScrolled(window.scrollY > 100);
+      setScrolled(window.scrollY > 80);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [variant]);
+  }, []);
+
+  const showSolid = !isTransparent || scrolled || menuOpen;
 
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          isTransparent && !menuOpen && !scrolled
-            ? "bg-transparent"
-            : "bg-ivory/95 backdrop-blur-sm shadow-sm"
-        }`}
+        className="fixed top-0 left-0 right-0 z-50 transition-all duration-700"
+        style={{
+          backgroundColor: menuOpen
+            ? "oklch(0.30 0.04 45)"
+            : showSolid
+              ? "oklch(0.94 0.015 80 / 0.96)"
+              : "transparent",
+          backdropFilter: showSolid && !menuOpen ? "blur(8px)" : "none",
+          borderBottom: showSolid && !menuOpen
+            ? "1px solid oklch(0.84 0.025 72 / 0.5)"
+            : "1px solid transparent",
+        }}
       >
-        <div className="flex items-center justify-between px-6 md:px-10 py-5">
+        <div className="flex items-center justify-between px-6 md:px-10 py-4 md:py-5">
           {/* Brand Name */}
           <Link href="/">
             <span
-              className={`font-[var(--font-display)] text-xl md:text-2xl font-light tracking-editorial transition-colors duration-300 ${
-                isTransparent && !menuOpen && !scrolled ? "text-white" : "text-espresso"
-              }`}
-              style={{ fontFamily: "var(--font-display)" }}
+              className="text-lg md:text-xl font-light transition-colors duration-500"
+              style={{
+                fontFamily: "var(--font-display)",
+                letterSpacing: "0.2em",
+                color: menuOpen
+                  ? "oklch(0.92 0.02 80)"
+                  : showSolid
+                    ? "oklch(0.34 0.05 45)"
+                    : "rgba(255,255,255,0.95)",
+              }}
             >
               QUEEN ST BB
             </span>
           </Link>
 
-          {/* Desktop Nav — hidden on mobile */}
-          <nav className="hidden lg:flex items-center gap-8">
-            {navLinks.slice(0, 6).map((link) => (
+          {/* Desktop Nav */}
+          <nav className="hidden lg:flex items-center gap-7">
+            {navLinks.map((link) => (
               <Link key={link.href} href={link.href}>
                 <span
-                  className={`font-[var(--font-body)] text-[11px] font-medium uppercase tracking-editorial transition-all duration-300 hover:opacity-60 ${
-                    isTransparent && !scrolled
-                      ? "text-white/90"
-                      : "text-espresso/80"
-                  } ${location === link.href ? "opacity-100" : ""}`}
-                  style={{ fontFamily: "var(--font-body)" }}
+                  className="text-[10.5px] font-medium uppercase transition-all duration-400 hover:opacity-50"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    letterSpacing: "0.18em",
+                    color: menuOpen
+                      ? "oklch(0.92 0.02 80 / 0.7)"
+                      : showSolid
+                        ? location === link.href
+                          ? "oklch(0.34 0.05 45)"
+                          : "oklch(0.34 0.05 45 / 0.65)"
+                        : location === link.href
+                          ? "rgba(255,255,255,1)"
+                          : "rgba(255,255,255,0.7)",
+                  }}
                 >
                   {link.label}
                 </span>
@@ -78,27 +105,44 @@ export default function Navigation({ variant = "solid" }: NavigationProps) {
             ))}
           </nav>
 
-          {/* Menu Toggle */}
+          {/* Menu Toggle — three thin lines */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className={`relative z-60 flex flex-col items-end gap-[5px] transition-colors duration-300 ${
-              menuOpen ? "text-espresso" : isTransparent && !scrolled ? "text-white" : "text-espresso"
-            }`}
+            className="relative z-60 flex flex-col items-end gap-[5px]"
             aria-label="Toggle menu"
           >
             <motion.span
               animate={menuOpen ? { rotate: 45, y: 7 } : { rotate: 0, y: 0 }}
-              className="block w-6 h-[1px] bg-current origin-center"
+              className="block w-6 h-[1px] origin-center"
+              style={{
+                backgroundColor: menuOpen
+                  ? "oklch(0.92 0.02 80)"
+                  : showSolid
+                    ? "oklch(0.34 0.05 45)"
+                    : "rgba(255,255,255,0.9)",
+              }}
               transition={{ duration: 0.3 }}
             />
             <motion.span
               animate={menuOpen ? { opacity: 0 } : { opacity: 1 }}
-              className="block w-4 h-[1px] bg-current"
+              className="block w-4 h-[1px]"
+              style={{
+                backgroundColor: showSolid
+                  ? "oklch(0.34 0.05 45)"
+                  : "rgba(255,255,255,0.9)",
+              }}
               transition={{ duration: 0.2 }}
             />
             <motion.span
               animate={menuOpen ? { rotate: -45, y: -7 } : { rotate: 0, y: 0 }}
-              className="block w-6 h-[1px] bg-current origin-center"
+              className="block w-6 h-[1px] origin-center"
+              style={{
+                backgroundColor: menuOpen
+                  ? "oklch(0.92 0.02 80)"
+                  : showSolid
+                    ? "oklch(0.34 0.05 45)"
+                    : "rgba(255,255,255,0.9)",
+              }}
               transition={{ duration: 0.3 }}
             />
           </button>
@@ -113,25 +157,29 @@ export default function Navigation({ variant = "solid" }: NavigationProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
-            className="fixed inset-0 z-40 bg-ivory flex items-center justify-center"
+            className="fixed inset-0 z-40 flex items-center justify-center"
+            style={{ backgroundColor: "oklch(0.30 0.04 45)" }}
           >
-            <nav className="flex flex-col items-center gap-6 md:gap-8">
-              {navLinks.map((link, i) => (
+            <nav className="flex flex-col items-center gap-5 md:gap-7">
+              {allLinks.map((link, i) => (
                 <motion.div
                   key={link.href}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  transition={{ delay: i * 0.06, duration: 0.4 }}
+                  transition={{ delay: i * 0.05, duration: 0.4 }}
                 >
                   <Link href={link.href} onClick={() => setMenuOpen(false)}>
                     <span
-                      className={`font-light text-3xl md:text-4xl tracking-wide-editorial transition-opacity duration-300 hover:opacity-50 ${
-                        location === link.href
-                          ? "text-terracotta"
-                          : "text-espresso"
-                      }`}
-                      style={{ fontFamily: "var(--font-display)" }}
+                      className="font-light text-2xl md:text-3xl transition-opacity duration-300 hover:opacity-40"
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        letterSpacing: "0.12em",
+                        color:
+                          location === link.href
+                            ? "oklch(0.82 0.04 72)"
+                            : "oklch(0.92 0.02 80)",
+                      }}
                     >
                       {link.label}
                     </span>
@@ -139,12 +187,12 @@ export default function Navigation({ variant = "solid" }: NavigationProps) {
                 </motion.div>
               ))}
 
-              {/* Decorative rule */}
               <motion.div
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{ delay: 0.5, duration: 0.6 }}
-                className="editorial-rule mt-4"
+                className="mt-4 h-[1px] w-12"
+                style={{ backgroundColor: "oklch(0.92 0.02 80 / 0.3)" }}
               />
             </nav>
           </motion.div>
