@@ -4,16 +4,17 @@
  * Cinematic, immersive, editorial — like a luxury brand story
  * Minimal text, strong visual focus
  */
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import Navigation from "@/components/Navigation";
+import { usePageImages } from "@/hooks/usePageImage";
 
-const IMAGES = {
-  main: "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-main-DCvSGXsexKPMwmhrmBHewa.webp",
-  tiramisu: "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-tiramisu-5h2ZTWStaR9kXHw97oAsV7.webp",
-  gelato: "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-gelato-bSnt8m7kGiDFqrvhPfDkmW.webp",
-  space: "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-space-d9F8XM8hZ4d35LsKJG8x5i.webp",
+const DEFAULT_IMAGES = {
+  "hero-main": "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-main-DCvSGXsexKPMwmhrmBHewa.webp",
+  "hero-tiramisu": "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-tiramisu-5h2ZTWStaR9kXHw97oAsV7.webp",
+  "hero-gelato": "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-gelato-bSnt8m7kGiDFqrvhPfDkmW.webp",
+  "hero-space": "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-space-d9F8XM8hZ4d35LsKJG8x5i.webp",
 };
 
 interface Section {
@@ -24,41 +25,45 @@ interface Section {
   href: string;
 }
 
-const sections: Section[] = [
-  {
-    id: "hero",
-    title: "Queen St BB",
-    subtitle: "A dessert atelier",
-    image: IMAGES.main,
-    href: "/about",
-  },
-  {
-    id: "tiramisu",
-    title: "Tiramisu",
-    subtitle: "Layered with intention",
-    image: IMAGES.tiramisu,
-    href: "/tiramisu",
-  },
-  {
-    id: "gelato",
-    title: "Gelato",
-    subtitle: "Crafted from tradition",
-    image: IMAGES.gelato,
-    href: "/gelato",
-  },
-  {
-    id: "space",
-    title: "The Space",
-    subtitle: "Where craft meets ceremony",
-    image: IMAGES.space,
-    href: "/space",
-  },
-];
+
 
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentSection, setCurrentSection] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
+
+  const images = usePageImages("home", DEFAULT_IMAGES);
+
+  const sections: Section[] = useMemo(() => [
+    {
+      id: "hero",
+      title: "Queen St BB",
+      subtitle: "A dessert atelier",
+      image: images["hero-main"],
+      href: "/about",
+    },
+    {
+      id: "tiramisu",
+      title: "Tiramisu",
+      subtitle: "Layered with intention",
+      image: images["hero-tiramisu"],
+      href: "/tiramisu",
+    },
+    {
+      id: "gelato",
+      title: "Gelato",
+      subtitle: "Crafted from tradition",
+      image: images["hero-gelato"],
+      href: "/gelato",
+    },
+    {
+      id: "space",
+      title: "The Space",
+      subtitle: "Where craft meets ceremony",
+      image: images["hero-space"],
+      href: "/space",
+    },
+  ], [images]);
 
   const scrollToSection = useCallback(
     (index: number) => {
@@ -67,7 +72,7 @@ export default function Home() {
       setCurrentSection(index);
       setTimeout(() => setIsScrolling(false), 1000);
     },
-    [isScrolling]
+    [isScrolling, sections.length]
   );
 
   useEffect(() => {

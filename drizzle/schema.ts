@@ -157,6 +157,8 @@ export const orders = mysqlTable("orders", {
   deliveryType: mysqlEnum("deliveryType", ["pickup", "delivery"]).default("pickup").notNull(),
   deliveryAddress: text("deliveryAddress"),
   branchId: int("branchId"),
+  stripeSessionId: varchar("stripeSessionId", { length: 255 }),
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
   adminNotes: text("adminNotes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -270,3 +272,45 @@ export const notifications = mysqlTable("notifications", {
 
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = typeof notifications.$inferInsert;
+
+// ─── Enquiries (Wholesale + Customer Care) ──────────────────────
+export const enquiries = mysqlTable("enquiries", {
+  id: int("id").autoincrement().primaryKey(),
+  type: mysqlEnum("type", ["wholesale", "customer_care"]).notNull(),
+  name: varchar("name", { length: 200 }).notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  phone: varchar("phone", { length: 50 }),
+  company: varchar("company", { length: 300 }),
+  interest: varchar("interest", { length: 200 }),
+  subject: varchar("subject", { length: 500 }),
+  message: text("message").notNull(),
+  status: mysqlEnum("enquiryStatus", [
+    "new",
+    "in_progress",
+    "responded",
+    "closed",
+  ]).default("new").notNull(),
+  adminNotes: text("adminNotes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Enquiry = typeof enquiries.$inferSelect;
+export type InsertEnquiry = typeof enquiries.$inferInsert;
+
+// ─── Page Images (Admin-managed content) ────────────────────────
+export const pageImages = mysqlTable("page_images", {
+  id: int("id").autoincrement().primaryKey(),
+  pageSlug: varchar("pageSlug", { length: 100 }).notNull(), // e.g. "home", "about", "space", "objects"
+  slotKey: varchar("slotKey", { length: 100 }).notNull(), // e.g. "hero", "section1", "section2"
+  imageUrl: text("imageUrl").notNull(),
+  storageKey: text("storageKey"),
+  altText: varchar("altText", { length: 500 }),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PageImage = typeof pageImages.$inferSelect;
+export type InsertPageImage = typeof pageImages.$inferInsert;

@@ -6,6 +6,7 @@ import {
   cakeBookings,
   products,
   customers,
+  enquiries,
 } from "../../drizzle/schema";
 
 export const adminDashboardRouter = router({
@@ -90,6 +91,21 @@ export const adminDashboardRouter = router({
       .orderBy(sql`${cakeBookings.pickupDate} ASC, ${cakeBookings.pickupTime} ASC`)
       .limit(10);
 
+    // Enquiry stats
+    const [totalEnquiriesResult] = await db
+      .select({ count: count() })
+      .from(enquiries);
+
+    const [pendingEnquiriesResult] = await db
+      .select({ count: count() })
+      .from(enquiries)
+      .where(eq(enquiries.status, "new"));
+
+    const [todayEnquiriesResult] = await db
+      .select({ count: count() })
+      .from(enquiries)
+      .where(and(gte(enquiries.createdAt, startOfDay), lte(enquiries.createdAt, endOfDay)));
+
     // Recent customers
     const recentCustomers = await db
       .select({
@@ -115,6 +131,9 @@ export const adminDashboardRouter = router({
       recentOrders,
       upcomingBookings,
       recentCustomers,
+      totalEnquiries: totalEnquiriesResult?.count ?? 0,
+      pendingEnquiries: pendingEnquiriesResult?.count ?? 0,
+      todayEnquiries: todayEnquiriesResult?.count ?? 0,
     };
   }),
 });

@@ -1,10 +1,21 @@
 import { useState, useEffect } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useLocation } from "wouter";
+
+const ADMIN_BASE = "/admin-angela91";
 
 export default function AdminLogin() {
-  const { login, isLoggingIn, loginError } = useAdminAuth();
+  const { login, isLoggingIn, loginError, isAuthenticated, isLoading } = useAdminAuth();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [, navigate] = useLocation();
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate(ADMIN_BASE);
+    }
+  }, [isAuthenticated, isLoading, navigate]);
 
   // Block search engine indexing
   useEffect(() => {
@@ -27,10 +38,31 @@ export default function AdminLogin() {
     setError("");
     try {
       await login(password);
+      // Navigation will happen via the useEffect above after refetch
     } catch (err: any) {
       setError(err?.message || "Invalid password");
     }
   };
+
+  // Show loading while checking auth
+  if (isLoading) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: "#F5F0EB" }}
+      >
+        <div
+          className="text-sm tracking-[0.15em] uppercase animate-pulse"
+          style={{
+            fontFamily: "var(--font-body, 'Jost', sans-serif)",
+            color: "#5A3A2E80",
+          }}
+        >
+          Loading...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

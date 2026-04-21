@@ -5,8 +5,9 @@
  */
 import { motion } from "framer-motion";
 import PageLayout from "@/components/PageLayout";
+import { usePageImage } from "@/hooks/usePageImage";
 
-const HERO =
+const DEFAULT_HERO =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-tiramisu-5h2ZTWStaR9kXHw97oAsV7.webp";
 
 const flavours = [
@@ -40,9 +41,11 @@ const fade = {
 };
 
 export default function Tiramisu() {
+  const heroImage = usePageImage("tiramisu", "hero", DEFAULT_HERO);
+
   return (
     <PageLayout
-      heroImage={HERO}
+      heroImage={heroImage}
       heroTitle="Tiramisu"
       heroSubtitle="The art of layered indulgence"
     >

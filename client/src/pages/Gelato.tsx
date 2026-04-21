@@ -5,8 +5,9 @@
  */
 import { motion } from "framer-motion";
 import PageLayout from "@/components/PageLayout";
+import { usePageImage } from "@/hooks/usePageImage";
 
-const HERO =
+const DEFAULT_HERO =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-gelato-bSnt8m7kGiDFqrvhPfDkmW.webp";
 
 const gelatos = [
@@ -28,7 +29,7 @@ const fade = {
 export default function Gelato() {
   return (
     <PageLayout
-      heroImage={HERO}
+      heroImage={usePageImage("gelato", "hero", DEFAULT_HERO)}
       heroTitle="Gelato"
       heroSubtitle="Crafted from tradition"
     >

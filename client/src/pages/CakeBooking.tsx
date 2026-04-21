@@ -8,8 +8,9 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import PageLayout from "@/components/PageLayout";
+import { usePageImage } from "@/hooks/usePageImage";
 
-const HERO =
+const DEFAULT_HERO =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-main-kcUndrGpKLvreReb7i8t53.png";
 
 // Fallback cake types when no products in DB yet
@@ -44,6 +45,7 @@ const labelStyle: React.CSSProperties = {
 };
 
 export default function CakeBooking() {
+  const heroImage = usePageImage("cake-booking", "hero", DEFAULT_HERO);
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -119,7 +121,7 @@ export default function CakeBooking() {
 
   if (submitted) {
     return (
-      <PageLayout heroImage={HERO} heroTitle="Booking Confirmed" heroSubtitle="Thank you">
+      <PageLayout heroImage={heroImage} heroTitle="Booking Confirmed" heroSubtitle="Thank you">
         <section className="py-20 md:py-28 px-6 md:px-10">
           <div className="max-w-lg mx-auto text-center">
             <motion.div {...fade}>
@@ -171,7 +173,7 @@ export default function CakeBooking() {
   }
 
   return (
-    <PageLayout heroImage={HERO} heroTitle="Cake Booking" heroSubtitle="Made to order">
+    <PageLayout heroImage={heroImage} heroTitle="Cake Booking" heroSubtitle="Made to order">
       {/* Introduction */}
       <section className="py-20 md:py-28 px-6 md:px-10">
         <div className="max-w-2xl mx-auto text-center">

@@ -6,9 +6,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 import PageLayout from "@/components/PageLayout";
+import { usePageImage } from "@/hooks/usePageImage";
 
-const HERO =
+const DEFAULT_HERO =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-main-DCvSGXsexKPMwmhrmBHewa.webp";
 
 const faqs = [
@@ -113,10 +115,26 @@ export default function CustomerCare() {
     message: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const submitMutation = trpc.publicEnquiries.submitCustomerCare.useMutation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Message sent. We will respond within 24 hours.");
-    setForm({ name: "", email: "", message: "" });
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await submitMutation.mutateAsync({
+        name: form.name,
+        email: form.email,
+        message: form.message,
+      });
+      toast.success("Message sent. We will respond within 24 hours.");
+      setForm({ name: "", email: "", message: "" });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const inputStyle: React.CSSProperties = {
@@ -130,7 +148,7 @@ export default function CustomerCare() {
 
   return (
     <PageLayout
-      heroImage={HERO}
+      heroImage={usePageImage("customer-care", "hero", DEFAULT_HERO)}
       heroTitle="Customer Care"
       heroSubtitle="We're here to help"
     >
@@ -283,7 +301,7 @@ export default function CustomerCare() {
                     color: "oklch(0.94 0.015 80)",
                   }}
                 >
-                  Send Message
+                  {isSubmitting ? "Sending..." : "Send Message"}
                 </button>
               </div>
             </form>

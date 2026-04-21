@@ -9,6 +9,8 @@ import {
   Cake,
   Users,
   Store,
+  MessageSquare,
+  ImageIcon,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -45,6 +47,8 @@ const menuItems = [
   { icon: Cake, label: "Bookings", path: "/bookings" },
   { icon: Users, label: "Customers", path: "/customers" },
   { icon: Store, label: "Branches", path: "/branches" },
+  { icon: MessageSquare, label: "Enquiries", path: "/enquiries" },
+  { icon: ImageIcon, label: "Page Images", path: "/page-images" },
 ];
 
 export default function AdminLayout({

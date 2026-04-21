@@ -12,6 +12,10 @@ import { adminCustomersRouter } from "./routers/adminCustomers";
 import { adminUploadRouter } from "./routers/adminUpload";
 import { publicProductsRouter } from "./routers/publicProducts";
 import { publicBookingsRouter } from "./routers/publicBookings";
+import { stripeCheckoutRouter } from "./routers/stripeCheckout";
+import { publicEnquiriesRouter } from "./routers/publicEnquiries";
+import { adminEnquiriesRouter } from "./routers/adminEnquiries";
+import { adminPageImagesRouter, publicPageImagesRouter } from "./routers/adminPageImages";
 
 export const appRouter = router({
   system: systemRouter,
@@ -33,10 +37,15 @@ export const appRouter = router({
   adminBookings: adminBookingsRouter,
   adminCustomers: adminCustomersRouter,
   adminUpload: adminUploadRouter,
+  adminEnquiries: adminEnquiriesRouter,
+  adminPageImages: adminPageImagesRouter,
 
   // Public APIs
   publicProducts: publicProductsRouter,
   publicBookings: publicBookingsRouter,
+  stripe: stripeCheckoutRouter,
+  publicEnquiries: publicEnquiriesRouter,
+  publicPageImages: publicPageImagesRouter,
 });
 
 export type AppRouter = typeof appRouter;

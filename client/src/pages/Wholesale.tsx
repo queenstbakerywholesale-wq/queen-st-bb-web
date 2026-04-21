@@ -6,9 +6,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 import PageLayout from "@/components/PageLayout";
+import { usePageImage } from "@/hooks/usePageImage";
 
-const HERO =
+const DEFAULT_HERO =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-objects-ANGDtyQvzsvteisBRsKv35.png";
 
 const offerings = [
@@ -48,10 +50,28 @@ export default function Wholesale() {
     message: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const submitMutation = trpc.publicEnquiries.submitWholesale.useMutation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Thank you. We will be in touch shortly.");
-    setForm({ name: "", company: "", email: "", interest: "", message: "" });
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await submitMutation.mutateAsync({
+        name: form.name,
+        email: form.email,
+        company: form.company || undefined,
+        interest: form.interest || undefined,
+        message: form.message,
+      });
+      toast.success("Thank you. We will be in touch shortly.");
+      setForm({ name: "", company: "", email: "", interest: "", message: "" });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to submit. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const inputStyle: React.CSSProperties = {
@@ -65,7 +85,7 @@ export default function Wholesale() {
 
   return (
     <PageLayout
-      heroImage={HERO}
+      heroImage={usePageImage("wholesale", "hero", DEFAULT_HERO)}
       heroTitle="Wholesale & Franchise"
       heroSubtitle="Partner with us"
     >
@@ -319,7 +339,7 @@ export default function Wholesale() {
                     color: "oklch(0.94 0.015 80)",
                   }}
                 >
-                  Submit Inquiry
+                  {isSubmitting ? "Submitting..." : "Submit Inquiry"}
                 </button>
               </div>
             </form>

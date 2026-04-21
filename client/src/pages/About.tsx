@@ -5,8 +5,9 @@
  */
 import { motion } from "framer-motion";
 import PageLayout from "@/components/PageLayout";
+import { usePageImage } from "@/hooks/usePageImage";
 
-const HERO =
+const DEFAULT_HERO =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-space-mUcyKwAcR2rwS4oEzm2GpP.png";
 
 const SPACE_IMG =
@@ -37,7 +38,7 @@ const fade = {
 export default function About() {
   return (
     <PageLayout
-      heroImage={HERO}
+      heroImage={usePageImage("about", "hero", DEFAULT_HERO)}
       heroTitle="Brand World"
       heroSubtitle="The story behind the atelier"
     >

@@ -7,6 +7,7 @@ import {
   DollarSign,
   Users,
   TrendingUp,
+  MessageSquare,
 } from "lucide-react";
 
 function StatCard({
@@ -135,7 +136,7 @@ export default function AdminDashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={TrendingUp}
           label="Total Revenue"
@@ -153,6 +154,17 @@ export default function AdminDashboard() {
           accent={
             (data?.lowStockProducts?.length ?? 0) > 0
               ? "#FFF3E0"
+              : "#5A3A2E10"
+          }
+        />
+        <StatCard
+          icon={MessageSquare}
+          label="Pending Enquiries"
+          value={data?.pendingEnquiries ?? 0}
+          sub={`${data?.todayEnquiries ?? 0} today · ${data?.totalEnquiries ?? 0} total`}
+          accent={
+            (data?.pendingEnquiries ?? 0) > 0
+              ? "#E8F5E9"
               : "#5A3A2E10"
           }
         />

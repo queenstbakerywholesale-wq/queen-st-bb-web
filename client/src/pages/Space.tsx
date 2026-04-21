@@ -5,8 +5,9 @@
  */
 import { motion } from "framer-motion";
 import PageLayout from "@/components/PageLayout";
+import { usePageImage } from "@/hooks/usePageImage";
 
-const HERO =
+const DEFAULT_HERO =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-space-d9F8XM8hZ4d35LsKJG8x5i.webp";
 
 const experiences = [
@@ -40,7 +41,7 @@ const fade = {
 export default function Space() {
   return (
     <PageLayout
-      heroImage={HERO}
+      heroImage={usePageImage("space", "hero", DEFAULT_HERO)}
       heroTitle="The Space"
       heroSubtitle="Where craft meets ceremony"
     >
@@ -68,7 +69,7 @@ export default function Space() {
       {/* Full-width atmospheric image break */}
       <section className="relative h-[50vh] md:h-[60vh] overflow-hidden">
         <img
-          src={HERO}
+          src={DEFAULT_HERO}
           alt="Interior atmosphere"
           className="w-full h-full object-cover"
           style={{

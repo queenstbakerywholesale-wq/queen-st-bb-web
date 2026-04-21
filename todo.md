@@ -21,3 +21,23 @@
 - [x] Enforce min prep notice hours and same-day booking rules in public booking submit/check
 - [x] Seed 3 default branches in the database
 - [x] Add recent customers section to admin dashboard
+
+## New Features (Batch 2)
+
+- [x] Stripe payment integration on Objects page — checkout, payment processing, order creation on success
+- [x] Wholesale & Franchise enquiry form — backend storage, admin view, owner notification on submit
+- [x] Customer Care enquiry form — backend storage, admin view, owner notification on submit
+- [x] Admin image/content management — upload/replace/remove images for homepage, Objects, Space, About, Customer Care, Wholesale, Cake Booking pages
+- [x] Connect public pages to admin-managed images (hero images, section images)
+- [x] Update admin dashboard with new enquiry submissions count
+- [x] Admin page for viewing/managing wholesale enquiries
+- [x] Admin page for viewing/managing customer care enquiries
+- [x] DB schema: enquiries table (wholesale + customer care), page_images table
+
+## Gap Resolution
+
+- [x] Browser QA: Wholesale and Customer Care form submissions
+- [x] Fix admin login page redirect — auto-redirect to dashboard after successful login
+- [x] Verify admin enquiries appear in admin panel after form submissions
+- [x] Browser QA: Objects cart + checkout flow
+- [x] Verify admin page images management in browser

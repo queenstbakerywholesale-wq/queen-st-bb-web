@@ -15,6 +15,13 @@
       "when": 1776739871797,
       "tag": "0001_mysterious_brood",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1776745888785,
+      "tag": "0002_curvy_whirlwind",
+      "breakpoints": true
     }
   ]
 }

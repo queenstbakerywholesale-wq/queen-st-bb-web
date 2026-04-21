@@ -13,6 +13,7 @@ import Wholesale from "./pages/Wholesale";
 import CakeBooking from "./pages/CakeBooking";
 import About from "./pages/About";
 import CustomerCare from "./pages/CustomerCare";
+import OrderSuccess from "./pages/OrderSuccess";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -22,6 +23,8 @@ import AdminShipping from "./pages/admin/AdminShipping";
 import AdminBookings from "./pages/admin/AdminBookings";
 import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminBranches from "./pages/admin/AdminBranches";
+import AdminEnquiries from "./pages/admin/AdminEnquiries";
+import AdminPageImages from "./pages/admin/AdminPageImages";
 
 const ADMIN_BASE = "/admin-angela91";
 
@@ -38,6 +41,7 @@ function Router() {
       <Route path="/cake-booking" component={CakeBooking} />
       <Route path="/about" component={About} />
       <Route path="/customer-care" component={CustomerCare} />
+      <Route path="/order-success" component={OrderSuccess} />
 
       {/* Admin login */}
       <Route path={`${ADMIN_BASE}/login`} component={AdminLogin} />
@@ -76,6 +80,16 @@ function Router() {
       <Route path={`${ADMIN_BASE}/branches`}>
         <AdminLayout>
           <AdminBranches />
+        </AdminLayout>
+      </Route>
+      <Route path={`${ADMIN_BASE}/enquiries`}>
+        <AdminLayout>
+          <AdminEnquiries />
+        </AdminLayout>
+      </Route>
+      <Route path={`${ADMIN_BASE}/page-images`}>
+        <AdminLayout>
+          <AdminPageImages />
         </AdminLayout>
       </Route>
 
