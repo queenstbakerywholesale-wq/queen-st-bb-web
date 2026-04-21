@@ -1,9 +1,11 @@
 /**
  * Admin Page Images — Manage hero and section images for all public pages
+ * Now with integrated image editor (crop & rotate) before upload
  */
 import { useState, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import ImageEditor from "@/components/ImageEditor";
 
 // Define all image slots across the site
 const PAGE_SLOTS = [
@@ -21,10 +23,17 @@ const PAGE_SLOTS = [
   { pageSlug: "customer-care", slotKey: "hero", label: "Customer Care — Hero" },
 ];
 
+interface PendingEdit {
+  file: File;
+  pageSlug: string;
+  slotKey: string;
+}
+
 export default function AdminPageImages() {
   const [selectedPage, setSelectedPage] = useState<string>("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingSlot, setUploadingSlot] = useState<string | null>(null);
+  const [pendingEdit, setPendingEdit] = useState<PendingEdit | null>(null);
 
   const { data: allImages = [], refetch } = trpc.adminPageImages.list.useQuery({
     pageSlug: selectedPage === "all" ? undefined : selectedPage,
@@ -49,6 +58,7 @@ export default function AdminPageImages() {
     );
   };
 
+  /** Upload the final (possibly edited) file to S3 and save to DB */
   const handleUpload = async (
     file: File,
     pageSlug: string,
@@ -89,6 +99,27 @@ export default function AdminPageImages() {
     }
   };
 
+  /** When a file is selected, open the editor instead of uploading directly */
+  const handleFileSelected = (
+    file: File,
+    pageSlug: string,
+    slotKey: string
+  ) => {
+    setPendingEdit({ file, pageSlug, slotKey });
+  };
+
+  /** Editor confirmed — upload the (possibly edited) file */
+  const handleEditorConfirm = (editedFile: File) => {
+    if (!pendingEdit) return;
+    setPendingEdit(null);
+    handleUpload(editedFile, pendingEdit.pageSlug, pendingEdit.slotKey);
+  };
+
+  /** Editor cancelled */
+  const handleEditorCancel = () => {
+    setPendingEdit(null);
+  };
+
   const labelStyle: React.CSSProperties = {
     fontFamily: "var(--font-body)",
     fontSize: "10px",
@@ -97,19 +128,19 @@ export default function AdminPageImages() {
     color: "oklch(0.34 0.05 45 / 0.5)",
   };
 
-  const inputStyle: React.CSSProperties = {
-    fontFamily: "var(--font-body)",
-    fontSize: "13px",
-    color: "oklch(0.34 0.05 45)",
-    backgroundColor: "oklch(0.94 0.015 80)",
-    border: "1px solid oklch(0.84 0.025 72 / 0.5)",
-    padding: "8px 12px",
-  };
-
   const uniquePages = Array.from(new Set(PAGE_SLOTS.map((s) => s.pageSlug)));
 
   return (
     <div className="space-y-8">
+      {/* Image Editor Modal */}
+      {pendingEdit && (
+        <ImageEditor
+          file={pendingEdit.file}
+          onConfirm={handleEditorConfirm}
+          onCancel={handleEditorCancel}
+        />
+      )}
+
       {/* Header */}
       <div>
         <h1
@@ -128,7 +159,7 @@ export default function AdminPageImages() {
             color: "oklch(0.34 0.05 45 / 0.5)",
           }}
         >
-          Manage hero and section images across all pages
+          Manage hero and section images across all pages — crop &amp; rotate before uploading
         </p>
       </div>
 
@@ -254,7 +285,7 @@ export default function AdminPageImages() {
                   )}
                 </div>
 
-                {/* Upload Button */}
+                {/* Upload Button — now opens editor first */}
                 <div className="flex gap-2">
                   <label
                     className="cursor-pointer text-[10px] uppercase py-2 px-4 transition-all duration-200 hover:opacity-70"
@@ -272,7 +303,7 @@ export default function AdminPageImages() {
                       className="hidden"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) handleUpload(file, slot.pageSlug, slot.slotKey);
+                        if (file) handleFileSelected(file, slot.pageSlug, slot.slotKey);
                         e.target.value = "";
                       }}
                     />

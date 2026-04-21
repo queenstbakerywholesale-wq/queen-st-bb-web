@@ -41,3 +41,11 @@
 - [x] Verify admin enquiries appear in admin panel after form submissions
 - [x] Browser QA: Objects cart + checkout flow
 - [x] Verify admin page images management in browser
+
+## Image Editor Enhancement
+
+- [x] Add image crop functionality to admin page images upload
+- [x] Add image rotate functionality to admin page images upload
+- [x] Create reusable ImageEditor component with crop/rotate controls
+- [x] Integrate ImageEditor into AdminPageImages upload flow
+- [x] Verify image editor works in browser
