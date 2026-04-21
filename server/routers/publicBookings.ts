@@ -4,6 +4,7 @@ import { getDb } from "../db";
 import { branches, cakeBookings, products, customers } from "../../drizzle/schema";
 import { eq, and, count } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { notifyOwner } from "../_core/notification";
 
 export const publicBookingsRouter = router({
   // Get active branches
@@ -242,6 +243,12 @@ export const publicBookingsRouter = router({
         pickupDate: input.pickupDate,
         pickupTime: input.pickupTime,
       });
+
+      // Notify owner about new booking (fire-and-forget)
+      notifyOwner({
+        title: `New Cake Booking: ${bookingNumber}`,
+        content: `Customer: ${input.customerName}\nPhone: ${input.customerPhone}\nBranch: ${branch.name}\nCake: ${input.productName}${input.size ? ` (${input.size})` : ""}\nPickup: ${input.pickupDate} at ${input.pickupTime}${input.customRequest ? `\nCustom Request: ${input.customRequest}` : ""}`,
+      }).catch(() => {});
 
       return { bookingNumber };
     }),

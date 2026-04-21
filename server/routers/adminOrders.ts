@@ -3,6 +3,7 @@ import { eq, sql, like, and, or, count } from "drizzle-orm";
 import { publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { orders, orderItems, shippingTracking } from "../../drizzle/schema";
+import { notifyOwner } from "../_core/notification";
 
 export const adminOrdersRouter = router({
   list: publicProcedure
@@ -161,6 +162,18 @@ export const adminOrdersRouter = router({
         .update(orders)
         .set({ status: input.status })
         .where(eq(orders.id, input.id));
+
+      // Notify owner on significant status changes
+      if (["ready", "shipped", "cancelled"].includes(input.status)) {
+        const [order] = await db.select().from(orders).where(eq(orders.id, input.id)).limit(1);
+        if (order) {
+          notifyOwner({
+            title: `Order #${order.orderNumber} — ${input.status.toUpperCase()}`,
+            content: `Order ${order.orderNumber} status changed to ${input.status}.\nCustomer: ${order.customerName}`,
+          }).catch(() => {});
+        }
+      }
+
       return { success: true };
     }),
 

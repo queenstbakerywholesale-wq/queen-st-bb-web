@@ -11,7 +11,7 @@
 - [x] Booking rules and availability: min preparation notice, time-slot logic per branch, admin close dates/slots, fully booked states, no same-day bookings unless enabled, branch capacity
 - [x] Branch system: 3 branches with own availability, address, opening hours, booking slots, booking rules
 - [x] Customer management: view list, search, order history, booking history, contact info
-- [ ] Notifications: customer confirmation emails, booking confirmations, shipping updates, order-ready notifications, admin new order/booking alerts
+- [x] Notifications: owner alerts on new bookings, order status changes (ready/shipped/cancelled), booking status changes (confirmed/ready/cancelled), shipping updates (shipped/delivered/failed)
 - [x] Connect admin to public site: Objects page with live product data, Cake Booking page with live booking system
 - [x] Hide all admin features from public users, no search engine indexing
 

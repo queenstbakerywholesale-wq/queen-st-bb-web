@@ -3,6 +3,7 @@ import { eq, sql, like, and, or, count, gte } from "drizzle-orm";
 import { publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { cakeBookings, branches } from "../../drizzle/schema";
+import { notifyOwner } from "../_core/notification";
 
 export const adminBookingsRouter = router({
   list: publicProcedure
@@ -132,6 +133,18 @@ export const adminBookingsRouter = router({
         .update(cakeBookings)
         .set({ status: input.status })
         .where(eq(cakeBookings.id, input.id));
+
+      // Notify owner on booking status changes
+      if (["confirmed", "ready", "cancelled"].includes(input.status)) {
+        const [booking] = await db.select().from(cakeBookings).where(eq(cakeBookings.id, input.id)).limit(1);
+        if (booking) {
+          notifyOwner({
+            title: `Booking ${booking.bookingNumber} — ${input.status.toUpperCase()}`,
+            content: `Customer: ${booking.customerName}\nCake: ${booking.productName}\nPickup: ${booking.pickupDate} at ${booking.pickupTime}`,
+          }).catch(() => {});
+        }
+      }
+
       return { success: true };
     }),
 
