@@ -70,12 +70,12 @@ export default function AdminCustomers() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-light tracking-[0.1em]" style={{ fontFamily: "var(--font-display)", color: "#5A3A2E" }}>
+        <h1 className="text-xl font-medium tracking-[0.04em]" style={{ fontFamily: "var(--font-display)", color: "#5A3A2E" }}>
           Customers
         </h1>
         <button
           onClick={() => { setEditingCustomer(null); setForm({ name: "", email: "", phone: "", notes: "" }); setShowForm(true); }}
-          className="flex items-center gap-2 px-4 py-2 text-[11px] uppercase tracking-[0.15em] rounded-md"
+          className="flex items-center gap-2 px-4 py-2 text-[11px] uppercase tracking-[0.04em] rounded-md"
           style={{ backgroundColor: "#5A3A2E", color: "#F5F0EB", fontFamily: "var(--font-body)" }}
         >
           <Plus className="w-3.5 h-3.5" /> Add Customer
@@ -105,10 +105,10 @@ export default function AdminCustomers() {
               <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none" style={inputStyle} rows={2} />
             </div>
             <div className="flex gap-3">
-              <button type="submit" className="px-5 py-2 text-[11px] uppercase tracking-[0.15em] rounded-md" style={{ backgroundColor: "#5A3A2E", color: "#F5F0EB", fontFamily: "var(--font-body)" }}>
+              <button type="submit" className="px-5 py-2 text-[11px] uppercase tracking-[0.04em] rounded-md" style={{ backgroundColor: "#5A3A2E", color: "#F5F0EB", fontFamily: "var(--font-body)" }}>
                 {editingCustomer ? "Update" : "Create"}
               </button>
-              <button type="button" onClick={() => { setShowForm(false); setEditingCustomer(null); }} className="px-5 py-2 text-[11px] uppercase tracking-[0.15em] rounded-md border" style={{ borderColor: "#5A3A2E30", color: "#5A3A2E", fontFamily: "var(--font-body)" }}>
+              <button type="button" onClick={() => { setShowForm(false); setEditingCustomer(null); }} className="px-5 py-2 text-[11px] uppercase tracking-[0.04em] rounded-md border" style={{ borderColor: "#5A3A2E30", color: "#5A3A2E", fontFamily: "var(--font-body)" }}>
                 Cancel
               </button>
             </div>
@@ -121,7 +121,7 @@ export default function AdminCustomers() {
         <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4" onClick={() => setSelectedCustomer(null)}>
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-light tracking-[0.1em]" style={{ fontFamily: "var(--font-display)", color: "#5A3A2E" }}>
+              <h2 className="text-lg font-medium tracking-[0.04em]" style={{ fontFamily: "var(--font-display)", color: "#5A3A2E" }}>
                 {customerDetail.data.name}
               </h2>
               <button onClick={() => setSelectedCustomer(null)}><X className="w-5 h-5" style={{ color: "#5A3A2E" }} /></button>
@@ -129,26 +129,26 @@ export default function AdminCustomers() {
 
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div>
-                <p className="text-[11px] uppercase tracking-[0.1em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Email</p>
+                <p className="text-[11px] uppercase tracking-[0.04em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Email</p>
                 <p className="text-sm" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>{customerDetail.data.email || "—"}</p>
               </div>
               <div>
-                <p className="text-[11px] uppercase tracking-[0.1em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Phone</p>
+                <p className="text-[11px] uppercase tracking-[0.04em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Phone</p>
                 <p className="text-sm" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>{customerDetail.data.phone || "—"}</p>
               </div>
               <div>
-                <p className="text-[11px] uppercase tracking-[0.1em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Orders</p>
+                <p className="text-[11px] uppercase tracking-[0.04em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Orders</p>
                 <p className="text-sm" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>{customerDetail.data.orders?.length ?? 0}</p>
               </div>
               <div>
-                <p className="text-[11px] uppercase tracking-[0.1em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Bookings</p>
+                <p className="text-[11px] uppercase tracking-[0.04em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Bookings</p>
                 <p className="text-sm" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>{customerDetail.data.bookings?.length ?? 0}</p>
               </div>
             </div>
 
             {customerDetail.data.notes && (
               <div className="mb-4">
-                <p className="text-[11px] uppercase tracking-[0.1em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Notes</p>
+                <p className="text-[11px] uppercase tracking-[0.04em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Notes</p>
                 <p className="text-sm p-2 rounded" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E", backgroundColor: "#5A3A2E05" }}>
                   {customerDetail.data.notes}
                 </p>
@@ -176,11 +176,11 @@ export default function AdminCustomers() {
           <table className="w-full">
             <thead>
               <tr style={{ backgroundColor: "#5A3A2E05", fontFamily: "var(--font-body)" }}>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Name</th>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Email</th>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Phone</th>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Joined</th>
-                <th className="text-right text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Actions</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Name</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Email</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Phone</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Joined</th>
+                <th className="text-right text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Actions</th>
               </tr>
             </thead>
             <tbody>

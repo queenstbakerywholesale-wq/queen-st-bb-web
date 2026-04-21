@@ -217,7 +217,7 @@ export default function Objects() {
             >
               {/* Cart Header */}
               <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: "oklch(0.84 0.025 72 / 0.4)" }}>
-                <h2 className="text-lg font-light" style={{ fontFamily: "var(--font-display)", color: "oklch(0.34 0.05 45)" }}>
+                <h2 className="text-lg" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: "oklch(0.34 0.05 45)" }}>
                   Your Bag ({cartCount})
                 </h2>
                 <button onClick={() => setCartOpen(false)} className="p-1 cursor-pointer" style={{ color: "oklch(0.34 0.05 45 / 0.6)" }}>
@@ -228,7 +228,7 @@ export default function Objects() {
               {/* Cart Items */}
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {cart.length === 0 ? (
-                  <p className="text-center text-sm font-light py-12" style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45 / 0.5)" }}>
+                  <p className="text-center text-sm py-12" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "oklch(0.34 0.05 45 / 0.5)" }}>
                     Your bag is empty
                   </p>
                 ) : (
@@ -244,7 +244,7 @@ export default function Objects() {
                         )}
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-sm font-light mb-1" style={{ fontFamily: "var(--font-display)", color: "oklch(0.34 0.05 45)" }}>
+                        <h3 className="text-sm mb-1" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: "oklch(0.34 0.05 45)" }}>
                           {item.productName}
                         </h3>
                         <p className="text-xs mb-2" style={{ fontFamily: "var(--font-body)", color: "oklch(0.45 0.06 45)" }}>
@@ -254,7 +254,7 @@ export default function Objects() {
                           <button onClick={() => updateQuantity(item.productId, -1)} className="w-6 h-6 flex items-center justify-center border cursor-pointer" style={{ borderColor: "oklch(0.84 0.025 72 / 0.6)", color: "oklch(0.34 0.05 45 / 0.6)" }}>
                             <Minus size={12} />
                           </button>
-                          <span className="text-xs font-light" style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45)" }}>
+                          <span className="text-xs" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "oklch(0.34 0.05 45)" }}>
                             {item.quantity}
                           </span>
                           <button onClick={() => updateQuantity(item.productId, 1)} className="w-6 h-6 flex items-center justify-center border cursor-pointer" style={{ borderColor: "oklch(0.84 0.025 72 / 0.6)", color: "oklch(0.34 0.05 45 / 0.6)" }}>
@@ -276,15 +276,15 @@ export default function Objects() {
                   {!checkoutOpen ? (
                     <>
                       <div className="flex justify-between mb-4">
-                        <span className="text-sm font-light" style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45 / 0.6)" }}>Total</span>
-                        <span className="text-sm font-light" style={{ fontFamily: "var(--font-display)", color: "oklch(0.34 0.05 45)" }}>
+                        <span className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "oklch(0.34 0.05 45 / 0.6)" }}>Total</span>
+                        <span className="text-sm" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: "oklch(0.34 0.05 45)" }}>
                           ${cartTotal.toFixed(2)} AUD
                         </span>
                       </div>
                       <button
                         onClick={() => setCheckoutOpen(true)}
-                        className="w-full py-3 text-[11px] font-medium uppercase tracking-[0.2em] cursor-pointer transition-opacity hover:opacity-80"
-                        style={{ fontFamily: "var(--font-body)", backgroundColor: "oklch(0.34 0.05 45)", color: "oklch(0.91 0.02 75)" }}
+                        className="w-full py-3 text-[11px] uppercase cursor-pointer transition-opacity hover:opacity-80"
+                        style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.04em", backgroundColor: "oklch(0.34 0.05 45)", color: "oklch(0.91 0.02 75)" }}
                       >
                         Proceed to Checkout
                       </button>
@@ -296,7 +296,7 @@ export default function Objects() {
                         placeholder="Full Name *"
                         value={checkoutForm.name}
                         onChange={(e) => setCheckoutForm((f) => ({ ...f, name: e.target.value }))}
-                        className="w-full px-4 py-3 text-sm font-light border outline-none"
+                        className="w-full px-4 py-3 text-sm border outline-none"
                         style={{
                           fontFamily: "var(--font-body)",
                           borderColor: "oklch(0.84 0.025 72 / 0.6)",
@@ -309,7 +309,7 @@ export default function Objects() {
                         placeholder="Email Address *"
                         value={checkoutForm.email}
                         onChange={(e) => setCheckoutForm((f) => ({ ...f, email: e.target.value }))}
-                        className="w-full px-4 py-3 text-sm font-light border outline-none"
+                        className="w-full px-4 py-3 text-sm border outline-none"
                         style={{
                           fontFamily: "var(--font-body)",
                           borderColor: "oklch(0.84 0.025 72 / 0.6)",
@@ -322,7 +322,7 @@ export default function Objects() {
                         placeholder="Phone (optional)"
                         value={checkoutForm.phone}
                         onChange={(e) => setCheckoutForm((f) => ({ ...f, phone: e.target.value }))}
-                        className="w-full px-4 py-3 text-sm font-light border outline-none"
+                        className="w-full px-4 py-3 text-sm border outline-none"
                         style={{
                           fontFamily: "var(--font-body)",
                           borderColor: "oklch(0.84 0.025 72 / 0.6)",
@@ -331,16 +331,16 @@ export default function Objects() {
                         }}
                       />
                       <div className="flex justify-between mb-2 pt-2">
-                        <span className="text-sm font-light" style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45 / 0.6)" }}>Total</span>
-                        <span className="text-sm font-light" style={{ fontFamily: "var(--font-display)", color: "oklch(0.34 0.05 45)" }}>
+                        <span className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "oklch(0.34 0.05 45 / 0.6)" }}>Total</span>
+                        <span className="text-sm" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: "oklch(0.34 0.05 45)" }}>
                           ${cartTotal.toFixed(2)} AUD
                         </span>
                       </div>
                       <button
                         onClick={handleCheckout}
                         disabled={isProcessing}
-                        className="w-full py-3 text-[11px] font-medium uppercase tracking-[0.2em] cursor-pointer transition-opacity hover:opacity-80 disabled:opacity-50"
-                        style={{ fontFamily: "var(--font-body)", backgroundColor: "oklch(0.34 0.05 45)", color: "oklch(0.91 0.02 75)" }}
+                        className="w-full py-3 text-[11px] uppercase cursor-pointer transition-opacity hover:opacity-80 disabled:opacity-50"
+                        style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.04em", backgroundColor: "oklch(0.34 0.05 45)", color: "oklch(0.91 0.02 75)" }}
                       >
                         {isProcessing ? "Processing..." : "Pay with Stripe"}
                       </button>
@@ -366,8 +366,8 @@ export default function Objects() {
           <motion.div {...fade}>
             <div className="editorial-rule mx-auto mb-8" />
             <p
-              className="text-lg md:text-xl font-light leading-[1.8]"
-              style={{ fontFamily: "var(--font-display)", color: "oklch(0.34 0.05 45 / 0.8)" }}
+              className="text-base md:text-lg"
+              style={{ fontFamily: "var(--font-body)", fontWeight: 400, lineHeight: 1.7, color: "oklch(0.34 0.05 45 / 0.8)" }}
             >
               A carefully curated selection of objects that extend the Queen St BB
               experience into your home. Each piece chosen for its craft,
@@ -393,7 +393,7 @@ export default function Objects() {
               <div className="flex items-center gap-4 mb-10">
                 <span
                   className="text-[10px] font-medium uppercase"
-                  style={{ fontFamily: "var(--font-body)", letterSpacing: "0.2em", color: "oklch(0.45 0.06 45 / 0.5)" }}
+                  style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.04em", color: "oklch(0.45 0.06 45 / 0.5)" }}
                 >
                   {category.category}
                 </span>
@@ -425,8 +425,8 @@ export default function Objects() {
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <span
-                            className="text-[10px] font-light uppercase"
-                            style={{ fontFamily: "var(--font-body)", letterSpacing: "0.15em", color: "oklch(0.72 0.03 65)" }}
+                            className="text-[10px] uppercase"
+                            style={{ fontFamily: "var(--font-body)", fontWeight: 400, letterSpacing: "0.04em", color: "oklch(0.72 0.03 65)" }}
                           >
                             {category.category}
                           </span>
@@ -446,20 +446,20 @@ export default function Objects() {
                       </button>
                     </div>
                     <h3
-                      className="text-base md:text-lg font-light mb-1 group-hover:opacity-60 transition-opacity duration-400"
-                      style={{ fontFamily: "var(--font-display)", color: "oklch(0.34 0.05 45)" }}
+                      className="text-base md:text-lg mb-1 group-hover:opacity-60 transition-opacity duration-400"
+                      style={{ fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "0.005em", color: "oklch(0.34 0.05 45)" }}
                     >
                       {item.name}
                     </h3>
                     <p
-                      className="text-[11px] font-light mb-2"
-                      style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45 / 0.45)" }}
+                      className="text-[11px] mb-2"
+                      style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "oklch(0.34 0.05 45 / 0.45)" }}
                     >
                       {item.detail}
                     </p>
                     <span
-                      className="text-sm font-light"
-                      style={{ fontFamily: "var(--font-body)", color: "oklch(0.45 0.06 45)" }}
+                      className="text-sm"
+                      style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "oklch(0.45 0.06 45)" }}
                     >
                       ${item.price.toFixed(0)}
                     </span>
@@ -479,8 +479,8 @@ export default function Objects() {
         <div className="max-w-2xl mx-auto text-center">
           <motion.div {...fade}>
             <p
-              className="text-xl md:text-2xl font-light italic leading-[1.7]"
-              style={{ fontFamily: "var(--font-display)", color: "oklch(0.34 0.05 45)" }}
+              className="text-xl md:text-2xl italic"
+              style={{ fontFamily: "var(--font-display)", fontWeight: 500, lineHeight: 1.5, color: "oklch(0.34 0.05 45)" }}
             >
               "The objects we choose shape the rituals we keep."
             </p>

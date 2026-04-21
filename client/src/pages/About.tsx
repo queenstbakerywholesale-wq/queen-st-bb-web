@@ -1,7 +1,6 @@
 /**
  * About (Brand World) — Strong brand storytelling
- * Palette: brand-brown, parchment, cocoa, linen
- * Emotional and minimal, visual-driven with short text
+ * Typography: Playfair Display 500 headings, Inter 400 body
  */
 import { motion } from "framer-motion";
 import PageLayout from "@/components/PageLayout";
@@ -42,15 +41,17 @@ export default function About() {
       heroTitle="Brand World"
       heroSubtitle="The story behind the atelier"
     >
-      {/* Opening Statement — emotional, minimal */}
+      {/* Opening Statement */}
       <section className="py-24 md:py-32 px-6 md:px-10">
         <div className="max-w-2xl mx-auto text-center">
           <motion.div {...fade}>
             <div className="editorial-rule mx-auto mb-10" />
             <p
-              className="text-xl md:text-2xl font-light leading-[1.7] italic"
+              className="text-xl md:text-2xl italic"
               style={{
                 fontFamily: "var(--font-display)",
+                fontWeight: 500,
+                lineHeight: 1.5,
                 color: "oklch(0.34 0.05 45)",
               }}
             >
@@ -62,7 +63,7 @@ export default function About() {
         </div>
       </section>
 
-      {/* Full-width atmospheric image — visual break */}
+      {/* Full-width atmospheric image */}
       <section className="relative h-[45vh] md:h-[55vh] overflow-hidden">
         <img
           src={SPACE_IMG}
@@ -83,15 +84,17 @@ export default function About() {
         <div className="absolute inset-0 film-grain" />
       </section>
 
-      {/* Short narrative — two brief paragraphs */}
+      {/* Short narrative */}
       <section className="py-20 md:py-28 px-6 md:px-10">
         <div className="max-w-2xl mx-auto">
           <motion.div {...fade} className="space-y-6 text-center">
             <p
-              className="text-base font-light leading-[1.9]"
+              className="text-base"
               style={{
                 fontFamily: "var(--font-body)",
-                color: "oklch(0.34 0.05 45 / 0.65)",
+                fontWeight: 400,
+                lineHeight: 1.7,
+                color: "oklch(0.34 0.05 45 / 0.7)",
               }}
             >
               Founded on Queen Street in Brisbane, our atelier draws from the
@@ -100,10 +103,12 @@ export default function About() {
               a designer.
             </p>
             <p
-              className="text-base font-light leading-[1.9]"
+              className="text-base"
               style={{
                 fontFamily: "var(--font-body)",
-                color: "oklch(0.34 0.05 45 / 0.65)",
+                fontWeight: 400,
+                lineHeight: 1.7,
+                color: "oklch(0.34 0.05 45 / 0.7)",
               }}
             >
               Our space is designed to slow you down — to invite you to sit, to
@@ -114,7 +119,7 @@ export default function About() {
         </div>
       </section>
 
-      {/* Values — three pillars */}
+      {/* Values */}
       <section
         className="py-20 md:py-28 px-6 md:px-10"
         style={{ backgroundColor: "oklch(0.91 0.02 75)" }}
@@ -122,10 +127,11 @@ export default function About() {
         <div className="max-w-5xl mx-auto">
           <motion.div {...fade} className="text-center mb-14">
             <span
-              className="text-[10px] font-medium uppercase block"
+              className="text-[11px] uppercase block"
               style={{
                 fontFamily: "var(--font-body)",
-                letterSpacing: "0.2em",
+                fontWeight: 500,
+                letterSpacing: "0.04em",
                 color: "oklch(0.45 0.06 45 / 0.5)",
               }}
             >
@@ -144,29 +150,35 @@ export default function About() {
                 className="text-center"
               >
                 <span
-                  className="text-[10px] font-medium uppercase block mb-4"
+                  className="text-[11px] uppercase block mb-4"
                   style={{
                     fontFamily: "var(--font-body)",
-                    letterSpacing: "0.18em",
-                    color: "oklch(0.45 0.06 45 / 0.45)",
+                    fontWeight: 500,
+                    letterSpacing: "0.04em",
+                    color: "oklch(0.45 0.06 45 / 0.5)",
                   }}
                 >
                   0{i + 1}
                 </span>
                 <h3
-                  className="text-xl md:text-2xl font-light mb-4"
+                  className="text-xl md:text-2xl mb-4"
                   style={{
                     fontFamily: "var(--font-display)",
+                    fontWeight: 500,
+                    letterSpacing: "0.005em",
+                    lineHeight: 1.15,
                     color: "oklch(0.34 0.05 45)",
                   }}
                 >
                   {value.title}
                 </h3>
                 <p
-                  className="text-sm font-light leading-[1.8]"
+                  className="text-sm"
                   style={{
                     fontFamily: "var(--font-body)",
-                    color: "oklch(0.34 0.05 45 / 0.55)",
+                    fontWeight: 400,
+                    lineHeight: 1.65,
+                    color: "oklch(0.34 0.05 45 / 0.65)",
                   }}
                 >
                   {value.text}
@@ -182,9 +194,11 @@ export default function About() {
         <div className="max-w-2xl mx-auto text-center">
           <motion.div {...fade}>
             <p
-              className="text-xl md:text-2xl lg:text-3xl font-light italic leading-[1.6]"
+              className="text-xl md:text-2xl lg:text-3xl italic"
               style={{
                 fontFamily: "var(--font-display)",
+                fontWeight: 500,
+                lineHeight: 1.5,
                 color: "oklch(0.34 0.05 45)",
               }}
             >

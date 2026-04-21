@@ -146,8 +146,8 @@ export default function ImageEditor({ file, onConfirm, onCancel }: ImageEditorPr
       >
         <div className="flex items-center gap-3">
           <h2
-            className="text-sm font-light tracking-[0.15em] uppercase"
-            style={{ fontFamily: "var(--font-body)", color: "oklch(0.94 0.015 80)" }}
+            className="text-sm uppercase"
+            style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.04em", color: "oklch(0.94 0.015 80)" }}
           >
             Edit Image
           </h2>

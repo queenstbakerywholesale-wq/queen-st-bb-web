@@ -69,7 +69,7 @@ export default function AdminLayout({
         style={{ backgroundColor: "#F5F0EB" }}
       >
         <div
-          className="text-sm tracking-[0.15em] uppercase animate-pulse"
+          className="text-sm tracking-[0.04em] uppercase animate-pulse"
           style={{
             fontFamily: "var(--font-body, 'Jost', sans-serif)",
             color: "#5A3A2E80",
@@ -115,7 +115,7 @@ export default function AdminLayout({
         >
           {!collapsed && (
             <span
-              className="text-xs font-light tracking-[0.15em] uppercase"
+              className="text-xs font-medium tracking-[0.04em] uppercase"
               style={{ fontFamily: "var(--font-body, 'Jost', sans-serif)" }}
             >
               QSB Admin
@@ -167,7 +167,7 @@ export default function AdminLayout({
                   {!collapsed && (
                     <span
                       className={`text-[13px] ${
-                        isActive ? "font-medium" : "font-light"
+                        isActive ? "font-medium" : "font-medium"
                       }`}
                       style={{
                         fontFamily: "var(--font-body, 'Jost', sans-serif)",
@@ -195,7 +195,7 @@ export default function AdminLayout({
             <LogOut className="w-[18px] h-[18px] opacity-60" />
             {!collapsed && (
               <span
-                className="text-[13px] font-light"
+                className="text-[13px] font-medium"
                 style={{
                   fontFamily: "var(--font-body, 'Jost', sans-serif)",
                   letterSpacing: "0.03em",
@@ -222,7 +222,7 @@ export default function AdminLayout({
             <Menu className="w-5 h-5" style={{ color: "#5A3A2E" }} />
           </button>
           <span
-            className="ml-3 text-xs font-light tracking-[0.15em] uppercase"
+            className="ml-3 text-xs font-medium tracking-[0.04em] uppercase"
             style={{
               fontFamily: "var(--font-body, 'Jost', sans-serif)",
               color: "#5A3A2E",

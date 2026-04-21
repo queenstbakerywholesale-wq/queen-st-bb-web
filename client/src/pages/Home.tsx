@@ -1,8 +1,8 @@
 /**
  * Home — 4 full-screen scrolling sections
- * Palette: brand-brown #5A3A2E, cream #D8C3A8, matte tones
- * Cinematic, immersive, editorial — like a luxury brand story
- * Minimal text, strong visual focus
+ * Typography: Playfair Display 500 for headings, Inter 500 for subtitles
+ * Pure white text over images, no opacity reduction on headings
+ * Cinematic, immersive, editorial — luxury brand story
  */
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "wouter";
@@ -25,8 +25,6 @@ interface Section {
   href: string;
 }
 
-
-
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentSection, setCurrentSection] = useState(0);
@@ -38,28 +36,28 @@ export default function Home() {
     {
       id: "hero",
       title: "Queen St BB",
-      subtitle: "A dessert atelier",
+      subtitle: "A Dessert Atelier",
       image: images["hero-main"],
       href: "/about",
     },
     {
       id: "tiramisu",
       title: "Tiramisu",
-      subtitle: "Layered with intention",
+      subtitle: "Layered with Intention",
       image: images["hero-tiramisu"],
       href: "/tiramisu",
     },
     {
       id: "gelato",
       title: "Gelato",
-      subtitle: "Crafted from tradition",
+      subtitle: "Crafted from Tradition",
       image: images["hero-gelato"],
       href: "/gelato",
     },
     {
       id: "space",
       title: "The Space",
-      subtitle: "Where craft meets ceremony",
+      subtitle: "Where Craft Meets Ceremony",
       image: images["hero-space"],
       href: "/space",
     },
@@ -166,19 +164,19 @@ export default function Home() {
                   style={{ filter: "saturate(0.85) contrast(0.95)" }}
                 />
               </motion.div>
-              {/* Matte dark overlay — desaturated, warm */}
+              {/* Slightly darker overlay for strong text contrast */}
               <div
                 className="absolute inset-0"
                 style={{
                   background:
-                    "linear-gradient(to top, oklch(0.15 0.03 45 / 0.65) 0%, oklch(0.2 0.02 45 / 0.25) 40%, transparent 70%)",
+                    "linear-gradient(to top, oklch(0.12 0.03 45 / 0.7) 0%, oklch(0.18 0.02 45 / 0.3) 40%, oklch(0.2 0.01 45 / 0.08) 70%)",
                 }}
               />
               {/* Subtle grain */}
               <div className="absolute inset-0 film-grain" />
             </div>
 
-            {/* Content Overlay — minimal text */}
+            {/* Content Overlay — minimal text, strong typography */}
             <div className="absolute inset-0 flex flex-col items-center justify-end pb-20 md:pb-28 z-10">
               <AnimatePresence mode="wait">
                 {currentSection === index && (
@@ -192,20 +190,24 @@ export default function Home() {
                     {index === 0 ? (
                       <>
                         <h1
-                          className="text-4xl md:text-6xl lg:text-7xl font-light text-white mb-3"
+                          className="text-5xl md:text-7xl lg:text-8xl mb-4"
                           style={{
                             fontFamily: "var(--font-display)",
-                            letterSpacing: "0.15em",
+                            fontWeight: 500,
+                            letterSpacing: "0.01em",
+                            lineHeight: 1.1,
+                            color: "#FFFFFF",
                           }}
                         >
                           Queen St BB
                         </h1>
                         <p
-                          className="text-[10px] md:text-[12px] font-light uppercase"
+                          className="text-xs md:text-sm uppercase"
                           style={{
                             fontFamily: "var(--font-body)",
-                            letterSpacing: "0.25em",
-                            color: "rgba(255,255,255,0.55)",
+                            fontWeight: 500,
+                            letterSpacing: "0.05em",
+                            color: "#FFFFFF",
                           }}
                         >
                           {section.subtitle}
@@ -215,32 +217,37 @@ export default function Home() {
                       <Link href={section.href}>
                         <div className="group">
                           <h2
-                            className="text-3xl md:text-5xl lg:text-6xl font-light text-white mb-2 group-hover:opacity-75 transition-opacity duration-500"
+                            className="text-4xl md:text-6xl lg:text-7xl mb-3 group-hover:opacity-75 transition-opacity duration-500"
                             style={{
                               fontFamily: "var(--font-display)",
-                              letterSpacing: "0.12em",
+                              fontWeight: 500,
+                              letterSpacing: "0.01em",
+                              lineHeight: 1.1,
+                              color: "#FFFFFF",
                             }}
                           >
                             {section.title}
                           </h2>
                           <p
-                            className="text-[10px] md:text-[12px] font-light uppercase"
+                            className="text-xs md:text-sm uppercase"
                             style={{
                               fontFamily: "var(--font-body)",
-                              letterSpacing: "0.2em",
-                              color: "rgba(255,255,255,0.45)",
+                              fontWeight: 500,
+                              letterSpacing: "0.05em",
+                              color: "#FFFFFF",
                             }}
                           >
                             {section.subtitle}
                           </p>
-                          <div className="flex justify-center mt-5">
+                          <div className="flex justify-center mt-6">
                             <span
-                              className="text-[9px] font-medium uppercase pb-1 group-hover:opacity-80 transition-all duration-400"
+                              className="text-[10px] uppercase pb-1 group-hover:opacity-80 transition-all duration-400"
                               style={{
                                 fontFamily: "var(--font-body)",
-                                letterSpacing: "0.2em",
-                                color: "rgba(255,255,255,0.4)",
-                                borderBottom: "1px solid rgba(255,255,255,0.2)",
+                                fontWeight: 500,
+                                letterSpacing: "0.05em",
+                                color: "rgba(255,255,255,0.5)",
+                                borderBottom: "1px solid rgba(255,255,255,0.3)",
                               }}
                             >
                               Explore
@@ -284,11 +291,12 @@ export default function Home() {
       {/* Section Counter */}
       <div className="fixed bottom-7 left-1/2 -translate-x-1/2 z-30">
         <span
-          className="text-[10px] font-light"
+          className="text-[11px]"
           style={{
             fontFamily: "var(--font-body)",
-            letterSpacing: "0.15em",
-            color: "rgba(255,255,255,0.4)",
+            fontWeight: 500,
+            letterSpacing: "0.05em",
+            color: "rgba(255,255,255,0.5)",
           }}
         >
           {String(currentSection + 1).padStart(2, "0")} /{" "}
@@ -307,11 +315,12 @@ export default function Home() {
             className="fixed bottom-14 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2"
           >
             <span
-              className="text-[9px] font-light uppercase"
+              className="text-[10px] uppercase"
               style={{
                 fontFamily: "var(--font-body)",
-                letterSpacing: "0.2em",
-                color: "rgba(255,255,255,0.35)",
+                fontWeight: 500,
+                letterSpacing: "0.05em",
+                color: "rgba(255,255,255,0.45)",
               }}
             >
               Scroll
@@ -320,7 +329,7 @@ export default function Home() {
               animate={{ y: [0, 5, 0] }}
               transition={{ duration: 1.8, repeat: Infinity }}
               className="w-[1px] h-4"
-              style={{ backgroundColor: "rgba(255,255,255,0.25)" }}
+              style={{ backgroundColor: "rgba(255,255,255,0.3)" }}
             />
           </motion.div>
         )}

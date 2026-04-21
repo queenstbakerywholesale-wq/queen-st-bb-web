@@ -28,7 +28,7 @@ export default function OrderSuccess() {
           <div>
             <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-6"
               style={{ borderColor: "oklch(0.34 0.05 45 / 0.3)", borderTopColor: "transparent" }} />
-            <p className="text-sm font-light" style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45 / 0.6)" }}>
+            <p className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "oklch(0.34 0.05 45 / 0.7)" }}>
               Verifying your payment...
             </p>
           </div>
@@ -40,48 +40,48 @@ export default function OrderSuccess() {
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
-            <h1 className="text-3xl md:text-4xl font-light mb-4"
-              style={{ fontFamily: "var(--font-display)", color: "oklch(0.34 0.05 45)" }}>
+            <h1 className="text-3xl md:text-4xl mb-4"
+              style={{ fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "0.01em", color: "oklch(0.34 0.05 45)" }}>
               Thank You
             </h1>
             <div className="editorial-rule mx-auto mb-6" />
-            <p className="text-sm font-light mb-2"
-              style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45 / 0.7)" }}>
+            <p className="text-sm mb-2"
+              style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "oklch(0.34 0.05 45 / 0.7)" }}>
               Your order has been confirmed.
             </p>
             {data.orderNumber && (
-              <p className="text-xs font-light mb-6"
-                style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45 / 0.5)" }}>
+              <p className="text-xs mb-6"
+                style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "oklch(0.34 0.05 45 / 0.6)" }}>
                 Order number: <strong>{data.orderNumber}</strong>
               </p>
             )}
             {data.customerEmail && (
-              <p className="text-xs font-light mb-8"
-                style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45 / 0.5)" }}>
+              <p className="text-xs mb-8"
+                style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "oklch(0.34 0.05 45 / 0.6)" }}>
                 A confirmation will be sent to {data.customerEmail}
               </p>
             )}
             <Link href="/">
-              <span className="inline-block px-8 py-3 text-[11px] font-medium uppercase tracking-[0.2em] cursor-pointer transition-opacity hover:opacity-80"
-                style={{ fontFamily: "var(--font-body)", backgroundColor: "oklch(0.34 0.05 45)", color: "oklch(0.91 0.02 75)" }}>
+              <span className="inline-block px-8 py-3 text-[11px] uppercase cursor-pointer transition-opacity hover:opacity-80"
+                style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.04em", backgroundColor: "oklch(0.34 0.05 45)", color: "oklch(0.91 0.02 75)" }}>
                 Return Home
               </span>
             </Link>
           </>
         ) : (
           <>
-            <h1 className="text-3xl md:text-4xl font-light mb-4"
-              style={{ fontFamily: "var(--font-display)", color: "oklch(0.34 0.05 45)" }}>
+            <h1 className="text-3xl md:text-4xl mb-4"
+              style={{ fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "0.01em", color: "oklch(0.34 0.05 45)" }}>
               Order Received
             </h1>
             <div className="editorial-rule mx-auto mb-6" />
-            <p className="text-sm font-light mb-8"
-              style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45 / 0.7)" }}>
+            <p className="text-sm mb-8"
+              style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "oklch(0.34 0.05 45 / 0.7)" }}>
               We have received your order. You will receive a confirmation shortly.
             </p>
             <Link href="/">
-              <span className="inline-block px-8 py-3 text-[11px] font-medium uppercase tracking-[0.2em] cursor-pointer transition-opacity hover:opacity-80"
-                style={{ fontFamily: "var(--font-body)", backgroundColor: "oklch(0.34 0.05 45)", color: "oklch(0.91 0.02 75)" }}>
+              <span className="inline-block px-8 py-3 text-[11px] uppercase cursor-pointer transition-opacity hover:opacity-80"
+                style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.04em", backgroundColor: "oklch(0.34 0.05 45)", color: "oklch(0.91 0.02 75)" }}>
                 Return Home
               </span>
             </Link>

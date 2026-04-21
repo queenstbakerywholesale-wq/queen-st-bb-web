@@ -98,12 +98,12 @@ export default function AdminBranches() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-light tracking-[0.1em]" style={{ fontFamily: "var(--font-display)", color: "#5A3A2E" }}>
+        <h1 className="text-xl font-medium tracking-[0.04em]" style={{ fontFamily: "var(--font-display)", color: "#5A3A2E" }}>
           Branches
         </h1>
         <button
           onClick={() => { setEditingBranch(null); resetForm(); setShowForm(true); }}
-          className="flex items-center gap-2 px-4 py-2 text-[11px] uppercase tracking-[0.15em] rounded-md"
+          className="flex items-center gap-2 px-4 py-2 text-[11px] uppercase tracking-[0.04em] rounded-md"
           style={{ backgroundColor: "#5A3A2E", color: "#F5F0EB", fontFamily: "var(--font-body)" }}
         >
           <Plus className="w-3.5 h-3.5" /> Add Branch
@@ -179,10 +179,10 @@ export default function AdminBranches() {
             </div>
 
             <div className="flex gap-3 pt-2">
-              <button type="submit" className="px-5 py-2 text-[11px] uppercase tracking-[0.15em] rounded-md" style={{ backgroundColor: "#5A3A2E", color: "#F5F0EB", fontFamily: "var(--font-body)" }}>
+              <button type="submit" className="px-5 py-2 text-[11px] uppercase tracking-[0.04em] rounded-md" style={{ backgroundColor: "#5A3A2E", color: "#F5F0EB", fontFamily: "var(--font-body)" }}>
                 {editingBranch ? "Update" : "Create"}
               </button>
-              <button type="button" onClick={() => { setShowForm(false); setEditingBranch(null); }} className="px-5 py-2 text-[11px] uppercase tracking-[0.15em] rounded-md border" style={{ borderColor: "#5A3A2E30", color: "#5A3A2E", fontFamily: "var(--font-body)" }}>
+              <button type="button" onClick={() => { setShowForm(false); setEditingBranch(null); }} className="px-5 py-2 text-[11px] uppercase tracking-[0.04em] rounded-md border" style={{ borderColor: "#5A3A2E30", color: "#5A3A2E", fontFamily: "var(--font-body)" }}>
                 Cancel
               </button>
             </div>
@@ -207,7 +207,7 @@ export default function AdminBranches() {
                     <p className="text-xs" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E60" }}>{branch.address}</p>
                   </div>
                 </div>
-                <span className={`text-[9px] uppercase tracking-[0.1em] px-2 py-0.5 rounded-full`} style={{
+                <span className={`text-[9px] uppercase tracking-[0.04em] px-2 py-0.5 rounded-full`} style={{
                   fontFamily: "var(--font-body)",
                   backgroundColor: branch.isActive ? "#E8F5E9" : "#FFEBEE",
                   color: branch.isActive ? "#2E7D32" : "#C62828",
@@ -226,7 +226,7 @@ export default function AdminBranches() {
                 <span>{branch.pickupSlotDuration}min slots | Max {branch.maxBookingsPerSlot}/slot | {branch.minPrepNoticeHours}h notice</span>
               </div>
 
-              <button onClick={() => handleEdit(branch)} className="flex items-center gap-1 text-[11px] uppercase tracking-[0.1em] hover:opacity-70 transition-opacity" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>
+              <button onClick={() => handleEdit(branch)} className="flex items-center gap-1 text-[11px] uppercase tracking-[0.04em] hover:opacity-70 transition-opacity" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>
                 <Pencil className="w-3 h-3" /> Edit
               </button>
             </div>

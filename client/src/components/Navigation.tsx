@@ -1,8 +1,8 @@
 /**
- * Navigation — Minimal editorial header
- * Palette: brand-brown #5A3A2E, parchment, cocoa
- * Transparent overlay → solid parchment on scroll
- * Clean, understated, never bulky
+ * Navigation — Luxury editorial header
+ * Typography: Inter weight 500, tight letter-spacing
+ * Brand wordmark: Playfair Display weight 500
+ * Pure white text over images, no opacity reduction
  */
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
@@ -61,42 +61,44 @@ export default function Navigation({ variant = "solid" }: NavigationProps) {
         }}
       >
         <div className="flex items-center justify-between px-6 md:px-10 py-4 md:py-5">
-          {/* Brand Name */}
+          {/* Brand Wordmark — Playfair Display, weight 500 */}
           <Link href="/">
             <span
-              className="text-lg md:text-xl font-light transition-colors duration-500"
+              className="text-lg md:text-xl transition-colors duration-500"
               style={{
                 fontFamily: "var(--font-display)",
-                letterSpacing: "0.2em",
+                fontWeight: 500,
+                letterSpacing: "0.04em",
                 color: menuOpen
-                  ? "oklch(0.92 0.02 80)"
+                  ? "#FFFFFF"
                   : showSolid
                     ? "oklch(0.34 0.05 45)"
-                    : "rgba(255,255,255,0.95)",
+                    : "#FFFFFF",
               }}
             >
               QUEEN ST BB
             </span>
           </Link>
 
-          {/* Desktop Nav */}
+          {/* Desktop Nav — Inter, weight 500, sharp */}
           <nav className="hidden lg:flex items-center gap-7">
             {navLinks.map((link) => (
               <Link key={link.href} href={link.href}>
                 <span
-                  className="text-[10.5px] font-medium uppercase transition-all duration-400 hover:opacity-50"
+                  className="text-[11px] uppercase transition-all duration-400 hover:opacity-60"
                   style={{
-                    fontFamily: "var(--font-body)",
-                    letterSpacing: "0.18em",
+                    fontFamily: "var(--font-nav)",
+                    fontWeight: 500,
+                    letterSpacing: "0.04em",
                     color: menuOpen
-                      ? "oklch(0.92 0.02 80 / 0.7)"
+                      ? "rgba(255,255,255,0.7)"
                       : showSolid
                         ? location === link.href
                           ? "oklch(0.34 0.05 45)"
                           : "oklch(0.34 0.05 45 / 0.65)"
                         : location === link.href
-                          ? "rgba(255,255,255,1)"
-                          : "rgba(255,255,255,0.7)",
+                          ? "#FFFFFF"
+                          : "rgba(255,255,255,0.85)",
                   }}
                 >
                   {link.label}
@@ -116,10 +118,10 @@ export default function Navigation({ variant = "solid" }: NavigationProps) {
               className="block w-6 h-[1px] origin-center"
               style={{
                 backgroundColor: menuOpen
-                  ? "oklch(0.92 0.02 80)"
+                  ? "#FFFFFF"
                   : showSolid
                     ? "oklch(0.34 0.05 45)"
-                    : "rgba(255,255,255,0.9)",
+                    : "#FFFFFF",
               }}
               transition={{ duration: 0.3 }}
             />
@@ -129,7 +131,7 @@ export default function Navigation({ variant = "solid" }: NavigationProps) {
               style={{
                 backgroundColor: showSolid
                   ? "oklch(0.34 0.05 45)"
-                  : "rgba(255,255,255,0.9)",
+                  : "#FFFFFF",
               }}
               transition={{ duration: 0.2 }}
             />
@@ -138,10 +140,10 @@ export default function Navigation({ variant = "solid" }: NavigationProps) {
               className="block w-6 h-[1px] origin-center"
               style={{
                 backgroundColor: menuOpen
-                  ? "oklch(0.92 0.02 80)"
+                  ? "#FFFFFF"
                   : showSolid
                     ? "oklch(0.34 0.05 45)"
-                    : "rgba(255,255,255,0.9)",
+                    : "#FFFFFF",
               }}
               transition={{ duration: 0.3 }}
             />
@@ -171,14 +173,15 @@ export default function Navigation({ variant = "solid" }: NavigationProps) {
                 >
                   <Link href={link.href} onClick={() => setMenuOpen(false)}>
                     <span
-                      className="font-light text-2xl md:text-3xl transition-opacity duration-300 hover:opacity-40"
+                      className="text-2xl md:text-3xl transition-opacity duration-300 hover:opacity-40"
                       style={{
                         fontFamily: "var(--font-display)",
-                        letterSpacing: "0.12em",
+                        fontWeight: 500,
+                        letterSpacing: "0.01em",
                         color:
                           location === link.href
                             ? "oklch(0.82 0.04 72)"
-                            : "oklch(0.92 0.02 80)",
+                            : "#FFFFFF",
                       }}
                     >
                       {link.label}
@@ -192,7 +195,7 @@ export default function Navigation({ variant = "solid" }: NavigationProps) {
                 animate={{ scaleX: 1 }}
                 transition={{ delay: 0.5, duration: 0.6 }}
                 className="mt-4 h-[1px] w-12"
-                style={{ backgroundColor: "oklch(0.92 0.02 80 / 0.3)" }}
+                style={{ backgroundColor: "rgba(255,255,255,0.3)" }}
               />
             </nav>
           </motion.div>

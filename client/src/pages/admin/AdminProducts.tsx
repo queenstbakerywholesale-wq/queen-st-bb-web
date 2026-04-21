@@ -177,7 +177,7 @@ function ProductForm({
       <div className="flex gap-3 pt-2">
         <button
           type="submit"
-          className="px-5 py-2 text-[11px] uppercase tracking-[0.15em] rounded-md transition-all"
+          className="px-5 py-2 text-[11px] uppercase tracking-[0.04em] rounded-md transition-all"
           style={{ backgroundColor: "#5A3A2E", color: "#F5F0EB", fontFamily: "var(--font-body)" }}
         >
           {initial ? "Update" : "Create"}
@@ -185,7 +185,7 @@ function ProductForm({
         <button
           type="button"
           onClick={onCancel}
-          className="px-5 py-2 text-[11px] uppercase tracking-[0.15em] rounded-md border transition-all"
+          className="px-5 py-2 text-[11px] uppercase tracking-[0.04em] rounded-md border transition-all"
           style={{ borderColor: "#5A3A2E30", color: "#5A3A2E", fontFamily: "var(--font-body)" }}
         >
           Cancel
@@ -257,14 +257,14 @@ export default function AdminProducts() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1
-          className="text-xl font-light tracking-[0.1em]"
+          className="text-xl font-medium tracking-[0.04em]"
           style={{ fontFamily: "var(--font-display)", color: "#5A3A2E" }}
         >
           Products
         </h1>
         <button
           onClick={() => { setEditingProduct(null); setShowForm(true); }}
-          className="flex items-center gap-2 px-4 py-2 text-[11px] uppercase tracking-[0.15em] rounded-md transition-all"
+          className="flex items-center gap-2 px-4 py-2 text-[11px] uppercase tracking-[0.04em] rounded-md transition-all"
           style={{ backgroundColor: "#5A3A2E", color: "#F5F0EB", fontFamily: "var(--font-body)" }}
         >
           <Plus className="w-3.5 h-3.5" /> Add Product
@@ -308,12 +308,12 @@ export default function AdminProducts() {
           <table className="w-full">
             <thead>
               <tr style={{ backgroundColor: "#5A3A2E05", fontFamily: "var(--font-body)" }}>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Product</th>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Type</th>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Price</th>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Stock</th>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Status</th>
-                <th className="text-right text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Actions</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Product</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Type</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Price</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Stock</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Status</th>
+                <th className="text-right text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -338,7 +338,7 @@ export default function AdminProducts() {
                       </div>
                     </td>
                     <td className="px-5 py-3">
-                      <span className="text-[10px] uppercase tracking-[0.1em] px-2 py-1 rounded-full" style={{ fontFamily: "var(--font-body)", backgroundColor: "#5A3A2E10", color: "#5A3A2E" }}>
+                      <span className="text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-full" style={{ fontFamily: "var(--font-body)", backgroundColor: "#5A3A2E10", color: "#5A3A2E" }}>
                         {product.productType}
                       </span>
                     </td>
@@ -349,7 +349,7 @@ export default function AdminProducts() {
                       {product.stock}
                     </td>
                     <td className="px-5 py-3">
-                      <span className={`text-[10px] uppercase tracking-[0.1em] px-2 py-1 rounded-full`} style={{
+                      <span className={`text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-full`} style={{
                         fontFamily: "var(--font-body)",
                         backgroundColor: product.isActive ? "#E8F5E9" : "#FFEBEE",
                         color: product.isActive ? "#2E7D32" : "#C62828",

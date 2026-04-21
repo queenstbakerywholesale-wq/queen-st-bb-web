@@ -1,7 +1,8 @@
 /**
- * PageLayout — Editorial page wrapper for inner pages
- * Palette: brand-brown #5A3A2E, parchment, cocoa, linen
- * Immersive hero with matte overlay, warm tones throughout
+ * PageLayout — Luxury editorial page wrapper for inner pages
+ * Typography: Playfair Display 500 for hero headings, Inter 500 for subtitles
+ * Pure white text over images, no opacity reduction on headings
+ * Larger, more impactful hero type with tight letter-spacing
  */
 import { ReactNode, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -53,12 +54,12 @@ export default function PageLayout({
             style={{ filter: "saturate(0.85) contrast(0.95)" }}
           />
         </motion.div>
-        {/* Matte warm overlay */}
+        {/* Slightly darker overlay for strong text contrast */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(to top, oklch(0.15 0.03 45 / 0.55) 0%, oklch(0.2 0.02 45 / 0.2) 40%, transparent 70%)",
+              "linear-gradient(to top, oklch(0.12 0.03 45 / 0.65) 0%, oklch(0.18 0.02 45 / 0.3) 40%, oklch(0.2 0.01 45 / 0.1) 70%)",
           }}
         />
         {/* Subtle grain */}
@@ -72,21 +73,25 @@ export default function PageLayout({
             className="text-center"
           >
             <h1
-              className="text-3xl md:text-5xl lg:text-6xl font-light text-white mb-2"
+              className="text-4xl md:text-6xl lg:text-7xl mb-3"
               style={{
                 fontFamily: "var(--font-display)",
-                letterSpacing: "0.12em",
+                fontWeight: 500,
+                letterSpacing: "0.01em",
+                lineHeight: 1.1,
+                color: "#FFFFFF",
               }}
             >
               {heroTitle}
             </h1>
             {heroSubtitle && (
               <p
-                className="text-[10px] md:text-[12px] font-light uppercase"
+                className="text-xs md:text-sm uppercase"
                 style={{
                   fontFamily: "var(--font-body)",
-                  letterSpacing: "0.2em",
-                  color: "rgba(255,255,255,0.5)",
+                  fontWeight: 500,
+                  letterSpacing: "0.05em",
+                  color: "#FFFFFF",
                 }}
               >
                 {heroSubtitle}

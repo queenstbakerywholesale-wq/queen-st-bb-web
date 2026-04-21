@@ -53,7 +53,7 @@ export default function AdminShipping() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-light tracking-[0.1em]" style={{ fontFamily: "var(--font-display)", color: "#5A3A2E" }}>
+      <h1 className="text-xl font-medium tracking-[0.04em]" style={{ fontFamily: "var(--font-display)", color: "#5A3A2E" }}>
         Shipping & Tracking
       </h1>
 
@@ -151,7 +151,7 @@ export default function AdminShipping() {
               </div>
               <button
                 onClick={handleSaveShipping}
-                className="px-5 py-2 text-[11px] uppercase tracking-[0.15em] rounded-md transition-all"
+                className="px-5 py-2 text-[11px] uppercase tracking-[0.04em] rounded-md transition-all"
                 style={{ backgroundColor: "#5A3A2E", color: "#F5F0EB", fontFamily: "var(--font-body)" }}
               >
                 Save Shipping Info

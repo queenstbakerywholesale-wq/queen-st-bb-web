@@ -35,12 +35,12 @@ const inputStyle: React.CSSProperties = {
   borderBottom: "1px solid oklch(0.84 0.025 72)",
   color: "oklch(0.34 0.05 45)",
   fontSize: "14px",
-  fontWeight: 300,
+  fontWeight: 400,
 };
 
 const labelStyle: React.CSSProperties = {
   fontFamily: "var(--font-body)",
-  letterSpacing: "0.15em",
+  letterSpacing: "0.04em",
   color: "oklch(0.34 0.05 45 / 0.5)",
 };
 
@@ -127,26 +127,26 @@ export default function CakeBooking() {
             <motion.div {...fade}>
               <div className="editorial-rule mx-auto mb-8" />
               <h2
-                className="text-2xl md:text-3xl font-light mb-4"
-                style={{ fontFamily: "var(--font-display)", color: "oklch(0.34 0.05 45)" }}
+                className="text-2xl md:text-3xl mb-4"
+                style={{ fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "0.005em", lineHeight: 1.15, color: "oklch(0.34 0.05 45)" }}
               >
                 Thank You
               </h2>
               <p
-                className="text-sm font-light leading-[1.8] mb-6"
-                style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45 / 0.7)" }}
+                className="text-sm mb-6"
+                style={{ fontFamily: "var(--font-body)", fontWeight: 400, lineHeight: 1.65, color: "oklch(0.34 0.05 45 / 0.7)" }}
               >
                 Your booking reference is
               </p>
               <p
-                className="text-xl font-light tracking-[0.15em] mb-8"
-                style={{ fontFamily: "var(--font-display)", color: "oklch(0.34 0.05 45)" }}
+                className="text-xl mb-8"
+                style={{ fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "0.01em", color: "oklch(0.34 0.05 45)" }}
               >
                 {bookingNumber}
               </p>
               <p
-                className="text-sm font-light leading-[1.8]"
-                style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45 / 0.6)" }}
+                className="text-sm"
+                style={{ fontFamily: "var(--font-body)", fontWeight: 400, lineHeight: 1.65, color: "oklch(0.34 0.05 45 / 0.6)" }}
               >
                 We will confirm your booking within 24 hours via phone or email.
               </p>
@@ -155,10 +155,11 @@ export default function CakeBooking() {
                   setSubmitted(false);
                   setForm({ name: "", phone: "", email: "", branchId: 0, date: "", time: "", cakeType: "", request: "" });
                 }}
-                className="mt-10 text-[10px] font-medium uppercase py-3 px-10 transition-all duration-400 hover:opacity-70"
+                className="mt-10 text-[11px] uppercase py-3 px-10 transition-all duration-400 hover:opacity-70"
                 style={{
                   fontFamily: "var(--font-body)",
-                  letterSpacing: "0.2em",
+                  fontWeight: 500,
+                  letterSpacing: "0.04em",
                   border: "1px solid oklch(0.34 0.05 45 / 0.2)",
                   color: "oklch(0.34 0.05 45)",
                 }}
@@ -180,8 +181,8 @@ export default function CakeBooking() {
           <motion.div {...fade}>
             <div className="editorial-rule mx-auto mb-8" />
             <p
-              className="text-lg md:text-xl font-light leading-[1.8]"
-              style={{ fontFamily: "var(--font-display)", color: "oklch(0.34 0.05 45 / 0.8)" }}
+              className="text-base md:text-lg"
+              style={{ fontFamily: "var(--font-body)", fontWeight: 400, lineHeight: 1.7, color: "oklch(0.34 0.05 45 / 0.8)" }}
             >
               Each cake is crafted to order in our atelier. Select from our
               collection or describe your vision — we will bring it to life.
@@ -198,8 +199,8 @@ export default function CakeBooking() {
         <div className="max-w-xl mx-auto">
           <motion.div {...fade}>
             <span
-              className="text-[10px] font-medium uppercase block mb-6 text-center"
-              style={{ fontFamily: "var(--font-body)", letterSpacing: "0.2em", color: "oklch(0.45 0.06 45 / 0.5)" }}
+              className="text-[11px] uppercase block mb-6 text-center"
+              style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.04em", color: "oklch(0.45 0.06 45 / 0.5)" }}
             >
               Place a Booking
             </span>
@@ -208,7 +209,7 @@ export default function CakeBooking() {
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Name */}
               <div>
-                <label className="text-[10px] font-medium uppercase block mb-2" style={labelStyle}>
+                <label className="text-[11px] uppercase block mb-2" style={labelStyle}>
                   Name *
                 </label>
                 <input
@@ -224,7 +225,7 @@ export default function CakeBooking() {
 
               {/* Phone */}
               <div>
-                <label className="text-[10px] font-medium uppercase block mb-2" style={labelStyle}>
+                <label className="text-[11px] uppercase block mb-2" style={labelStyle}>
                   Phone *
                 </label>
                 <input
@@ -240,7 +241,7 @@ export default function CakeBooking() {
 
               {/* Email (optional) */}
               <div>
-                <label className="text-[10px] font-medium uppercase block mb-2" style={labelStyle}>
+                <label className="text-[11px] uppercase block mb-2" style={labelStyle}>
                   Email
                 </label>
                 <input
@@ -256,7 +257,7 @@ export default function CakeBooking() {
               {/* Branch */}
               {branchesData && branchesData.length > 0 && (
                 <div>
-                  <label className="text-[10px] font-medium uppercase block mb-2" style={labelStyle}>
+                  <label className="text-[11px] uppercase block mb-2" style={labelStyle}>
                     Pickup Location *
                   </label>
                   <select
@@ -280,7 +281,7 @@ export default function CakeBooking() {
 
               {/* Date */}
               <div>
-                <label className="text-[10px] font-medium uppercase block mb-2" style={labelStyle}>
+                <label className="text-[11px] uppercase block mb-2" style={labelStyle}>
                   Pickup Date *
                 </label>
                 <input
@@ -297,7 +298,7 @@ export default function CakeBooking() {
               {/* Time Slot */}
               {slotsData && slotsData.slots.length > 0 && (
                 <div>
-                  <label className="text-[10px] font-medium uppercase block mb-2" style={labelStyle}>
+                  <label className="text-[11px] uppercase block mb-2" style={labelStyle}>
                     Pickup Time *
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -340,7 +341,7 @@ export default function CakeBooking() {
 
               {/* Cake Type */}
               <div>
-                <label className="text-[10px] font-medium uppercase block mb-2" style={labelStyle}>
+                <label className="text-[11px] uppercase block mb-2" style={labelStyle}>
                   Cake Type *
                 </label>
                 <select
@@ -363,7 +364,7 @@ export default function CakeBooking() {
 
               {/* Custom Request */}
               <div>
-                <label className="text-[10px] font-medium uppercase block mb-2" style={labelStyle}>
+                <label className="text-[11px] uppercase block mb-2" style={labelStyle}>
                   Custom Request
                 </label>
                 <textarea
@@ -380,10 +381,11 @@ export default function CakeBooking() {
                 <button
                   type="submit"
                   disabled={submitMutation.isPending}
-                  className="text-[10px] font-medium uppercase py-3 px-10 transition-all duration-400 hover:opacity-70 disabled:opacity-40"
+                  className="text-[11px] uppercase py-3 px-10 transition-all duration-400 hover:opacity-70 disabled:opacity-40"
                   style={{
                     fontFamily: "var(--font-body)",
-                    letterSpacing: "0.2em",
+                    fontWeight: 500,
+                    letterSpacing: "0.04em",
                     backgroundColor: "oklch(0.34 0.05 45)",
                     color: "oklch(0.94 0.015 80)",
                   }}

@@ -1,7 +1,6 @@
 /**
  * Gelato — Editorial product page
- * Palette: brand-brown #5A3A2E, parchment, cocoa, linen
- * Warm, cinematic, Italian-inspired
+ * Typography: Playfair Display 500 headings, Inter 400 body
  */
 import { motion } from "framer-motion";
 import PageLayout from "@/components/PageLayout";
@@ -39,9 +38,11 @@ export default function Gelato() {
           <motion.div {...fade}>
             <div className="editorial-rule mx-auto mb-8" />
             <p
-              className="text-lg md:text-xl font-light leading-[1.8]"
+              className="text-base md:text-lg"
               style={{
-                fontFamily: "var(--font-display)",
+                fontFamily: "var(--font-body)",
+                fontWeight: 400,
+                lineHeight: 1.7,
                 color: "oklch(0.34 0.05 45 / 0.8)",
               }}
             >
@@ -59,10 +60,11 @@ export default function Gelato() {
         <div className="max-w-4xl mx-auto">
           <motion.div {...fade} className="text-center mb-12">
             <span
-              className="text-[10px] font-medium uppercase block"
+              className="text-[11px] uppercase block"
               style={{
                 fontFamily: "var(--font-body)",
-                letterSpacing: "0.2em",
+                fontWeight: 500,
+                letterSpacing: "0.04em",
                 color: "oklch(0.45 0.06 45 / 0.5)",
               }}
             >
@@ -85,9 +87,12 @@ export default function Gelato() {
               >
                 <div className="md:w-1/3">
                   <h3
-                    className="text-xl md:text-2xl font-light transition-opacity duration-300 group-hover:opacity-60"
+                    className="text-xl md:text-2xl transition-opacity duration-300 group-hover:opacity-60"
                     style={{
                       fontFamily: "var(--font-display)",
+                      fontWeight: 500,
+                      letterSpacing: "0.005em",
+                      lineHeight: 1.15,
                       color: "oklch(0.34 0.05 45)",
                     }}
                   >
@@ -96,10 +101,12 @@ export default function Gelato() {
                 </div>
                 <div className="md:w-1/3">
                   <p
-                    className="text-sm font-light"
+                    className="text-sm"
                     style={{
                       fontFamily: "var(--font-body)",
-                      color: "oklch(0.34 0.05 45 / 0.5)",
+                      fontWeight: 400,
+                      lineHeight: 1.6,
+                      color: "oklch(0.34 0.05 45 / 0.65)",
                     }}
                   >
                     {gelato.description}
@@ -107,10 +114,11 @@ export default function Gelato() {
                 </div>
                 <div className="md:w-1/3 md:text-right">
                   <span
-                    className="text-[10px] font-medium uppercase"
+                    className="text-[11px] uppercase"
                     style={{
                       fontFamily: "var(--font-body)",
-                      letterSpacing: "0.15em",
+                      fontWeight: 500,
+                      letterSpacing: "0.04em",
                       color: "oklch(0.62 0.02 60)",
                     }}
                   >
@@ -131,19 +139,22 @@ export default function Gelato() {
         <div className="max-w-2xl mx-auto text-center">
           <motion.div {...fade}>
             <span
-              className="text-[10px] font-medium uppercase block mb-8"
+              className="text-[11px] uppercase block mb-8"
               style={{
                 fontFamily: "var(--font-body)",
-                letterSpacing: "0.2em",
+                fontWeight: 500,
+                letterSpacing: "0.04em",
                 color: "oklch(0.45 0.06 45 / 0.5)",
               }}
             >
               The Process
             </span>
             <p
-              className="text-xl md:text-2xl font-light leading-[1.6]"
+              className="text-xl md:text-2xl"
               style={{
                 fontFamily: "var(--font-display)",
+                fontWeight: 500,
+                lineHeight: 1.5,
                 color: "oklch(0.34 0.05 45)",
               }}
             >

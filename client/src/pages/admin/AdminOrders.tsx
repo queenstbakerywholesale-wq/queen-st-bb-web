@@ -64,7 +64,7 @@ export default function AdminOrders() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-light tracking-[0.1em]" style={{ fontFamily: "var(--font-display)", color: "#5A3A2E" }}>
+      <h1 className="text-xl font-medium tracking-[0.04em]" style={{ fontFamily: "var(--font-display)", color: "#5A3A2E" }}>
         Orders
       </h1>
 
@@ -103,7 +103,7 @@ export default function AdminOrders() {
         <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4" onClick={() => setSelectedOrder(null)}>
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-light tracking-[0.1em]" style={{ fontFamily: "var(--font-display)", color: "#5A3A2E" }}>
+              <h2 className="text-lg font-medium tracking-[0.04em]" style={{ fontFamily: "var(--font-display)", color: "#5A3A2E" }}>
                 {orderDetail.data.orderNumber}
               </h2>
               <button onClick={() => setSelectedOrder(null)}><X className="w-5 h-5" style={{ color: "#5A3A2E" }} /></button>
@@ -111,13 +111,13 @@ export default function AdminOrders() {
 
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div>
-                <p className="text-[11px] uppercase tracking-[0.1em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Customer</p>
+                <p className="text-[11px] uppercase tracking-[0.04em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Customer</p>
                 <p className="text-sm" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>{orderDetail.data.customerName}</p>
                 {orderDetail.data.customerEmail && <p className="text-xs" style={{ color: "#5A3A2E60" }}>{orderDetail.data.customerEmail}</p>}
                 {orderDetail.data.customerPhone && <p className="text-xs" style={{ color: "#5A3A2E60" }}>{orderDetail.data.customerPhone}</p>}
               </div>
               <div>
-                <p className="text-[11px] uppercase tracking-[0.1em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Order Status</p>
+                <p className="text-[11px] uppercase tracking-[0.04em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Order Status</p>
                 <select
                   value={orderDetail.data.status}
                   onChange={(e) => updateStatus.mutate({ id: selectedOrder, status: e.target.value as any })}
@@ -130,7 +130,7 @@ export default function AdminOrders() {
                 </select>
               </div>
               <div>
-                <p className="text-[11px] uppercase tracking-[0.1em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Payment</p>
+                <p className="text-[11px] uppercase tracking-[0.04em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Payment</p>
                 <select
                   value={orderDetail.data.paymentStatus}
                   onChange={(e) => updatePayment.mutate({ id: selectedOrder, paymentStatus: e.target.value as any })}
@@ -143,8 +143,8 @@ export default function AdminOrders() {
                 </select>
               </div>
               <div>
-                <p className="text-[11px] uppercase tracking-[0.1em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Total</p>
-                <p className="text-lg font-light" style={{ fontFamily: "var(--font-display)", color: "#5A3A2E" }}>
+                <p className="text-[11px] uppercase tracking-[0.04em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Total</p>
+                <p className="text-lg font-medium" style={{ fontFamily: "var(--font-display)", color: "#5A3A2E" }}>
                   ${Number(orderDetail.data.total).toFixed(2)}
                 </p>
               </div>
@@ -153,7 +153,7 @@ export default function AdminOrders() {
             {/* Items */}
             {orderDetail.data.items && orderDetail.data.items.length > 0 && (
               <div className="mb-6">
-                <p className="text-[11px] uppercase tracking-[0.1em] mb-2" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Items</p>
+                <p className="text-[11px] uppercase tracking-[0.04em] mb-2" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Items</p>
                 <div className="space-y-2">
                   {orderDetail.data.items.map((item: any) => (
                     <div key={item.id} className="flex justify-between text-sm p-2 rounded" style={{ backgroundColor: "#5A3A2E05", fontFamily: "var(--font-body)", color: "#5A3A2E" }}>
@@ -167,7 +167,7 @@ export default function AdminOrders() {
 
             {/* Admin Notes */}
             <div>
-              <p className="text-[11px] uppercase tracking-[0.1em] mb-2" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Admin Notes</p>
+              <p className="text-[11px] uppercase tracking-[0.04em] mb-2" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Admin Notes</p>
               <textarea
                 defaultValue={orderDetail.data.adminNotes ?? ""}
                 onBlur={(e) => updateNotes.mutate({ id: selectedOrder, adminNotes: e.target.value })}
@@ -187,13 +187,13 @@ export default function AdminOrders() {
           <table className="w-full">
             <thead>
               <tr style={{ backgroundColor: "#5A3A2E05", fontFamily: "var(--font-body)" }}>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Order #</th>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Customer</th>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Total</th>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Status</th>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Payment</th>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Date</th>
-                <th className="text-right text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Actions</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Order #</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Customer</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Total</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Status</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Payment</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Date</th>
+                <th className="text-right text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -213,12 +213,12 @@ export default function AdminOrders() {
                       <td className="px-5 py-3 text-sm" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>{order.customerName}</td>
                       <td className="px-5 py-3 text-sm" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>${Number(order.total).toFixed(2)}</td>
                       <td className="px-5 py-3">
-                        <span className="text-[10px] uppercase tracking-[0.1em] px-2 py-1 rounded-full" style={{ fontFamily: "var(--font-body)", backgroundColor: sc.bg, color: sc.text }}>
+                        <span className="text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-full" style={{ fontFamily: "var(--font-body)", backgroundColor: sc.bg, color: sc.text }}>
                           {order.status}
                         </span>
                       </td>
                       <td className="px-5 py-3">
-                        <span className="text-[10px] uppercase tracking-[0.1em] px-2 py-1 rounded-full" style={{ fontFamily: "var(--font-body)", backgroundColor: pc.bg, color: pc.text }}>
+                        <span className="text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-full" style={{ fontFamily: "var(--font-body)", backgroundColor: pc.bg, color: pc.text }}>
                           {order.paymentStatus}
                         </span>
                       </td>

@@ -80,7 +80,7 @@ export default function Wholesale() {
     borderBottom: "1px solid oklch(0.84 0.025 72)",
     color: "oklch(0.34 0.05 45)",
     fontSize: "14px",
-    fontWeight: 300,
+    fontWeight: 400,
   };
 
   return (
@@ -94,10 +94,11 @@ export default function Wholesale() {
         <div className="max-w-3xl mx-auto">
           <motion.div {...fade}>
             <span
-              className="text-[10px] font-medium uppercase block mb-6 text-center"
+              className="text-[11px] uppercase block mb-6 text-center"
               style={{
                 fontFamily: "var(--font-body)",
-                letterSpacing: "0.2em",
+                fontWeight: 500,
+                letterSpacing: "0.04em",
                 color: "oklch(0.45 0.06 45 / 0.5)",
               }}
             >
@@ -105,9 +106,11 @@ export default function Wholesale() {
             </span>
             <div className="editorial-rule mx-auto mb-10" />
             <p
-              className="text-lg md:text-xl font-light leading-[1.8] text-center"
+              className="text-base md:text-lg text-center"
               style={{
-                fontFamily: "var(--font-display)",
+                fontFamily: "var(--font-body)",
+                fontWeight: 400,
+                lineHeight: 1.7,
                 color: "oklch(0.34 0.05 45 / 0.8)",
               }}
             >
@@ -117,10 +120,12 @@ export default function Wholesale() {
               meaningful.
             </p>
             <p
-              className="text-base font-light leading-[1.8] text-center mt-6"
+              className="text-base text-center mt-6"
               style={{
                 fontFamily: "var(--font-body)",
-                color: "oklch(0.34 0.05 45 / 0.55)",
+                fontWeight: 400,
+                lineHeight: 1.65,
+                color: "oklch(0.34 0.05 45 / 0.6)",
               }}
             >
               Our partners share our commitment to quality, craft, and the
@@ -138,10 +143,11 @@ export default function Wholesale() {
         <div className="max-w-5xl mx-auto">
           <motion.div {...fade} className="text-center mb-14">
             <span
-              className="text-[10px] font-medium uppercase block mb-6"
+              className="text-[11px] uppercase block mb-6"
               style={{
                 fontFamily: "var(--font-body)",
-                letterSpacing: "0.2em",
+                fontWeight: 500,
+                letterSpacing: "0.04em",
                 color: "oklch(0.45 0.06 45 / 0.5)",
               }}
             >
@@ -164,9 +170,12 @@ export default function Wholesale() {
                 }}
               >
                 <h3
-                  className="text-2xl md:text-3xl font-light mb-6"
+                  className="text-2xl md:text-3xl mb-6"
                   style={{
                     fontFamily: "var(--font-display)",
+                    fontWeight: 500,
+                    letterSpacing: "0.005em",
+                    lineHeight: 1.15,
                     color: "oklch(0.34 0.05 45)",
                   }}
                 >
@@ -180,10 +189,12 @@ export default function Wholesale() {
                         style={{ backgroundColor: "oklch(0.45 0.06 45 / 0.4)" }}
                       />
                       <span
-                        className="text-sm font-light leading-relaxed"
+                        className="text-sm"
                         style={{
                           fontFamily: "var(--font-body)",
-                          color: "oklch(0.34 0.05 45 / 0.6)",
+                          fontWeight: 400,
+                          lineHeight: 1.6,
+                          color: "oklch(0.34 0.05 45 / 0.65)",
                         }}
                       >
                         {point}
@@ -202,10 +213,11 @@ export default function Wholesale() {
         <div className="max-w-xl mx-auto">
           <motion.div {...fade}>
             <span
-              className="text-[10px] font-medium uppercase block mb-6 text-center"
+              className="text-[11px] uppercase block mb-6 text-center"
               style={{
                 fontFamily: "var(--font-body)",
-                letterSpacing: "0.2em",
+                fontWeight: 500,
+                letterSpacing: "0.04em",
                 color: "oklch(0.45 0.06 45 / 0.5)",
               }}
             >
@@ -216,10 +228,11 @@ export default function Wholesale() {
             <form onSubmit={handleSubmit} className="space-y-8">
               <div>
                 <label
-                  className="text-[10px] font-medium uppercase block mb-2"
+                  className="text-[11px] uppercase block mb-2"
                   style={{
                     fontFamily: "var(--font-body)",
-                    letterSpacing: "0.15em",
+                    fontWeight: 500,
+                    letterSpacing: "0.04em",
                     color: "oklch(0.34 0.05 45 / 0.5)",
                   }}
                 >
@@ -238,10 +251,11 @@ export default function Wholesale() {
 
               <div>
                 <label
-                  className="text-[10px] font-medium uppercase block mb-2"
+                  className="text-[11px] uppercase block mb-2"
                   style={{
                     fontFamily: "var(--font-body)",
-                    letterSpacing: "0.15em",
+                    fontWeight: 500,
+                    letterSpacing: "0.04em",
                     color: "oklch(0.34 0.05 45 / 0.5)",
                   }}
                 >
@@ -260,10 +274,11 @@ export default function Wholesale() {
 
               <div>
                 <label
-                  className="text-[10px] font-medium uppercase block mb-2"
+                  className="text-[11px] uppercase block mb-2"
                   style={{
                     fontFamily: "var(--font-body)",
-                    letterSpacing: "0.15em",
+                    fontWeight: 500,
+                    letterSpacing: "0.04em",
                     color: "oklch(0.34 0.05 45 / 0.5)",
                   }}
                 >
@@ -282,10 +297,11 @@ export default function Wholesale() {
 
               <div>
                 <label
-                  className="text-[10px] font-medium uppercase block mb-2"
+                  className="text-[11px] uppercase block mb-2"
                   style={{
                     fontFamily: "var(--font-body)",
-                    letterSpacing: "0.15em",
+                    fontWeight: 500,
+                    letterSpacing: "0.04em",
                     color: "oklch(0.34 0.05 45 / 0.5)",
                   }}
                 >
@@ -309,10 +325,11 @@ export default function Wholesale() {
 
               <div>
                 <label
-                  className="text-[10px] font-medium uppercase block mb-2"
+                  className="text-[11px] uppercase block mb-2"
                   style={{
                     fontFamily: "var(--font-body)",
-                    letterSpacing: "0.15em",
+                    fontWeight: 500,
+                    letterSpacing: "0.04em",
                     color: "oklch(0.34 0.05 45 / 0.5)",
                   }}
                 >
@@ -331,10 +348,11 @@ export default function Wholesale() {
               <div className="pt-4">
                 <button
                   type="submit"
-                  className="text-[10px] font-medium uppercase py-3 px-10 transition-all duration-400 hover:opacity-70"
+                  className="text-[11px] uppercase py-3 px-10 transition-all duration-400 hover:opacity-70"
                   style={{
                     fontFamily: "var(--font-body)",
-                    letterSpacing: "0.2em",
+                    fontWeight: 500,
+                    letterSpacing: "0.04em",
                     backgroundColor: "oklch(0.34 0.05 45)",
                     color: "oklch(0.94 0.015 80)",
                   }}

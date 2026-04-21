@@ -144,7 +144,7 @@ export default function AdminPageImages() {
       {/* Header */}
       <div>
         <h1
-          className="text-2xl font-light"
+          className="text-2xl font-medium"
           style={{
             fontFamily: "var(--font-display)",
             color: "oklch(0.34 0.05 45)",
@@ -153,7 +153,7 @@ export default function AdminPageImages() {
           Page Images
         </h1>
         <p
-          className="mt-1 text-sm font-light"
+          className="mt-1 text-sm font-medium"
           style={{
             fontFamily: "var(--font-body)",
             color: "oklch(0.34 0.05 45 / 0.5)",

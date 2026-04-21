@@ -52,7 +52,7 @@ export default function AdminLogin() {
         style={{ backgroundColor: "#F5F0EB" }}
       >
         <div
-          className="text-sm tracking-[0.15em] uppercase animate-pulse"
+          className="text-sm tracking-[0.04em] uppercase animate-pulse"
           style={{
             fontFamily: "var(--font-body, 'Jost', sans-serif)",
             color: "#5A3A2E80",
@@ -72,7 +72,7 @@ export default function AdminLogin() {
       <div className="w-full max-w-sm px-6">
         <div className="text-center mb-12">
           <h1
-            className="text-2xl font-light tracking-[0.2em] mb-2"
+            className="text-2xl font-medium tracking-[0.04em] mb-2"
             style={{
               fontFamily: "var(--font-display, 'Cormorant Garamond', serif)",
               color: "#5A3A2E",
@@ -125,7 +125,7 @@ export default function AdminLogin() {
           <button
             type="submit"
             disabled={isLoggingIn || !password}
-            className="w-full py-3 text-[11px] uppercase tracking-[0.2em] font-medium transition-all duration-300 disabled:opacity-40"
+            className="w-full py-3 text-[11px] uppercase tracking-[0.04em] font-medium transition-all duration-300 disabled:opacity-40"
             style={{
               fontFamily: "var(--font-body, 'Jost', sans-serif)",
               backgroundColor: "#5A3A2E",

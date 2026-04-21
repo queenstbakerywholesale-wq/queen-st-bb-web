@@ -1,7 +1,6 @@
 /**
  * Tiramisu — Editorial product page
- * Palette: brand-brown #5A3A2E, parchment, cocoa, linen
- * Cinematic imagery, editorial text blocks, warm matte tones
+ * Typography: Playfair Display 500 headings, Inter 400 body
  */
 import { motion } from "framer-motion";
 import PageLayout from "@/components/PageLayout";
@@ -55,9 +54,11 @@ export default function Tiramisu() {
           <motion.div {...fade}>
             <div className="editorial-rule mx-auto mb-8" />
             <p
-              className="text-lg md:text-xl font-light leading-[1.8]"
+              className="text-base md:text-lg"
               style={{
-                fontFamily: "var(--font-display)",
+                fontFamily: "var(--font-body)",
+                fontWeight: 400,
+                lineHeight: 1.7,
                 color: "oklch(0.34 0.05 45 / 0.8)",
               }}
             >
@@ -75,10 +76,11 @@ export default function Tiramisu() {
         <div className="max-w-5xl mx-auto">
           <motion.div {...fade} className="text-center mb-12">
             <span
-              className="text-[10px] font-medium uppercase block"
+              className="text-[11px] uppercase block"
               style={{
                 fontFamily: "var(--font-body)",
-                letterSpacing: "0.2em",
+                fontWeight: 500,
+                letterSpacing: "0.04em",
                 color: "oklch(0.45 0.06 45 / 0.5)",
               }}
             >
@@ -107,29 +109,35 @@ export default function Tiramisu() {
                 }
               >
                 <span
-                  className="text-[10px] font-medium uppercase block mb-4"
+                  className="text-[11px] uppercase block mb-4"
                   style={{
                     fontFamily: "var(--font-body)",
-                    letterSpacing: "0.18em",
-                    color: "oklch(0.45 0.06 45 / 0.45)",
+                    fontWeight: 500,
+                    letterSpacing: "0.04em",
+                    color: "oklch(0.45 0.06 45 / 0.5)",
                   }}
                 >
                   {flavour.note}
                 </span>
                 <h3
-                  className="text-2xl md:text-3xl font-light mb-3 transition-opacity duration-300 group-hover:opacity-70"
+                  className="text-2xl md:text-3xl mb-3 transition-opacity duration-300 group-hover:opacity-70"
                   style={{
                     fontFamily: "var(--font-display)",
+                    fontWeight: 500,
+                    letterSpacing: "0.005em",
+                    lineHeight: 1.15,
                     color: "oklch(0.34 0.05 45)",
                   }}
                 >
                   {flavour.name}
                 </h3>
                 <p
-                  className="text-sm font-light leading-relaxed"
+                  className="text-sm"
                   style={{
                     fontFamily: "var(--font-body)",
-                    color: "oklch(0.34 0.05 45 / 0.55)",
+                    fontWeight: 400,
+                    lineHeight: 1.6,
+                    color: "oklch(0.34 0.05 45 / 0.65)",
                   }}
                 >
                   {flavour.description}
@@ -148,9 +156,11 @@ export default function Tiramisu() {
         <div className="max-w-2xl mx-auto text-center">
           <motion.div {...fade}>
             <p
-              className="text-xl md:text-2xl lg:text-3xl font-light italic leading-[1.6]"
+              className="text-xl md:text-2xl lg:text-3xl italic"
               style={{
                 fontFamily: "var(--font-display)",
+                fontWeight: 500,
+                lineHeight: 1.5,
                 color: "oklch(0.34 0.05 45)",
               }}
             >

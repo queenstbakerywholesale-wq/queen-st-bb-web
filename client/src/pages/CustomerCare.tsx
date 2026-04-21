@@ -63,9 +63,11 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
         className="w-full py-6 md:py-7 flex items-baseline justify-between text-left group"
       >
         <h3
-          className="text-base md:text-lg font-light pr-8 transition-opacity duration-300 group-hover:opacity-60"
+          className="text-base md:text-lg pr-8 transition-opacity duration-300 group-hover:opacity-60"
           style={{
             fontFamily: "var(--font-display)",
+            fontWeight: 500,
+            letterSpacing: "0.005em",
             color: "oklch(0.34 0.05 45)",
           }}
         >
@@ -93,10 +95,12 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
             className="overflow-hidden"
           >
             <p
-              className="pb-6 md:pb-7 text-sm font-light leading-[1.8] max-w-2xl"
+              className="pb-6 md:pb-7 text-sm max-w-2xl"
               style={{
                 fontFamily: "var(--font-body)",
-                color: "oklch(0.34 0.05 45 / 0.55)",
+                fontWeight: 400,
+                lineHeight: 1.65,
+                color: "oklch(0.34 0.05 45 / 0.6)",
               }}
             >
               {answer}
@@ -143,7 +147,7 @@ export default function CustomerCare() {
     borderBottom: "1px solid oklch(0.84 0.025 72)",
     color: "oklch(0.34 0.05 45)",
     fontSize: "14px",
-    fontWeight: 300,
+    fontWeight: 400,
   };
 
   return (
@@ -158,9 +162,11 @@ export default function CustomerCare() {
           <motion.div {...fade}>
             <div className="editorial-rule mx-auto mb-8" />
             <p
-              className="text-lg md:text-xl font-light leading-[1.8]"
+              className="text-base md:text-lg"
               style={{
-                fontFamily: "var(--font-display)",
+                fontFamily: "var(--font-body)",
+                fontWeight: 400,
+                lineHeight: 1.7,
                 color: "oklch(0.34 0.05 45 / 0.8)",
               }}
             >
@@ -180,10 +186,11 @@ export default function CustomerCare() {
         <div className="max-w-3xl mx-auto">
           <motion.div {...fade} className="mb-10 text-center">
             <span
-              className="text-[10px] font-medium uppercase block"
+              className="text-[11px] uppercase block"
               style={{
                 fontFamily: "var(--font-body)",
-                letterSpacing: "0.2em",
+                fontWeight: 500,
+                letterSpacing: "0.04em",
                 color: "oklch(0.45 0.06 45 / 0.5)",
               }}
             >
@@ -212,10 +219,11 @@ export default function CustomerCare() {
         <div className="max-w-xl mx-auto">
           <motion.div {...fade}>
             <span
-              className="text-[10px] font-medium uppercase block mb-6 text-center"
+              className="text-[11px] uppercase block mb-6 text-center"
               style={{
                 fontFamily: "var(--font-body)",
-                letterSpacing: "0.2em",
+                fontWeight: 500,
+                letterSpacing: "0.04em",
                 color: "oklch(0.45 0.06 45 / 0.5)",
               }}
             >
@@ -226,10 +234,11 @@ export default function CustomerCare() {
             <form onSubmit={handleSubmit} className="space-y-8">
               <div>
                 <label
-                  className="text-[10px] font-medium uppercase block mb-2"
+                  className="text-[11px] uppercase block mb-2"
                   style={{
                     fontFamily: "var(--font-body)",
-                    letterSpacing: "0.15em",
+                    fontWeight: 500,
+                    letterSpacing: "0.04em",
                     color: "oklch(0.34 0.05 45 / 0.5)",
                   }}
                 >
@@ -248,10 +257,11 @@ export default function CustomerCare() {
 
               <div>
                 <label
-                  className="text-[10px] font-medium uppercase block mb-2"
+                  className="text-[11px] uppercase block mb-2"
                   style={{
                     fontFamily: "var(--font-body)",
-                    letterSpacing: "0.15em",
+                    fontWeight: 500,
+                    letterSpacing: "0.04em",
                     color: "oklch(0.34 0.05 45 / 0.5)",
                   }}
                 >
@@ -270,10 +280,11 @@ export default function CustomerCare() {
 
               <div>
                 <label
-                  className="text-[10px] font-medium uppercase block mb-2"
+                  className="text-[11px] uppercase block mb-2"
                   style={{
                     fontFamily: "var(--font-body)",
-                    letterSpacing: "0.15em",
+                    fontWeight: 500,
+                    letterSpacing: "0.04em",
                     color: "oklch(0.34 0.05 45 / 0.5)",
                   }}
                 >
@@ -293,10 +304,11 @@ export default function CustomerCare() {
               <div className="pt-4">
                 <button
                   type="submit"
-                  className="text-[10px] font-medium uppercase py-3 px-10 transition-all duration-400 hover:opacity-70"
+                  className="text-[11px] uppercase py-3 px-10 transition-all duration-400 hover:opacity-70"
                   style={{
                     fontFamily: "var(--font-body)",
-                    letterSpacing: "0.2em",
+                    fontWeight: 500,
+                    letterSpacing: "0.04em",
                     backgroundColor: "oklch(0.34 0.05 45)",
                     color: "oklch(0.94 0.015 80)",
                   }}
@@ -319,10 +331,11 @@ export default function CustomerCare() {
             <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
               <div>
                 <span
-                  className="text-[10px] font-medium uppercase block mb-2"
+                  className="text-[11px] uppercase block mb-2"
                   style={{
                     fontFamily: "var(--font-body)",
-                    letterSpacing: "0.15em",
+                    fontWeight: 500,
+                    letterSpacing: "0.04em",
                     color: "oklch(0.45 0.06 45 / 0.5)",
                   }}
                 >
@@ -330,7 +343,7 @@ export default function CustomerCare() {
                 </span>
                 <a
                   href="mailto:hello@queenstbb.com"
-                  className="text-sm font-light transition-opacity duration-300 hover:opacity-60"
+                  className="text-sm transition-opacity duration-300 hover:opacity-60"
                   style={{
                     fontFamily: "var(--font-body)",
                     color: "oklch(0.34 0.05 45)",
@@ -341,17 +354,18 @@ export default function CustomerCare() {
               </div>
               <div>
                 <span
-                  className="text-[10px] font-medium uppercase block mb-2"
+                  className="text-[11px] uppercase block mb-2"
                   style={{
                     fontFamily: "var(--font-body)",
-                    letterSpacing: "0.15em",
+                    fontWeight: 500,
+                    letterSpacing: "0.04em",
                     color: "oklch(0.45 0.06 45 / 0.5)",
                   }}
                 >
                   Location
                 </span>
                 <p
-                  className="text-sm font-light"
+                  className="text-sm"
                   style={{
                     fontFamily: "var(--font-body)",
                     color: "oklch(0.34 0.05 45)",
@@ -362,17 +376,18 @@ export default function CustomerCare() {
               </div>
               <div>
                 <span
-                  className="text-[10px] font-medium uppercase block mb-2"
+                  className="text-[11px] uppercase block mb-2"
                   style={{
                     fontFamily: "var(--font-body)",
-                    letterSpacing: "0.15em",
+                    fontWeight: 500,
+                    letterSpacing: "0.04em",
                     color: "oklch(0.45 0.06 45 / 0.5)",
                   }}
                 >
                   Hours
                 </span>
                 <p
-                  className="text-sm font-light"
+                  className="text-sm"
                   style={{
                     fontFamily: "var(--font-body)",
                     color: "oklch(0.34 0.05 45)",

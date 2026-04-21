@@ -1,7 +1,6 @@
 /**
  * Space / Experience — Editorial magazine-style layout
- * Palette: brand-brown, parchment, cocoa, linen
- * Full-width imagery, immersive and emotional mood
+ * Typography: Playfair Display 500 headings, Inter 400 body
  */
 import { motion } from "framer-motion";
 import PageLayout from "@/components/PageLayout";
@@ -51,9 +50,11 @@ export default function Space() {
           <motion.div {...fade}>
             <div className="editorial-rule mx-auto mb-8" />
             <p
-              className="text-lg md:text-xl font-light leading-[1.8]"
+              className="text-base md:text-lg"
               style={{
-                fontFamily: "var(--font-display)",
+                fontFamily: "var(--font-body)",
+                fontWeight: 400,
+                lineHeight: 1.7,
                 color: "oklch(0.34 0.05 45 / 0.8)",
               }}
             >
@@ -87,15 +88,16 @@ export default function Space() {
         <div className="absolute inset-0 film-grain" />
       </section>
 
-      {/* Experience Sections — magazine editorial layout */}
+      {/* Experience Sections */}
       <section className="py-20 md:py-28 px-6 md:px-10">
         <div className="max-w-5xl mx-auto">
           <motion.div {...fade} className="mb-16 text-center">
             <span
-              className="text-[10px] font-medium uppercase block mb-6"
+              className="text-[11px] uppercase block mb-6"
               style={{
                 fontFamily: "var(--font-body)",
-                letterSpacing: "0.2em",
+                fontWeight: 500,
+                letterSpacing: "0.04em",
                 color: "oklch(0.45 0.06 45 / 0.6)",
               }}
             >
@@ -121,29 +123,34 @@ export default function Space() {
               <div className="flex flex-col md:flex-row gap-6 md:gap-16">
                 <div className="md:w-1/3">
                   <span
-                    className="text-[10px] font-medium uppercase block mb-3"
+                    className="text-[11px] uppercase block mb-3"
                     style={{
                       fontFamily: "var(--font-body)",
-                      letterSpacing: "0.18em",
+                      fontWeight: 500,
+                      letterSpacing: "0.04em",
                       color: "oklch(0.45 0.06 45 / 0.5)",
                     }}
                   >
                     0{i + 1}
                   </span>
                   <h3
-                    className="text-2xl md:text-3xl font-light mb-2"
+                    className="text-2xl md:text-3xl mb-2"
                     style={{
                       fontFamily: "var(--font-display)",
+                      fontWeight: 500,
+                      letterSpacing: "0.005em",
+                      lineHeight: 1.15,
                       color: "oklch(0.34 0.05 45)",
                     }}
                   >
                     {exp.title}
                   </h3>
                   <span
-                    className="text-[10px] font-light uppercase"
+                    className="text-[11px] uppercase"
                     style={{
                       fontFamily: "var(--font-body)",
-                      letterSpacing: "0.15em",
+                      fontWeight: 500,
+                      letterSpacing: "0.04em",
                       color: "oklch(0.62 0.02 60)",
                     }}
                   >
@@ -152,10 +159,12 @@ export default function Space() {
                 </div>
                 <div className="md:w-2/3">
                   <p
-                    className="text-base font-light leading-[1.8]"
+                    className="text-base"
                     style={{
                       fontFamily: "var(--font-body)",
-                      color: "oklch(0.34 0.05 45 / 0.65)",
+                      fontWeight: 400,
+                      lineHeight: 1.65,
+                      color: "oklch(0.34 0.05 45 / 0.7)",
                     }}
                   >
                     {exp.description}
@@ -175,30 +184,35 @@ export default function Space() {
         <div className="max-w-2xl mx-auto text-center">
           <motion.div {...fade}>
             <span
-              className="text-[10px] font-medium uppercase block mb-8"
+              className="text-[11px] uppercase block mb-8"
               style={{
                 fontFamily: "var(--font-body)",
-                letterSpacing: "0.2em",
+                fontWeight: 500,
+                letterSpacing: "0.04em",
                 color: "oklch(0.45 0.06 45 / 0.5)",
               }}
             >
               Visit Us
             </span>
             <p
-              className="text-2xl md:text-3xl font-light mb-4"
+              className="text-2xl md:text-3xl mb-4"
               style={{
                 fontFamily: "var(--font-display)",
+                fontWeight: 500,
+                letterSpacing: "0.005em",
+                lineHeight: 1.2,
                 color: "oklch(0.34 0.05 45)",
-                lineHeight: "1.4",
               }}
             >
               Queen Street, Brisbane
             </p>
             <p
-              className="text-sm font-light leading-relaxed"
+              className="text-sm"
               style={{
                 fontFamily: "var(--font-body)",
-                color: "oklch(0.34 0.05 45 / 0.5)",
+                fontWeight: 400,
+                lineHeight: 1.6,
+                color: "oklch(0.34 0.05 45 / 0.6)",
               }}
             >
               Open daily, 8:00 AM — 10:00 PM

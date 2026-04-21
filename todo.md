@@ -49,3 +49,39 @@
 - [x] Create reusable ImageEditor component with crop/rotate controls
 - [x] Integrate ImageEditor into AdminPageImages upload flow
 - [x] Verify image editor works in browser
+
+## Watermark Feature
+
+- [x] Add server-side automatic watermark to all uploaded images
+- [x] Watermark should use brand text "QUEEN ST BB" in subtle overlay
+- [x] Watermark applied during upload before saving to S3
+- [x] Admin toggle option for watermark on/off (optional)
+
+## Typography Refinement (Miu Miu-inspired)
+
+- [x] Switch heading font to Playfair Display (weight 500)
+- [x] Switch body font to Inter (weight 400-500)
+- [x] Update index.css global tokens: font families, sizes, spacing
+- [x] Update Google Fonts CDN link in index.html
+- [x] Hero headings: 56-72px, tight letter-spacing (0-0.01em), line-height 1.1-1.2
+- [x] Section titles: 28-36px with same tight spacing
+- [x] Body text: 14-16px, line-height 1.5-1.7
+- [x] Navigation: Inter/Helvetica weight 500, letter-spacing 0.05em max
+- [x] Text over images: pure white #FFFFFF, no opacity reduction
+- [x] Fix all ultra-light font weights across all pages
+- [x] Update Home page typography
+- [x] Update Tiramisu page typography
+- [x] Update Gelato page typography
+- [x] Update Space page typography
+- [x] Update Objects page typography
+- [x] Update Wholesale page typography
+- [x] Update Cake Booking page typography
+- [x] Update About page typography
+- [x] Update Customer Care page typography
+- [x] Update navigation/header typography
+- [x] Update footer typography
+- [x] Update NotFound page typography
+- [x] Update Objects page cart/checkout typography
+- [x] Update all admin pages typography (AdminLogin, AdminLayout, AdminDashboard, AdminProducts, AdminOrders, AdminShipping, AdminBookings, AdminCustomers, AdminBranches, AdminEnquiries, AdminPageImages)
+- [x] Remove all font-light usage across entire codebase
+- [x] Reduce excessive letter-spacing (tracking) across all pages

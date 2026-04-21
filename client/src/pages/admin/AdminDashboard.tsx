@@ -40,7 +40,7 @@ function StatCard({
         </div>
       </div>
       <p
-        className="text-2xl font-light mb-1"
+        className="text-2xl font-medium mb-1"
         style={{
           fontFamily: "var(--font-display, 'Cormorant Garamond', serif)",
           color: "#5A3A2E",
@@ -49,7 +49,7 @@ function StatCard({
         {value}
       </p>
       <p
-        className="text-[11px] uppercase tracking-[0.1em]"
+        className="text-[11px] uppercase tracking-[0.04em]"
         style={{
           fontFamily: "var(--font-body, 'Jost', sans-serif)",
           color: "#5A3A2E80",
@@ -79,7 +79,7 @@ export default function AdminDashboard() {
     return (
       <div className="space-y-6">
         <h1
-          className="text-xl font-light tracking-[0.1em]"
+          className="text-xl font-medium tracking-[0.04em]"
           style={{
             fontFamily: "var(--font-display, 'Cormorant Garamond', serif)",
             color: "#5A3A2E",
@@ -103,7 +103,7 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       <h1
-        className="text-xl font-light tracking-[0.1em]"
+        className="text-xl font-medium tracking-[0.04em]"
         style={{
           fontFamily: "var(--font-display, 'Cormorant Garamond', serif)",
           color: "#5A3A2E",
@@ -237,16 +237,16 @@ export default function AdminDashboard() {
                   fontFamily: "var(--font-body, 'Jost', sans-serif)",
                 }}
               >
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
                   Order #
                 </th>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
                   Customer
                 </th>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
                   Total
                 </th>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
                   Status
                 </th>
               </tr>
@@ -288,7 +288,7 @@ export default function AdminDashboard() {
                     </td>
                     <td className="px-5 py-3">
                       <span
-                        className="text-[10px] uppercase tracking-[0.1em] px-2 py-1 rounded-full"
+                        className="text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-full"
                         style={{
                           fontFamily: "var(--font-body, 'Jost', sans-serif)",
                           backgroundColor: "#5A3A2E10",
@@ -347,16 +347,16 @@ export default function AdminDashboard() {
                   fontFamily: "var(--font-body, 'Jost', sans-serif)",
                 }}
               >
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
                   Booking #
                 </th>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
                   Customer
                 </th>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
                   Pickup
                 </th>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
                   Status
                 </th>
               </tr>
@@ -398,7 +398,7 @@ export default function AdminDashboard() {
                     </td>
                     <td className="px-5 py-3">
                       <span
-                        className="text-[10px] uppercase tracking-[0.1em] px-2 py-1 rounded-full"
+                        className="text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-full"
                         style={{
                           fontFamily: "var(--font-body, 'Jost', sans-serif)",
                           backgroundColor: "#5A3A2E10",
@@ -457,16 +457,16 @@ export default function AdminDashboard() {
                   fontFamily: "var(--font-body, 'Jost', sans-serif)",
                 }}
               >
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
                   Name
                 </th>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
                   Email
                 </th>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
                   Phone
                 </th>
-                <th className="text-left text-[11px] uppercase tracking-[0.1em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>
                   Orders
                 </th>
               </tr>

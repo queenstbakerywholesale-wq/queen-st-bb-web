@@ -68,7 +68,7 @@ export default function AdminEnquiries() {
       <div className="flex items-baseline justify-between">
         <div>
           <h1
-            className="text-2xl font-light"
+            className="text-2xl font-medium"
             style={{
               fontFamily: "var(--font-display)",
               color: "oklch(0.34 0.05 45)",
@@ -77,7 +77,7 @@ export default function AdminEnquiries() {
             Enquiries
           </h1>
           <p
-            className="mt-1 text-sm font-light"
+            className="mt-1 text-sm font-medium"
             style={{
               fontFamily: "var(--font-body)",
               color: "oklch(0.34 0.05 45 / 0.5)",
@@ -107,7 +107,7 @@ export default function AdminEnquiries() {
             >
               <span style={labelStyle}>{s.label}</span>
               <p
-                className="text-2xl font-light mt-1"
+                className="text-2xl font-medium mt-1"
                 style={{
                   fontFamily: "var(--font-display)",
                   color: "oklch(0.34 0.05 45)",
@@ -157,7 +157,7 @@ export default function AdminEnquiries() {
         <div className="space-y-3">
           {enquiries.length === 0 ? (
             <p
-              className="text-center py-12 text-sm font-light"
+              className="text-center py-12 text-sm font-medium"
               style={{
                 fontFamily: "var(--font-body)",
                 color: "oklch(0.34 0.05 45 / 0.4)",
@@ -274,7 +274,7 @@ export default function AdminEnquiries() {
               <div className="flex items-start justify-between">
                 <div>
                   <h2
-                    className="text-lg font-light"
+                    className="text-lg font-medium"
                     style={{
                       fontFamily: "var(--font-display)",
                       color: "oklch(0.34 0.05 45)",
@@ -400,7 +400,7 @@ export default function AdminEnquiries() {
               <div>
                 <span style={labelStyle}>Message</span>
                 <p
-                  className="text-sm font-light leading-relaxed mt-2 whitespace-pre-wrap"
+                  className="text-sm font-medium leading-relaxed mt-2 whitespace-pre-wrap"
                   style={{
                     fontFamily: "var(--font-body)",
                     color: "oklch(0.34 0.05 45 / 0.7)",
@@ -437,7 +437,7 @@ export default function AdminEnquiries() {
           ) : (
             <div className="flex items-center justify-center h-full">
               <p
-                className="text-sm font-light"
+                className="text-sm font-medium"
                 style={{
                   fontFamily: "var(--font-body)",
                   color: "oklch(0.34 0.05 45 / 0.3)",

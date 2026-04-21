@@ -1,7 +1,7 @@
 /**
- * Footer — Minimal editorial footer
- * Palette: brand-brown #5A3A2E background, cream text
- * Warm, understated, never heavy
+ * Footer — Luxury editorial footer
+ * Typography: Playfair Display 500 for brand, Inter 500 for section labels
+ * Warm brown background, cream text with strong contrast
  */
 import { Link } from "wouter";
 
@@ -15,21 +15,22 @@ export default function Footer() {
         {/* Brand */}
         <div className="mb-12">
           <h2
-            className="text-xl md:text-2xl font-light"
+            className="text-xl md:text-2xl"
             style={{
               fontFamily: "var(--font-display)",
-              letterSpacing: "0.2em",
-              color: "oklch(0.94 0.015 80)",
+              fontWeight: 500,
+              letterSpacing: "0.02em",
+              color: "#FFFFFF",
             }}
           >
-            QUEEN ST BB
+            Queen St BB
           </h2>
           <div
             className="mt-4"
             style={{
               width: "40px",
               height: "1px",
-              backgroundColor: "oklch(0.94 0.015 80 / 0.2)",
+              backgroundColor: "rgba(255,255,255,0.2)",
             }}
           />
         </div>
@@ -38,11 +39,12 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-10 mb-16">
           <div>
             <h3
-              className="text-[10px] font-medium uppercase mb-4"
+              className="text-[11px] uppercase mb-4"
               style={{
-                fontFamily: "var(--font-body)",
-                letterSpacing: "0.18em",
-                color: "oklch(0.94 0.015 80 / 0.4)",
+                fontFamily: "var(--font-nav)",
+                fontWeight: 500,
+                letterSpacing: "0.04em",
+                color: "rgba(255,255,255,0.5)",
               }}
             >
               Collections
@@ -52,10 +54,11 @@ export default function Footer() {
                 <li key={item}>
                   <Link href={`/${item.toLowerCase()}`}>
                     <span
-                      className="text-sm font-light transition-colors duration-300 hover:opacity-100"
+                      className="text-sm transition-colors duration-300 hover:opacity-100"
                       style={{
                         fontFamily: "var(--font-body)",
-                        color: "oklch(0.94 0.015 80 / 0.6)",
+                        fontWeight: 400,
+                        color: "rgba(255,255,255,0.7)",
                       }}
                     >
                       {item}
@@ -68,11 +71,12 @@ export default function Footer() {
 
           <div>
             <h3
-              className="text-[10px] font-medium uppercase mb-4"
+              className="text-[11px] uppercase mb-4"
               style={{
-                fontFamily: "var(--font-body)",
-                letterSpacing: "0.18em",
-                color: "oklch(0.94 0.015 80 / 0.4)",
+                fontFamily: "var(--font-nav)",
+                fontWeight: 500,
+                letterSpacing: "0.04em",
+                color: "rgba(255,255,255,0.5)",
               }}
             >
               Experience
@@ -85,10 +89,11 @@ export default function Footer() {
                 <li key={item.href}>
                   <Link href={item.href}>
                     <span
-                      className="text-sm font-light transition-colors duration-300 hover:opacity-100"
+                      className="text-sm transition-colors duration-300 hover:opacity-100"
                       style={{
                         fontFamily: "var(--font-body)",
-                        color: "oklch(0.94 0.015 80 / 0.6)",
+                        fontWeight: 400,
+                        color: "rgba(255,255,255,0.7)",
                       }}
                     >
                       {item.label}
@@ -101,11 +106,12 @@ export default function Footer() {
 
           <div>
             <h3
-              className="text-[10px] font-medium uppercase mb-4"
+              className="text-[11px] uppercase mb-4"
               style={{
-                fontFamily: "var(--font-body)",
-                letterSpacing: "0.18em",
-                color: "oklch(0.94 0.015 80 / 0.4)",
+                fontFamily: "var(--font-nav)",
+                fontWeight: 500,
+                letterSpacing: "0.04em",
+                color: "rgba(255,255,255,0.5)",
               }}
             >
               Business
@@ -118,10 +124,11 @@ export default function Footer() {
                 <li key={item.href}>
                   <Link href={item.href}>
                     <span
-                      className="text-sm font-light transition-colors duration-300 hover:opacity-100"
+                      className="text-sm transition-colors duration-300 hover:opacity-100"
                       style={{
                         fontFamily: "var(--font-body)",
-                        color: "oklch(0.94 0.015 80 / 0.6)",
+                        fontWeight: 400,
+                        color: "rgba(255,255,255,0.7)",
                       }}
                     >
                       {item.label}
@@ -134,11 +141,12 @@ export default function Footer() {
 
           <div>
             <h3
-              className="text-[10px] font-medium uppercase mb-4"
+              className="text-[11px] uppercase mb-4"
               style={{
-                fontFamily: "var(--font-body)",
-                letterSpacing: "0.18em",
-                color: "oklch(0.94 0.015 80 / 0.4)",
+                fontFamily: "var(--font-nav)",
+                fontWeight: 500,
+                letterSpacing: "0.04em",
+                color: "rgba(255,255,255,0.5)",
               }}
             >
               Support
@@ -147,10 +155,11 @@ export default function Footer() {
               <li>
                 <Link href="/customer-care">
                   <span
-                    className="text-sm font-light transition-colors duration-300 hover:opacity-100"
+                    className="text-sm transition-colors duration-300 hover:opacity-100"
                     style={{
                       fontFamily: "var(--font-body)",
-                      color: "oklch(0.94 0.015 80 / 0.6)",
+                      fontWeight: 400,
+                      color: "rgba(255,255,255,0.7)",
                     }}
                   >
                     Customer Care
@@ -164,24 +173,26 @@ export default function Footer() {
         {/* Bottom */}
         <div
           className="pt-6 flex flex-col md:flex-row items-center justify-between gap-4"
-          style={{ borderTop: "1px solid oklch(0.94 0.015 80 / 0.1)" }}
+          style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}
         >
           <p
-            className="text-[10px] font-light"
+            className="text-[11px]"
             style={{
               fontFamily: "var(--font-body)",
-              letterSpacing: "0.1em",
-              color: "oklch(0.94 0.015 80 / 0.3)",
+              fontWeight: 400,
+              letterSpacing: "0.02em",
+              color: "rgba(255,255,255,0.4)",
             }}
           >
             &copy; {new Date().getFullYear()} Queen St BB. All rights reserved.
           </p>
           <p
-            className="text-[10px] font-light"
+            className="text-[11px]"
             style={{
               fontFamily: "var(--font-body)",
-              letterSpacing: "0.1em",
-              color: "oklch(0.94 0.015 80 / 0.3)",
+              fontWeight: 400,
+              letterSpacing: "0.02em",
+              color: "rgba(255,255,255,0.4)",
             }}
           >
             Crafted with care
