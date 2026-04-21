@@ -13,10 +13,22 @@ import Wholesale from "./pages/Wholesale";
 import CakeBooking from "./pages/CakeBooking";
 import About from "./pages/About";
 import CustomerCare from "./pages/CustomerCare";
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminShipping from "./pages/admin/AdminShipping";
+import AdminBookings from "./pages/admin/AdminBookings";
+import AdminCustomers from "./pages/admin/AdminCustomers";
+import AdminBranches from "./pages/admin/AdminBranches";
+
+const ADMIN_BASE = "/admin-angela91";
 
 function Router() {
   return (
     <Switch>
+      {/* Public pages */}
       <Route path="/" component={Home} />
       <Route path="/tiramisu" component={Tiramisu} />
       <Route path="/gelato" component={Gelato} />
@@ -26,6 +38,47 @@ function Router() {
       <Route path="/cake-booking" component={CakeBooking} />
       <Route path="/about" component={About} />
       <Route path="/customer-care" component={CustomerCare} />
+
+      {/* Admin login */}
+      <Route path={`${ADMIN_BASE}/login`} component={AdminLogin} />
+
+      {/* Admin protected routes */}
+      <Route path={`${ADMIN_BASE}`}>
+        <AdminLayout>
+          <AdminDashboard />
+        </AdminLayout>
+      </Route>
+      <Route path={`${ADMIN_BASE}/products`}>
+        <AdminLayout>
+          <AdminProducts />
+        </AdminLayout>
+      </Route>
+      <Route path={`${ADMIN_BASE}/orders`}>
+        <AdminLayout>
+          <AdminOrders />
+        </AdminLayout>
+      </Route>
+      <Route path={`${ADMIN_BASE}/shipping`}>
+        <AdminLayout>
+          <AdminShipping />
+        </AdminLayout>
+      </Route>
+      <Route path={`${ADMIN_BASE}/bookings`}>
+        <AdminLayout>
+          <AdminBookings />
+        </AdminLayout>
+      </Route>
+      <Route path={`${ADMIN_BASE}/customers`}>
+        <AdminLayout>
+          <AdminCustomers />
+        </AdminLayout>
+      </Route>
+      <Route path={`${ADMIN_BASE}/branches`}>
+        <AdminLayout>
+          <AdminBranches />
+        </AdminLayout>
+      </Route>
+
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
