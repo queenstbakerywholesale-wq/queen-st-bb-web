@@ -89,6 +89,8 @@ export const adminProductsRouter = router({
           "gelato",
           "cake",
           "merchandise",
+          "postcards",
+          "objects",
           "wholesale",
         ]),
         sizes: z
@@ -102,9 +104,12 @@ export const adminProductsRouter = router({
 
       const result = await db.insert(products).values({
         ...input,
-        images: input.images ?? null,
-        sizes: input.sizes ?? null,
-        compareAtPrice: input.compareAtPrice ?? null,
+        images: input.images?.length ? input.images : null,
+        sizes: input.sizes?.length ? input.sizes : null,
+        compareAtPrice: input.compareAtPrice || null,
+        imageUrl: input.imageUrl || null,
+        description: input.description || null,
+        shortDescription: input.shortDescription || null,
       });
 
       return { id: Number(result[0].insertId) };
@@ -128,7 +133,7 @@ export const adminProductsRouter = router({
         isActive: z.boolean().optional(),
         isFeatured: z.boolean().optional(),
         productType: z
-          .enum(["tiramisu", "gelato", "cake", "merchandise", "wholesale"])
+          .enum(["tiramisu", "gelato", "cake", "merchandise", "postcards", "objects", "wholesale"])
           .optional(),
         sizes: z
           .array(z.object({ name: z.string(), priceAdjustment: z.number() }))

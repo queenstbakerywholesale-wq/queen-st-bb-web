@@ -9,7 +9,7 @@ export const publicProductsRouter = router({
     .input(
       z.object({
         categoryId: z.number().optional(),
-        productType: z.enum(["tiramisu", "gelato", "cake", "merchandise", "wholesale"]).optional(),
+        productType: z.enum(["tiramisu", "gelato", "cake", "merchandise", "postcards", "objects", "wholesale"]).optional(),
         limit: z.number().min(1).max(100).default(50),
       }).optional()
     )

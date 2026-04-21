@@ -1,6 +1,6 @@
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
-import { Search, X, Eye, ChevronDown } from "lucide-react";
+import { Search, X, Eye, Truck, Store, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 const ORDER_STATUSES = ["pending", "paid", "preparing", "ready", "shipped", "completed", "cancelled"] as const;
@@ -18,6 +18,27 @@ const statusColors: Record<string, { bg: string; text: string }> = {
   refunded: { bg: "#FFEBEE", text: "#C62828" },
   partial: { bg: "#FFF8E1", text: "#F57F17" },
 };
+
+function FulfillmentBadge({ type, hasCake }: { type: string; hasCake?: boolean }) {
+  const isShipping = type === "shipping";
+  return (
+    <span
+      className="inline-flex items-center gap-1 text-[9px] uppercase tracking-[0.04em] px-2 py-0.5 rounded-full whitespace-nowrap"
+      style={{
+        fontFamily: "var(--font-body)",
+        fontWeight: 500,
+        backgroundColor: isShipping ? "#E0F2F1" : "#FFF3E0",
+        color: isShipping ? "#00695C" : "#E65100",
+      }}
+    >
+      {isShipping ? <Truck className="w-3 h-3" /> : <Store className="w-3 h-3" />}
+      {isShipping ? "Shipping" : "Pickup"}
+      {hasCake && !isShipping && (
+        <AlertTriangle className="w-2.5 h-2.5 ml-0.5" />
+      )}
+    </span>
+  );
+}
 
 export default function AdminOrders() {
   const [page, setPage] = useState(1);
@@ -60,11 +81,12 @@ export default function AdminOrders() {
 
   const totalPages = Math.ceil((data?.total ?? 0) / 20);
 
-  const inputStyle = { fontFamily: "var(--font-body, 'Jost', sans-serif)", backgroundColor: "#fff", borderColor: "#5A3A2E15", color: "#5A3A2E" };
+  const inputStyle = { fontFamily: "var(--font-body)", backgroundColor: "#fff", borderColor: "#5A3A2E15", color: "#5A3A2E" };
+  const labelStyle = { fontFamily: "var(--font-body)", color: "#5A3A2E80", fontSize: "11px", textTransform: "uppercase" as const, letterSpacing: "0.04em", fontWeight: 500 };
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-medium tracking-[0.04em]" style={{ fontFamily: "var(--font-display)", color: "#5A3A2E" }}>
+      <h1 className="text-xl" style={{ fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "0.01em", color: "#5A3A2E" }}>
         Orders
       </h1>
 
@@ -80,7 +102,7 @@ export default function AdminOrders() {
             style={inputStyle}
           />
           {search && (
-            <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+            <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer">
               <X className="w-4 h-4" style={{ color: "#5A3A2E50" }} />
             </button>
           )}
@@ -103,21 +125,21 @@ export default function AdminOrders() {
         <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4" onClick={() => setSelectedOrder(null)}>
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-medium tracking-[0.04em]" style={{ fontFamily: "var(--font-display)", color: "#5A3A2E" }}>
+              <h2 className="text-lg" style={{ fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "0.01em", color: "#5A3A2E" }}>
                 {orderDetail.data.orderNumber}
               </h2>
-              <button onClick={() => setSelectedOrder(null)}><X className="w-5 h-5" style={{ color: "#5A3A2E" }} /></button>
+              <button onClick={() => setSelectedOrder(null)} className="cursor-pointer"><X className="w-5 h-5" style={{ color: "#5A3A2E" }} /></button>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div>
-                <p className="text-[11px] uppercase tracking-[0.04em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Customer</p>
-                <p className="text-sm" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>{orderDetail.data.customerName}</p>
-                {orderDetail.data.customerEmail && <p className="text-xs" style={{ color: "#5A3A2E60" }}>{orderDetail.data.customerEmail}</p>}
-                {orderDetail.data.customerPhone && <p className="text-xs" style={{ color: "#5A3A2E60" }}>{orderDetail.data.customerPhone}</p>}
+                <p style={labelStyle} className="mb-1">Customer</p>
+                <p className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: "#5A3A2E" }}>{orderDetail.data.customerName}</p>
+                {orderDetail.data.customerEmail && <p className="text-xs" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E60" }}>{orderDetail.data.customerEmail}</p>}
+                {orderDetail.data.customerPhone && <p className="text-xs" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E60" }}>{orderDetail.data.customerPhone}</p>}
               </div>
               <div>
-                <p className="text-[11px] uppercase tracking-[0.04em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Order Status</p>
+                <p style={labelStyle} className="mb-1">Order Status</p>
                 <select
                   value={orderDetail.data.status}
                   onChange={(e) => updateStatus.mutate({ id: selectedOrder, status: e.target.value as any })}
@@ -130,7 +152,7 @@ export default function AdminOrders() {
                 </select>
               </div>
               <div>
-                <p className="text-[11px] uppercase tracking-[0.04em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Payment</p>
+                <p style={labelStyle} className="mb-1">Payment</p>
                 <select
                   value={orderDetail.data.paymentStatus}
                   onChange={(e) => updatePayment.mutate({ id: selectedOrder, paymentStatus: e.target.value as any })}
@@ -143,22 +165,98 @@ export default function AdminOrders() {
                 </select>
               </div>
               <div>
-                <p className="text-[11px] uppercase tracking-[0.04em] mb-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Total</p>
-                <p className="text-lg font-medium" style={{ fontFamily: "var(--font-display)", color: "#5A3A2E" }}>
+                <p style={labelStyle} className="mb-1">Total</p>
+                <p className="text-lg" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: "#5A3A2E" }}>
                   ${Number(orderDetail.data.total).toFixed(2)}
                 </p>
+              </div>
+            </div>
+
+            {/* Fulfillment Details */}
+            <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: "#5A3A2E06", border: "1px solid #5A3A2E0A" }}>
+              <div className="flex items-center gap-3 mb-3">
+                <p style={labelStyle} className="mb-0">Fulfillment</p>
+                <FulfillmentBadge
+                  type={orderDetail.data.fulfillmentType || "pickup"}
+                  hasCake={orderDetail.data.hasCakeItems}
+                />
+              </div>
+
+              {orderDetail.data.fulfillmentType === "shipping" ? (
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2">
+                    <Truck className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "#00695C" }} />
+                    <div>
+                      <p className="text-xs" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: "#5A3A2E" }}>Shipping Address</p>
+                      <p className="text-xs" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "#5A3A2E80", whiteSpace: "pre-line" }}>
+                        {orderDetail.data.shippingAddress || "Not provided"}
+                      </p>
+                    </div>
+                  </div>
+                  {Number(orderDetail.data.shippingFee) > 0 && (
+                    <p className="text-xs" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "#5A3A2E80" }}>
+                      Shipping fee: <strong style={{ fontWeight: 500, color: "#5A3A2E" }}>${Number(orderDetail.data.shippingFee).toFixed(2)}</strong>
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2">
+                    <Store className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "#E65100" }} />
+                    <div>
+                      <p className="text-xs" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: "#5A3A2E" }}>Store Pickup</p>
+                      {orderDetail.data.pickupBranchId && (
+                        <p className="text-xs" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "#5A3A2E80" }}>
+                          Branch ID: {orderDetail.data.pickupBranchId}
+                        </p>
+                      )}
+                      {orderDetail.data.pickupDate && (
+                        <p className="text-xs" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "#5A3A2E80" }}>
+                          Date: {orderDetail.data.pickupDate}
+                          {orderDetail.data.pickupTime && ` at ${orderDetail.data.pickupTime}`}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  {orderDetail.data.hasCakeItems && (
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <AlertTriangle className="w-3 h-3" style={{ color: "#E65100" }} />
+                      <p className="text-[10px]" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: "#E65100" }}>
+                        Contains cake items — pickup required
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Subtotal breakdown */}
+              <div className="mt-3 pt-3 space-y-1" style={{ borderTop: "1px solid #5A3A2E10" }}>
+                <div className="flex justify-between text-xs" style={{ fontFamily: "var(--font-body)" }}>
+                  <span style={{ color: "#5A3A2E80" }}>Subtotal</span>
+                  <span style={{ color: "#5A3A2E" }}>${Number(orderDetail.data.subtotal).toFixed(2)}</span>
+                </div>
+                {Number(orderDetail.data.shippingFee) > 0 && (
+                  <div className="flex justify-between text-xs" style={{ fontFamily: "var(--font-body)" }}>
+                    <span style={{ color: "#5A3A2E80" }}>Shipping</span>
+                    <span style={{ color: "#5A3A2E" }}>${Number(orderDetail.data.shippingFee).toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm pt-1" style={{ fontFamily: "var(--font-body)", fontWeight: 500 }}>
+                  <span style={{ color: "#5A3A2E" }}>Total</span>
+                  <span style={{ color: "#5A3A2E" }}>${Number(orderDetail.data.total).toFixed(2)}</span>
+                </div>
               </div>
             </div>
 
             {/* Items */}
             {orderDetail.data.items && orderDetail.data.items.length > 0 && (
               <div className="mb-6">
-                <p className="text-[11px] uppercase tracking-[0.04em] mb-2" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Items</p>
+                <p style={labelStyle} className="mb-2">Items</p>
                 <div className="space-y-2">
                   {orderDetail.data.items.map((item: any) => (
                     <div key={item.id} className="flex justify-between text-sm p-2 rounded" style={{ backgroundColor: "#5A3A2E05", fontFamily: "var(--font-body)", color: "#5A3A2E" }}>
-                      <span>{item.productName} x{item.quantity}</span>
-                      <span>${Number(item.totalPrice).toFixed(2)}</span>
+                      <span style={{ fontWeight: 400 }}>{item.productName} x{item.quantity}</span>
+                      <span style={{ fontWeight: 500 }}>${Number(item.totalPrice).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
@@ -167,7 +265,7 @@ export default function AdminOrders() {
 
             {/* Admin Notes */}
             <div>
-              <p className="text-[11px] uppercase tracking-[0.04em] mb-2" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>Admin Notes</p>
+              <p style={labelStyle} className="mb-2">Admin Notes</p>
               <textarea
                 defaultValue={orderDetail.data.adminNotes ?? ""}
                 onBlur={(e) => updateNotes.mutate({ id: selectedOrder, adminNotes: e.target.value })}
@@ -187,20 +285,21 @@ export default function AdminOrders() {
           <table className="w-full">
             <thead>
               <tr style={{ backgroundColor: "#5A3A2E05", fontFamily: "var(--font-body)" }}>
-                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Order #</th>
-                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Customer</th>
-                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Total</th>
-                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Status</th>
-                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Payment</th>
-                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Date</th>
-                <th className="text-right text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Actions</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3" style={{ color: "#5A3A2E80", fontWeight: 500 }}>Order #</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3" style={{ color: "#5A3A2E80", fontWeight: 500 }}>Customer</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3" style={{ color: "#5A3A2E80", fontWeight: 500 }}>Fulfillment</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3" style={{ color: "#5A3A2E80", fontWeight: 500 }}>Total</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3" style={{ color: "#5A3A2E80", fontWeight: 500 }}>Status</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3" style={{ color: "#5A3A2E80", fontWeight: 500 }}>Payment</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3" style={{ color: "#5A3A2E80", fontWeight: 500 }}>Date</th>
+                <th className="text-right text-[11px] uppercase tracking-[0.04em] px-5 py-3" style={{ color: "#5A3A2E80", fontWeight: 500 }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 [...Array(5)].map((_, i) => (
                   <tr key={i} className="border-t" style={{ borderColor: "#5A3A2E08" }}>
-                    <td colSpan={7} className="px-5 py-3"><div className="h-4 rounded animate-pulse" style={{ backgroundColor: "#5A3A2E08" }} /></td>
+                    <td colSpan={8} className="px-5 py-3"><div className="h-4 rounded animate-pulse" style={{ backgroundColor: "#5A3A2E08" }} /></td>
                   </tr>
                 ))
               ) : data?.items && data.items.length > 0 ? (
@@ -209,24 +308,30 @@ export default function AdminOrders() {
                   const pc = statusColors[order.paymentStatus] || statusColors.unpaid;
                   return (
                     <tr key={order.id} className="border-t" style={{ borderColor: "#5A3A2E08" }}>
-                      <td className="px-5 py-3 text-sm font-medium" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>{order.orderNumber}</td>
-                      <td className="px-5 py-3 text-sm" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>{order.customerName}</td>
-                      <td className="px-5 py-3 text-sm" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>${Number(order.total).toFixed(2)}</td>
+                      <td className="px-5 py-3 text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: "#5A3A2E" }}>{order.orderNumber}</td>
+                      <td className="px-5 py-3 text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "#5A3A2E" }}>{order.customerName}</td>
                       <td className="px-5 py-3">
-                        <span className="text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-full" style={{ fontFamily: "var(--font-body)", backgroundColor: sc.bg, color: sc.text }}>
+                        <FulfillmentBadge
+                          type={(order as any).fulfillmentType || "pickup"}
+                          hasCake={(order as any).hasCakeItems}
+                        />
+                      </td>
+                      <td className="px-5 py-3 text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "#5A3A2E" }}>${Number(order.total).toFixed(2)}</td>
+                      <td className="px-5 py-3">
+                        <span className="text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-full" style={{ fontFamily: "var(--font-body)", fontWeight: 500, backgroundColor: sc.bg, color: sc.text }}>
                           {order.status}
                         </span>
                       </td>
                       <td className="px-5 py-3">
-                        <span className="text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-full" style={{ fontFamily: "var(--font-body)", backgroundColor: pc.bg, color: pc.text }}>
+                        <span className="text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-full" style={{ fontFamily: "var(--font-body)", fontWeight: 500, backgroundColor: pc.bg, color: pc.text }}>
                           {order.paymentStatus}
                         </span>
                       </td>
-                      <td className="px-5 py-3 text-sm" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>
+                      <td className="px-5 py-3 text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "#5A3A2E80" }}>
                         {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "—"}
                       </td>
                       <td className="px-5 py-3 text-right">
-                        <button onClick={() => setSelectedOrder(order.id)} className="p-1.5 rounded hover:bg-black/5 transition-colors">
+                        <button onClick={() => setSelectedOrder(order.id)} className="p-1.5 rounded hover:bg-black/5 transition-colors cursor-pointer">
                           <Eye className="w-3.5 h-3.5" style={{ color: "#5A3A2E" }} />
                         </button>
                       </td>
@@ -235,7 +340,7 @@ export default function AdminOrders() {
                 })
               ) : (
                 <tr>
-                  <td colSpan={7} className="px-5 py-8 text-center text-sm" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E50" }}>
+                  <td colSpan={8} className="px-5 py-8 text-center text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "#5A3A2E50" }}>
                     No orders found
                   </td>
                 </tr>
@@ -248,7 +353,7 @@ export default function AdminOrders() {
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2">
           {Array.from({ length: totalPages }, (_, i) => (
-            <button key={i} onClick={() => setPage(i + 1)} className="w-8 h-8 text-xs rounded-md transition-all" style={{ fontFamily: "var(--font-body)", backgroundColor: page === i + 1 ? "#5A3A2E" : "transparent", color: page === i + 1 ? "#F5F0EB" : "#5A3A2E" }}>
+            <button key={i} onClick={() => setPage(i + 1)} className="w-8 h-8 text-xs rounded-md transition-all cursor-pointer" style={{ fontFamily: "var(--font-body)", fontWeight: 500, backgroundColor: page === i + 1 ? "#5A3A2E" : "transparent", color: page === i + 1 ? "#F5F0EB" : "#5A3A2E" }}>
               {i + 1}
             </button>
           ))}

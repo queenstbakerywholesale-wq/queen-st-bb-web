@@ -2,14 +2,16 @@
  * Objects — Minimal shop layout with live product data + Stripe checkout
  * Palette: brand-brown, parchment, cocoa, linen
  * Clean, premium presentation — focus on product and spacing
+ * Fulfillment: shipping + pickup for regular items, pickup-only for cakes
  */
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import PageLayout from "@/components/PageLayout";
 import { toast } from "sonner";
-import { X, ShoppingBag, Plus, Minus } from "lucide-react";
+import { X, ShoppingBag, Plus, Minus, Truck, Store, AlertTriangle } from "lucide-react";
 import { usePageImage } from "@/hooks/usePageImage";
+import { isPickupOnlyType, FIXED_SHIPPING_FEE_AUD } from "@shared/const";
 
 const DEFAULT_HERO =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-objects-aKrCAfQFaFKVp7bwFWiYN7.webp";
@@ -22,6 +24,7 @@ type CartItem = {
   quantity: number;
   size?: string;
   imageUrl?: string;
+  productType: string;
 };
 
 // Fallback static data when no products in DB
@@ -29,24 +32,24 @@ const fallbackObjects = [
   {
     category: "Ceramics",
     items: [
-      { id: 901, name: "Atelier Espresso Cup", detail: "Hand-thrown stoneware, ivory glaze", price: 48, imageUrl: "" },
-      { id: 902, name: "Dessert Plate — Terracotta", detail: "Artisan ceramic, matte finish", price: 62, imageUrl: "" },
-      { id: 903, name: "Serving Bowl — Marble", detail: "Carrara marble, hand-polished", price: 185, imageUrl: "" },
+      { id: 901, name: "Atelier Espresso Cup", detail: "Hand-thrown stoneware, ivory glaze", price: 48, imageUrl: "", productType: "merchandise" },
+      { id: 902, name: "Dessert Plate — Terracotta", detail: "Artisan ceramic, matte finish", price: 62, imageUrl: "", productType: "merchandise" },
+      { id: 903, name: "Serving Bowl — Marble", detail: "Carrara marble, hand-polished", price: 185, imageUrl: "", productType: "merchandise" },
     ],
   },
   {
     category: "Textiles",
     items: [
-      { id: 904, name: "Linen Napkin Set", detail: "Belgian linen, natural dye", price: 38, imageUrl: "" },
-      { id: 905, name: "Apron — Atelier Edition", detail: "Washed cotton, brass hardware", price: 95, imageUrl: "" },
+      { id: 904, name: "Linen Napkin Set", detail: "Belgian linen, natural dye", price: 38, imageUrl: "", productType: "merchandise" },
+      { id: 905, name: "Apron — Atelier Edition", detail: "Washed cotton, brass hardware", price: 95, imageUrl: "", productType: "merchandise" },
     ],
   },
   {
     category: "Confections",
     items: [
-      { id: 906, name: "Chocolate Collection", detail: "Single-origin, hand-tempered", price: 42, imageUrl: "" },
-      { id: 907, name: "Biscotti Gift Box", detail: "Almond & pistachio, wrapped in tissue", price: 36, imageUrl: "" },
-      { id: 908, name: "House Blend Coffee", detail: "Medium roast, caramel & hazelnut notes", price: 28, imageUrl: "" },
+      { id: 906, name: "Chocolate Collection", detail: "Single-origin, hand-tempered", price: 42, imageUrl: "", productType: "merchandise" },
+      { id: 907, name: "Biscotti Gift Box", detail: "Almond & pistachio, wrapped in tissue", price: 36, imageUrl: "", productType: "merchandise" },
+      { id: 908, name: "House Blend Coffee", detail: "Medium roast, caramel & hazelnut notes", price: 28, imageUrl: "", productType: "merchandise" },
     ],
   },
 ];
@@ -62,19 +65,35 @@ export default function Objects() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [fulfillmentType, setFulfillmentType] = useState<"shipping" | "pickup">("shipping");
   const [checkoutForm, setCheckoutForm] = useState({
     name: "",
     email: "",
     phone: "",
+    shippingAddress: "",
+    pickupBranchId: 0,
   });
   const [isProcessing, setIsProcessing] = useState(false);
 
   const { data: liveProducts } = trpc.publicProducts.list.useQuery({
-    productType: "merchandise",
     limit: 100,
   });
   const { data: liveCategories } = trpc.publicProducts.categories.useQuery();
+  const { data: branchesData } = trpc.publicBookings.branches.useQuery();
   const checkoutMutation = trpc.stripe.createCheckoutSession.useMutation();
+
+  // Detect if cart has cake items
+  const hasCakeItems = useMemo(
+    () => cart.some((item) => isPickupOnlyType(item.productType)),
+    [cart]
+  );
+
+  // Force pickup when cart has cake items
+  useEffect(() => {
+    if (hasCakeItems && fulfillmentType !== "pickup") {
+      setFulfillmentType("pickup");
+    }
+  }, [hasCakeItems, fulfillmentType]);
 
   // Group live products by category, or fall back to static data
   const displayData = useMemo(() => {
@@ -87,7 +106,7 @@ export default function Objects() {
       }
     }
 
-    const grouped: Record<string, { id: number; name: string; detail: string; price: number; imageUrl: string }[]> = {};
+    const grouped: Record<string, { id: number; name: string; detail: string; price: number; imageUrl: string; productType: string }[]> = {};
     for (const p of liveProducts) {
       const catName = p.categoryId ? categoryMap.get(p.categoryId) || "Other" : "Other";
       if (!grouped[catName]) grouped[catName] = [];
@@ -97,13 +116,14 @@ export default function Objects() {
         detail: p.shortDescription || "",
         price: Number(p.price),
         imageUrl: p.imageUrl || "",
+        productType: p.productType,
       });
     }
 
     return Object.entries(grouped).map(([category, items]) => ({ category, items }));
   }, [liveProducts, liveCategories]);
 
-  const addToCart = useCallback((item: { id: number; name: string; price: number; imageUrl?: string }) => {
+  const addToCart = useCallback((item: { id: number; name: string; price: number; imageUrl?: string; productType: string }) => {
     setCart((prev) => {
       const existing = prev.find((c) => c.productId === item.id);
       if (existing) {
@@ -119,6 +139,7 @@ export default function Objects() {
           price: item.price,
           quantity: 1,
           imageUrl: item.imageUrl || undefined,
+          productType: item.productType,
         },
       ];
     });
@@ -139,27 +160,50 @@ export default function Objects() {
     setCart((prev) => prev.filter((c) => c.productId !== productId));
   }, []);
 
-  const cartTotal = useMemo(
+  const cartSubtotal = useMemo(
     () => cart.reduce((sum, c) => sum + c.price * c.quantity, 0),
     [cart]
   );
+  const shippingFee = fulfillmentType === "shipping" ? FIXED_SHIPPING_FEE_AUD : 0;
+  const cartTotal = cartSubtotal + shippingFee;
   const cartCount = useMemo(
     () => cart.reduce((sum, c) => sum + c.quantity, 0),
     [cart]
   );
+
+  const selectedBranch = useMemo(() => {
+    if (!branchesData || !checkoutForm.pickupBranchId) return null;
+    return branchesData.find((b: any) => b.id === checkoutForm.pickupBranchId) || null;
+  }, [branchesData, checkoutForm.pickupBranchId]);
 
   const handleCheckout = async () => {
     if (!checkoutForm.name || !checkoutForm.email) {
       toast.error("Please enter your name and email");
       return;
     }
+    if (fulfillmentType === "shipping" && !checkoutForm.shippingAddress) {
+      toast.error("Please enter your shipping address");
+      return;
+    }
+    if (fulfillmentType === "pickup" && !checkoutForm.pickupBranchId) {
+      toast.error("Please select a pickup location");
+      return;
+    }
     setIsProcessing(true);
     try {
       const result = await checkoutMutation.mutateAsync({
-        items: cart,
+        items: cart.map((item) => ({
+          ...item,
+          imageUrl: item.imageUrl || undefined,
+          size: item.size || undefined,
+        })),
         customerName: checkoutForm.name,
         customerEmail: checkoutForm.email,
         customerPhone: checkoutForm.phone || undefined,
+        fulfillmentType,
+        shippingAddress: fulfillmentType === "shipping" ? checkoutForm.shippingAddress : undefined,
+        pickupBranchId: fulfillmentType === "pickup" ? checkoutForm.pickupBranchId : undefined,
+        pickupBranchName: fulfillmentType === "pickup" && selectedBranch ? (selectedBranch as any).name : undefined,
       });
       if (result.checkoutUrl) {
         toast.success("Redirecting to secure checkout...");
@@ -171,6 +215,13 @@ export default function Objects() {
       setIsProcessing(false);
     }
   };
+
+  // Style constants
+  const brown = "oklch(0.34 0.05 45)";
+  const cream = "oklch(0.91 0.02 75)";
+  const parchment = "oklch(0.95 0.01 75)";
+  const midBrown = "oklch(0.45 0.06 45)";
+  const borderColor = "oklch(0.84 0.025 72 / 0.4)";
 
   return (
     <PageLayout
@@ -185,7 +236,7 @@ export default function Objects() {
           animate={{ scale: 1 }}
           onClick={() => { setCartOpen(true); setCheckoutOpen(false); }}
           className="fixed bottom-8 right-8 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg cursor-pointer"
-          style={{ backgroundColor: "oklch(0.34 0.05 45)", color: "oklch(0.91 0.02 75)" }}
+          style={{ backgroundColor: brown, color: cream }}
         >
           <ShoppingBag size={20} />
           <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-[10px] font-medium flex items-center justify-center"
@@ -213,14 +264,14 @@ export default function Objects() {
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
               className="fixed top-0 right-0 h-full w-full max-w-md z-[70] flex flex-col shadow-2xl"
-              style={{ backgroundColor: "oklch(0.95 0.01 75)" }}
+              style={{ backgroundColor: parchment }}
             >
               {/* Cart Header */}
-              <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: "oklch(0.84 0.025 72 / 0.4)" }}>
-                <h2 className="text-lg" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: "oklch(0.34 0.05 45)" }}>
+              <div className="flex items-center justify-between p-6 border-b" style={{ borderColor }}>
+                <h2 className="text-lg" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: brown }}>
                   Your Bag ({cartCount})
                 </h2>
-                <button onClick={() => setCartOpen(false)} className="p-1 cursor-pointer" style={{ color: "oklch(0.34 0.05 45 / 0.6)" }}>
+                <button onClick={() => setCartOpen(false)} className="p-1 cursor-pointer" style={{ color: `${brown}99` }}>
                   <X size={20} />
                 </button>
               </div>
@@ -228,63 +279,146 @@ export default function Objects() {
               {/* Cart Items */}
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {cart.length === 0 ? (
-                  <p className="text-center text-sm py-12" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "oklch(0.34 0.05 45 / 0.5)" }}>
+                  <p className="text-center text-sm py-12" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: `${brown}80` }}>
                     Your bag is empty
                   </p>
                 ) : (
-                  cart.map((item) => (
-                    <div key={item.productId} className="flex gap-4">
-                      <div className="w-16 h-20 flex-shrink-0 overflow-hidden" style={{ backgroundColor: "oklch(0.91 0.02 75)" }}>
-                        {item.imageUrl ? (
-                          <img src={item.imageUrl} alt={item.productName} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <ShoppingBag size={14} style={{ color: "oklch(0.72 0.03 65)" }} />
+                  <>
+                    {cart.map((item) => (
+                      <div key={item.productId} className="flex gap-4">
+                        <div className="w-16 h-20 flex-shrink-0 overflow-hidden" style={{ backgroundColor: cream }}>
+                          {item.imageUrl ? (
+                            <img src={item.imageUrl} alt={item.productName} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <ShoppingBag size={14} style={{ color: "oklch(0.72 0.03 65)" }} />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-sm mb-1" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: brown }}>
+                            {item.productName}
+                          </h3>
+                          <div className="flex items-center gap-2 mb-2">
+                            <p className="text-xs" style={{ fontFamily: "var(--font-body)", color: midBrown }}>
+                              ${item.price.toFixed(0)}
+                            </p>
+                            {isPickupOnlyType(item.productType) && (
+                              <span className="text-[9px] uppercase px-1.5 py-0.5" style={{
+                                fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.05em",
+                                backgroundColor: "oklch(0.55 0.12 35 / 0.1)", color: "oklch(0.55 0.12 35)",
+                              }}>
+                                Pickup Only
+                              </span>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-sm mb-1" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: "oklch(0.34 0.05 45)" }}>
-                          {item.productName}
-                        </h3>
-                        <p className="text-xs mb-2" style={{ fontFamily: "var(--font-body)", color: "oklch(0.45 0.06 45)" }}>
-                          ${item.price.toFixed(0)}
-                        </p>
-                        <div className="flex items-center gap-3">
-                          <button onClick={() => updateQuantity(item.productId, -1)} className="w-6 h-6 flex items-center justify-center border cursor-pointer" style={{ borderColor: "oklch(0.84 0.025 72 / 0.6)", color: "oklch(0.34 0.05 45 / 0.6)" }}>
-                            <Minus size={12} />
-                          </button>
-                          <span className="text-xs" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "oklch(0.34 0.05 45)" }}>
-                            {item.quantity}
-                          </span>
-                          <button onClick={() => updateQuantity(item.productId, 1)} className="w-6 h-6 flex items-center justify-center border cursor-pointer" style={{ borderColor: "oklch(0.84 0.025 72 / 0.6)", color: "oklch(0.34 0.05 45 / 0.6)" }}>
-                            <Plus size={12} />
-                          </button>
-                          <button onClick={() => removeFromCart(item.productId)} className="ml-auto text-[10px] uppercase cursor-pointer" style={{ fontFamily: "var(--font-body)", letterSpacing: "0.1em", color: "oklch(0.34 0.05 45 / 0.4)" }}>
-                            Remove
-                          </button>
+                          <div className="flex items-center gap-3">
+                            <button onClick={() => updateQuantity(item.productId, -1)} className="w-6 h-6 flex items-center justify-center border cursor-pointer" style={{ borderColor: `${borderColor}`, color: `${brown}99` }}>
+                              <Minus size={12} />
+                            </button>
+                            <span className="text-xs" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: brown }}>
+                              {item.quantity}
+                            </span>
+                            <button onClick={() => updateQuantity(item.productId, 1)} className="w-6 h-6 flex items-center justify-center border cursor-pointer" style={{ borderColor: `${borderColor}`, color: `${brown}99` }}>
+                              <Plus size={12} />
+                            </button>
+                            <button onClick={() => removeFromCart(item.productId)} className="ml-auto text-[10px] uppercase cursor-pointer" style={{ fontFamily: "var(--font-body)", letterSpacing: "0.1em", color: `${brown}66` }}>
+                              Remove
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    ))}
+
+                    {/* Cake items notice */}
+                    {hasCakeItems && (
+                      <div className="flex items-start gap-3 p-4 rounded" style={{ backgroundColor: "oklch(0.55 0.12 35 / 0.06)", border: "1px solid oklch(0.55 0.12 35 / 0.15)" }}>
+                        <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" style={{ color: "oklch(0.55 0.12 35)" }} />
+                        <p className="text-xs leading-relaxed" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "oklch(0.55 0.12 35)" }}>
+                          Your bag contains cake items. Cakes are available for pickup only. Shipping has been disabled for this order.
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
               {/* Cart Footer */}
               {cart.length > 0 && (
-                <div className="p-6 border-t" style={{ borderColor: "oklch(0.84 0.025 72 / 0.4)" }}>
+                <div className="p-6 border-t" style={{ borderColor }}>
                   {!checkoutOpen ? (
                     <>
-                      <div className="flex justify-between mb-4">
-                        <span className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "oklch(0.34 0.05 45 / 0.6)" }}>Total</span>
-                        <span className="text-sm" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: "oklch(0.34 0.05 45)" }}>
-                          ${cartTotal.toFixed(2)} AUD
-                        </span>
+                      {/* Fulfillment Type Selector */}
+                      <div className="mb-4">
+                        <p className="text-[10px] uppercase mb-2" style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.05em", color: `${brown}80` }}>
+                          Fulfillment Method
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => !hasCakeItems && setFulfillmentType("shipping")}
+                            disabled={hasCakeItems}
+                            className="flex-1 flex items-center justify-center gap-2 py-2.5 border text-[11px] uppercase cursor-pointer transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                            style={{
+                              fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.04em",
+                              borderColor: fulfillmentType === "shipping" ? brown : borderColor,
+                              backgroundColor: fulfillmentType === "shipping" ? brown : "transparent",
+                              color: fulfillmentType === "shipping" ? cream : brown,
+                            }}
+                          >
+                            <Truck size={14} />
+                            Shipping
+                          </button>
+                          <button
+                            onClick={() => setFulfillmentType("pickup")}
+                            className="flex-1 flex items-center justify-center gap-2 py-2.5 border text-[11px] uppercase cursor-pointer transition-all"
+                            style={{
+                              fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.04em",
+                              borderColor: fulfillmentType === "pickup" ? brown : borderColor,
+                              backgroundColor: fulfillmentType === "pickup" ? brown : "transparent",
+                              color: fulfillmentType === "pickup" ? cream : brown,
+                            }}
+                          >
+                            <Store size={14} />
+                            Store Pickup
+                          </button>
+                        </div>
+                        {!hasCakeItems && (
+                          <p className="text-[10px] mt-1.5" style={{ fontFamily: "var(--font-body)", color: `${brown}60` }}>
+                            {fulfillmentType === "shipping"
+                              ? `Shipping fee: $${FIXED_SHIPPING_FEE_AUD.toFixed(2)} AUD`
+                              : "Free — collect from our store"}
+                          </p>
+                        )}
                       </div>
+
+                      {/* Order Summary */}
+                      <div className="space-y-2 mb-4">
+                        <div className="flex justify-between">
+                          <span className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: `${brown}99` }}>Subtotal</span>
+                          <span className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: brown }}>
+                            ${cartSubtotal.toFixed(2)}
+                          </span>
+                        </div>
+                        {fulfillmentType === "shipping" && (
+                          <div className="flex justify-between">
+                            <span className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: `${brown}99` }}>Shipping</span>
+                            <span className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: brown }}>
+                              ${shippingFee.toFixed(2)}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex justify-between pt-2 border-t" style={{ borderColor }}>
+                          <span className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: brown }}>Total</span>
+                          <span className="text-sm" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: brown }}>
+                            ${cartTotal.toFixed(2)} AUD
+                          </span>
+                        </div>
+                      </div>
+
                       <button
                         onClick={() => setCheckoutOpen(true)}
                         className="w-full py-3 text-[11px] uppercase cursor-pointer transition-opacity hover:opacity-80"
-                        style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.04em", backgroundColor: "oklch(0.34 0.05 45)", color: "oklch(0.91 0.02 75)" }}
+                        style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.04em", backgroundColor: brown, color: cream }}
                       >
                         Proceed to Checkout
                       </button>
@@ -297,12 +431,7 @@ export default function Objects() {
                         value={checkoutForm.name}
                         onChange={(e) => setCheckoutForm((f) => ({ ...f, name: e.target.value }))}
                         className="w-full px-4 py-3 text-sm border outline-none"
-                        style={{
-                          fontFamily: "var(--font-body)",
-                          borderColor: "oklch(0.84 0.025 72 / 0.6)",
-                          backgroundColor: "transparent",
-                          color: "oklch(0.34 0.05 45)",
-                        }}
+                        style={{ fontFamily: "var(--font-body)", borderColor, backgroundColor: "transparent", color: brown }}
                       />
                       <input
                         type="email"
@@ -310,12 +439,7 @@ export default function Objects() {
                         value={checkoutForm.email}
                         onChange={(e) => setCheckoutForm((f) => ({ ...f, email: e.target.value }))}
                         className="w-full px-4 py-3 text-sm border outline-none"
-                        style={{
-                          fontFamily: "var(--font-body)",
-                          borderColor: "oklch(0.84 0.025 72 / 0.6)",
-                          backgroundColor: "transparent",
-                          color: "oklch(0.34 0.05 45)",
-                        }}
+                        style={{ fontFamily: "var(--font-body)", borderColor, backgroundColor: "transparent", color: brown }}
                       />
                       <input
                         type="tel"
@@ -323,31 +447,87 @@ export default function Objects() {
                         value={checkoutForm.phone}
                         onChange={(e) => setCheckoutForm((f) => ({ ...f, phone: e.target.value }))}
                         className="w-full px-4 py-3 text-sm border outline-none"
-                        style={{
-                          fontFamily: "var(--font-body)",
-                          borderColor: "oklch(0.84 0.025 72 / 0.6)",
-                          backgroundColor: "transparent",
-                          color: "oklch(0.34 0.05 45)",
-                        }}
+                        style={{ fontFamily: "var(--font-body)", borderColor, backgroundColor: "transparent", color: brown }}
                       />
-                      <div className="flex justify-between mb-2 pt-2">
-                        <span className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "oklch(0.34 0.05 45 / 0.6)" }}>Total</span>
-                        <span className="text-sm" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: "oklch(0.34 0.05 45)" }}>
-                          ${cartTotal.toFixed(2)} AUD
-                        </span>
+
+                      {/* Fulfillment-specific fields */}
+                      {fulfillmentType === "shipping" ? (
+                        <div>
+                          <textarea
+                            placeholder="Shipping Address *"
+                            value={checkoutForm.shippingAddress}
+                            onChange={(e) => setCheckoutForm((f) => ({ ...f, shippingAddress: e.target.value }))}
+                            rows={3}
+                            className="w-full px-4 py-3 text-sm border outline-none resize-none"
+                            style={{ fontFamily: "var(--font-body)", borderColor, backgroundColor: "transparent", color: brown }}
+                          />
+                          <p className="text-[10px] mt-1" style={{ fontFamily: "var(--font-body)", color: `${brown}60` }}>
+                            Shipping within Australia — ${FIXED_SHIPPING_FEE_AUD.toFixed(2)} AUD
+                          </p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="text-[10px] uppercase mb-2" style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.05em", color: `${brown}80` }}>
+                            Pickup Location *
+                          </p>
+                          {branchesData && branchesData.length > 0 ? (
+                            <div className="space-y-2">
+                              {branchesData.map((branch: any) => (
+                                <button
+                                  key={branch.id}
+                                  onClick={() => setCheckoutForm((f) => ({ ...f, pickupBranchId: branch.id }))}
+                                  className="w-full text-left p-3 border cursor-pointer transition-all"
+                                  style={{
+                                    fontFamily: "var(--font-body)",
+                                    borderColor: checkoutForm.pickupBranchId === branch.id ? brown : borderColor,
+                                    backgroundColor: checkoutForm.pickupBranchId === branch.id ? `${brown}08` : "transparent",
+                                  }}
+                                >
+                                  <p className="text-sm" style={{ fontWeight: 500, color: brown }}>{branch.name}</p>
+                                  <p className="text-xs mt-0.5" style={{ color: `${brown}70` }}>{branch.address}</p>
+                                </button>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-xs p-3 border" style={{ fontFamily: "var(--font-body)", borderColor, color: `${brown}60` }}>
+                              No pickup locations available. Please contact us.
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Order Summary */}
+                      <div className="space-y-1 pt-2">
+                        <div className="flex justify-between">
+                          <span className="text-xs" style={{ fontFamily: "var(--font-body)", color: `${brown}80` }}>Subtotal</span>
+                          <span className="text-xs" style={{ fontFamily: "var(--font-body)", color: brown }}>${cartSubtotal.toFixed(2)}</span>
+                        </div>
+                        {fulfillmentType === "shipping" && (
+                          <div className="flex justify-between">
+                            <span className="text-xs" style={{ fontFamily: "var(--font-body)", color: `${brown}80` }}>Shipping</span>
+                            <span className="text-xs" style={{ fontFamily: "var(--font-body)", color: brown }}>${shippingFee.toFixed(2)}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between pt-1 border-t" style={{ borderColor }}>
+                          <span className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: brown }}>Total</span>
+                          <span className="text-sm" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: brown }}>
+                            ${cartTotal.toFixed(2)} AUD
+                          </span>
+                        </div>
                       </div>
+
                       <button
                         onClick={handleCheckout}
                         disabled={isProcessing}
                         className="w-full py-3 text-[11px] uppercase cursor-pointer transition-opacity hover:opacity-80 disabled:opacity-50"
-                        style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.04em", backgroundColor: "oklch(0.34 0.05 45)", color: "oklch(0.91 0.02 75)" }}
+                        style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.04em", backgroundColor: brown, color: cream }}
                       >
                         {isProcessing ? "Processing..." : "Pay with Stripe"}
                       </button>
                       <button
                         onClick={() => setCheckoutOpen(false)}
                         className="w-full py-2 text-[10px] uppercase tracking-[0.15em] cursor-pointer"
-                        style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45 / 0.5)" }}
+                        style={{ fontFamily: "var(--font-body)", color: `${brown}80` }}
                       >
                         Back to Bag
                       </button>
@@ -367,7 +547,7 @@ export default function Objects() {
             <div className="editorial-rule mx-auto mb-8" />
             <p
               className="text-base md:text-lg"
-              style={{ fontFamily: "var(--font-body)", fontWeight: 400, lineHeight: 1.7, color: "oklch(0.34 0.05 45 / 0.8)" }}
+              style={{ fontFamily: "var(--font-body)", fontWeight: 400, lineHeight: 1.7, color: `${brown}CC` }}
             >
               A carefully curated selection of objects that extend the Queen St BB
               experience into your home. Each piece chosen for its craft,
@@ -393,11 +573,11 @@ export default function Objects() {
               <div className="flex items-center gap-4 mb-10">
                 <span
                   className="text-[10px] font-medium uppercase"
-                  style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.04em", color: "oklch(0.45 0.06 45 / 0.5)" }}
+                  style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.04em", color: `${midBrown}80` }}
                 >
                   {category.category}
                 </span>
-                <div className="flex-1 h-[1px]" style={{ backgroundColor: "oklch(0.84 0.025 72 / 0.4)" }} />
+                <div className="flex-1 h-[1px]" style={{ backgroundColor: borderColor }} />
               </div>
 
               {/* Items — clean grid with generous spacing */}
@@ -414,7 +594,7 @@ export default function Objects() {
                     {/* Product image or placeholder */}
                     <div
                       className="aspect-[4/5] mb-5 overflow-hidden relative"
-                      style={{ backgroundColor: "oklch(0.91 0.02 75)" }}
+                      style={{ backgroundColor: cream }}
                     >
                       {item.imageUrl ? (
                         <img
@@ -432,14 +612,23 @@ export default function Objects() {
                           </span>
                         </div>
                       )}
+                      {/* Pickup-only badge */}
+                      {isPickupOnlyType(item.productType) && (
+                        <div className="absolute top-3 left-3 px-2 py-1 text-[9px] uppercase" style={{
+                          fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.05em",
+                          backgroundColor: "oklch(0.55 0.12 35 / 0.9)", color: "#fff",
+                        }}>
+                          Pickup Only
+                        </div>
+                      )}
                       {/* Add to bag overlay */}
                       <button
-                        onClick={() => addToCart({ id: item.id, name: item.name, price: item.price, imageUrl: item.imageUrl })}
+                        onClick={() => addToCart({ id: item.id, name: item.name, price: item.price, imageUrl: item.imageUrl, productType: item.productType })}
                         className="absolute bottom-0 left-0 right-0 py-3 text-[10px] font-medium uppercase tracking-[0.2em] text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
                         style={{
                           fontFamily: "var(--font-body)",
                           backgroundColor: "oklch(0.34 0.05 45 / 0.9)",
-                          color: "oklch(0.91 0.02 75)",
+                          color: cream,
                         }}
                       >
                         Add to Bag
@@ -447,22 +636,29 @@ export default function Objects() {
                     </div>
                     <h3
                       className="text-base md:text-lg mb-1 group-hover:opacity-60 transition-opacity duration-400"
-                      style={{ fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "0.005em", color: "oklch(0.34 0.05 45)" }}
+                      style={{ fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "0.005em", color: brown }}
                     >
                       {item.name}
                     </h3>
                     <p
                       className="text-[11px] mb-2"
-                      style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "oklch(0.34 0.05 45 / 0.45)" }}
+                      style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: `${brown}73` }}
                     >
                       {item.detail}
                     </p>
-                    <span
-                      className="text-sm"
-                      style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "oklch(0.45 0.06 45)" }}
-                    >
-                      ${item.price.toFixed(0)}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="text-sm"
+                        style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: midBrown }}
+                      >
+                        ${item.price.toFixed(0)}
+                      </span>
+                      {!isPickupOnlyType(item.productType) && (
+                        <span className="text-[9px] uppercase" style={{ fontFamily: "var(--font-body)", fontWeight: 400, letterSpacing: "0.04em", color: `${brown}50` }}>
+                          Shipping or Pickup
+                        </span>
+                      )}
+                    </div>
                   </motion.div>
                 ))}
               </div>
@@ -474,13 +670,13 @@ export default function Objects() {
       {/* Quote */}
       <section
         className="py-20 md:py-28 px-6 md:px-10"
-        style={{ backgroundColor: "oklch(0.91 0.02 75)" }}
+        style={{ backgroundColor: cream }}
       >
         <div className="max-w-2xl mx-auto text-center">
           <motion.div {...fade}>
             <p
               className="text-xl md:text-2xl italic"
-              style={{ fontFamily: "var(--font-display)", fontWeight: 500, lineHeight: 1.5, color: "oklch(0.34 0.05 45)" }}
+              style={{ fontFamily: "var(--font-display)", fontWeight: 500, lineHeight: 1.5, color: brown }}
             >
               "The objects we choose shape the rituals we keep."
             </p>

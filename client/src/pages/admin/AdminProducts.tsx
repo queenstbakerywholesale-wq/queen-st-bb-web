@@ -1,9 +1,25 @@
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
-import { Plus, Pencil, Trash2, Search, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, X, Truck, Store } from "lucide-react";
 import { toast } from "sonner";
+import { PRODUCT_TYPES, isPickupOnlyType } from "@shared/const";
 
-const PRODUCT_TYPES = ["tiramisu", "gelato", "cake", "merchandise", "wholesale"] as const;
+function FulfillmentBadge({ productType }: { productType: string }) {
+  const pickupOnly = isPickupOnlyType(productType);
+  return (
+    <span
+      className="inline-flex items-center gap-1 text-[9px] uppercase tracking-[0.04em] px-2 py-0.5 rounded-full whitespace-nowrap"
+      style={{
+        fontFamily: "var(--font-body)",
+        backgroundColor: pickupOnly ? "#FFF3E0" : "#E8F5E9",
+        color: pickupOnly ? "#E65100" : "#2E7D32",
+      }}
+    >
+      {pickupOnly ? <Store className="w-3 h-3" /> : <Truck className="w-3 h-3" />}
+      {pickupOnly ? "Pickup Only" : "Ship + Pickup"}
+    </span>
+  );
+}
 
 function ProductForm({
   initial,
@@ -25,7 +41,7 @@ function ProductForm({
     lowStockThreshold: initial?.lowStockThreshold ?? 5,
     isActive: initial?.isActive ?? true,
     isFeatured: initial?.isFeatured ?? false,
-    productType: initial?.productType ?? "tiramisu",
+    productType: initial?.productType ?? "merchandise",
     imageUrl: initial?.imageUrl ?? "",
   });
 
@@ -38,18 +54,19 @@ function ProductForm({
   };
 
   const inputStyle = {
-    fontFamily: "var(--font-body, 'Jost', sans-serif)",
+    fontFamily: "var(--font-body)",
     backgroundColor: "#fff",
     borderColor: "#5A3A2E20",
     color: "#5A3A2E",
   };
 
   const labelStyle = {
-    fontFamily: "var(--font-body, 'Jost', sans-serif)",
+    fontFamily: "var(--font-body)",
     color: "#5A3A2E80",
     fontSize: "11px",
     textTransform: "uppercase" as const,
-    letterSpacing: "0.1em",
+    letterSpacing: "0.05em",
+    fontWeight: 500,
   };
 
   return (
@@ -103,9 +120,17 @@ function ProductForm({
             style={inputStyle}
           >
             {PRODUCT_TYPES.map((t) => (
-              <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+              <option key={t} value={t}>
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+                {isPickupOnlyType(t) ? " (Pickup Only)" : ""}
+              </option>
             ))}
           </select>
+          <p className="text-[10px] mt-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E60" }}>
+            {isPickupOnlyType(form.productType)
+              ? "This product type is pickup only — shipping will be disabled automatically."
+              : "This product type allows both shipping and store pickup."}
+          </p>
         </div>
         <div>
           <label style={labelStyle} className="block mb-1">Image URL</label>
@@ -157,7 +182,7 @@ function ProductForm({
         />
       </div>
       <div className="flex gap-4">
-        <label className="flex items-center gap-2 text-sm" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>
+        <label className="flex items-center gap-2 text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "#5A3A2E" }}>
           <input
             type="checkbox"
             checked={form.isActive}
@@ -165,7 +190,7 @@ function ProductForm({
           />
           Active
         </label>
-        <label className="flex items-center gap-2 text-sm" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>
+        <label className="flex items-center gap-2 text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "#5A3A2E" }}>
           <input
             type="checkbox"
             checked={form.isFeatured}
@@ -178,7 +203,7 @@ function ProductForm({
         <button
           type="submit"
           className="px-5 py-2 text-[11px] uppercase tracking-[0.04em] rounded-md transition-all"
-          style={{ backgroundColor: "#5A3A2E", color: "#F5F0EB", fontFamily: "var(--font-body)" }}
+          style={{ backgroundColor: "#5A3A2E", color: "#F5F0EB", fontFamily: "var(--font-body)", fontWeight: 500 }}
         >
           {initial ? "Update" : "Create"}
         </button>
@@ -186,7 +211,7 @@ function ProductForm({
           type="button"
           onClick={onCancel}
           className="px-5 py-2 text-[11px] uppercase tracking-[0.04em] rounded-md border transition-all"
-          style={{ borderColor: "#5A3A2E30", color: "#5A3A2E", fontFamily: "var(--font-body)" }}
+          style={{ borderColor: "#5A3A2E30", color: "#5A3A2E", fontFamily: "var(--font-body)", fontWeight: 500 }}
         >
           Cancel
         </button>
@@ -257,24 +282,37 @@ export default function AdminProducts() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1
-          className="text-xl font-medium tracking-[0.04em]"
-          style={{ fontFamily: "var(--font-display)", color: "#5A3A2E" }}
+          className="text-xl"
+          style={{ fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "0.01em", color: "#5A3A2E" }}
         >
           Products
         </h1>
         <button
           onClick={() => { setEditingProduct(null); setShowForm(true); }}
           className="flex items-center gap-2 px-4 py-2 text-[11px] uppercase tracking-[0.04em] rounded-md transition-all"
-          style={{ backgroundColor: "#5A3A2E", color: "#F5F0EB", fontFamily: "var(--font-body)" }}
+          style={{ backgroundColor: "#5A3A2E", color: "#F5F0EB", fontFamily: "var(--font-body)", fontWeight: 500 }}
         >
           <Plus className="w-3.5 h-3.5" /> Add Product
         </button>
       </div>
 
+      {/* Fulfillment Legend */}
+      <div className="flex items-center gap-4 p-3 rounded-md" style={{ backgroundColor: "#5A3A2E06", border: "1px solid #5A3A2E0A" }}>
+        <span className="text-[10px] uppercase" style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.05em", color: "#5A3A2E80" }}>
+          Fulfillment:
+        </span>
+        <span className="inline-flex items-center gap-1 text-[10px]" style={{ fontFamily: "var(--font-body)", color: "#2E7D32" }}>
+          <Truck className="w-3 h-3" /> Non-cake = Shipping + Pickup
+        </span>
+        <span className="inline-flex items-center gap-1 text-[10px]" style={{ fontFamily: "var(--font-body)", color: "#E65100" }}>
+          <Store className="w-3 h-3" /> Cake = Pickup Only
+        </span>
+      </div>
+
       {/* Form */}
       {showForm && (
         <div className="p-5 rounded-lg border" style={{ backgroundColor: "#fff", borderColor: "#5A3A2E10" }}>
-          <h3 className="text-sm font-medium mb-4 tracking-[0.05em]" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>
+          <h3 className="text-sm mb-4" style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.02em", color: "#5A3A2E" }}>
             {editingProduct ? "Edit Product" : "New Product"}
           </h3>
           <ProductForm
@@ -308,19 +346,20 @@ export default function AdminProducts() {
           <table className="w-full">
             <thead>
               <tr style={{ backgroundColor: "#5A3A2E05", fontFamily: "var(--font-body)" }}>
-                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Product</th>
-                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Type</th>
-                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Price</th>
-                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Stock</th>
-                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Status</th>
-                <th className="text-right text-[11px] uppercase tracking-[0.04em] px-5 py-3 font-medium" style={{ color: "#5A3A2E80" }}>Actions</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3" style={{ color: "#5A3A2E80", fontWeight: 500 }}>Product</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3" style={{ color: "#5A3A2E80", fontWeight: 500 }}>Type</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3" style={{ color: "#5A3A2E80", fontWeight: 500 }}>Fulfillment</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3" style={{ color: "#5A3A2E80", fontWeight: 500 }}>Price</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3" style={{ color: "#5A3A2E80", fontWeight: 500 }}>Stock</th>
+                <th className="text-left text-[11px] uppercase tracking-[0.04em] px-5 py-3" style={{ color: "#5A3A2E80", fontWeight: 500 }}>Status</th>
+                <th className="text-right text-[11px] uppercase tracking-[0.04em] px-5 py-3" style={{ color: "#5A3A2E80", fontWeight: 500 }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 [...Array(5)].map((_, i) => (
                   <tr key={i} className="border-t" style={{ borderColor: "#5A3A2E08" }}>
-                    <td colSpan={6} className="px-5 py-3"><div className="h-4 rounded animate-pulse" style={{ backgroundColor: "#5A3A2E08" }} /></td>
+                    <td colSpan={7} className="px-5 py-3"><div className="h-4 rounded animate-pulse" style={{ backgroundColor: "#5A3A2E08" }} /></td>
                   </tr>
                 ))
               ) : data?.items && data.items.length > 0 ? (
@@ -332,25 +371,28 @@ export default function AdminProducts() {
                           <img src={product.imageUrl} alt="" className="w-10 h-10 rounded object-cover" />
                         )}
                         <div>
-                          <p className="text-sm font-medium" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>{product.name}</p>
-                          <p className="text-[11px]" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E50" }}>{product.shortDescription}</p>
+                          <p className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: "#5A3A2E" }}>{product.name}</p>
+                          <p className="text-[11px]" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "#5A3A2E50" }}>{product.shortDescription}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-5 py-3">
-                      <span className="text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-full" style={{ fontFamily: "var(--font-body)", backgroundColor: "#5A3A2E10", color: "#5A3A2E" }}>
+                      <span className="text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-full" style={{ fontFamily: "var(--font-body)", fontWeight: 500, backgroundColor: "#5A3A2E10", color: "#5A3A2E" }}>
                         {product.productType}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-sm" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>
+                    <td className="px-5 py-3">
+                      <FulfillmentBadge productType={product.productType} />
+                    </td>
+                    <td className="px-5 py-3 text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "#5A3A2E" }}>
                       ${Number(product.price).toFixed(2)}
                     </td>
-                    <td className="px-5 py-3 text-sm" style={{ fontFamily: "var(--font-body)", color: product.stock <= product.lowStockThreshold ? "#C0392B" : "#5A3A2E" }}>
+                    <td className="px-5 py-3 text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: product.stock <= product.lowStockThreshold ? "#C0392B" : "#5A3A2E" }}>
                       {product.stock}
                     </td>
                     <td className="px-5 py-3">
-                      <span className={`text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-full`} style={{
-                        fontFamily: "var(--font-body)",
+                      <span className="text-[10px] uppercase tracking-[0.04em] px-2 py-1 rounded-full" style={{
+                        fontFamily: "var(--font-body)", fontWeight: 500,
                         backgroundColor: product.isActive ? "#E8F5E9" : "#FFEBEE",
                         color: product.isActive ? "#2E7D32" : "#C62828",
                       }}>
@@ -359,10 +401,10 @@ export default function AdminProducts() {
                     </td>
                     <td className="px-5 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button onClick={() => handleEdit(product)} className="p-1.5 rounded hover:bg-black/5 transition-colors">
+                        <button onClick={() => handleEdit(product)} className="p-1.5 rounded hover:bg-black/5 transition-colors cursor-pointer">
                           <Pencil className="w-3.5 h-3.5" style={{ color: "#5A3A2E" }} />
                         </button>
-                        <button onClick={() => handleDelete(product.id)} className="p-1.5 rounded hover:bg-red-50 transition-colors">
+                        <button onClick={() => handleDelete(product.id)} className="p-1.5 rounded hover:bg-red-50 transition-colors cursor-pointer">
                           <Trash2 className="w-3.5 h-3.5" style={{ color: "#C0392B" }} />
                         </button>
                       </div>
@@ -371,7 +413,7 @@ export default function AdminProducts() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-5 py-8 text-center text-sm" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E50" }}>
+                  <td colSpan={7} className="px-5 py-8 text-center text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "#5A3A2E50" }}>
                     No products found
                   </td>
                 </tr>
@@ -388,9 +430,10 @@ export default function AdminProducts() {
             <button
               key={i}
               onClick={() => setPage(i + 1)}
-              className="w-8 h-8 text-xs rounded-md transition-all"
+              className="w-8 h-8 text-xs rounded-md transition-all cursor-pointer"
               style={{
                 fontFamily: "var(--font-body)",
+                fontWeight: 500,
                 backgroundColor: page === i + 1 ? "#5A3A2E" : "transparent",
                 color: page === i + 1 ? "#F5F0EB" : "#5A3A2E",
               }}

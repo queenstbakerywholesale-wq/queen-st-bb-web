@@ -14,6 +14,7 @@ export const adminOrdersRouter = router({
         search: z.string().optional(),
         status: z.string().optional(),
         paymentStatus: z.string().optional(),
+        fulfillmentType: z.enum(["shipping", "pickup"]).optional(),
       })
     )
     .query(async ({ input }) => {
@@ -38,6 +39,9 @@ export const adminOrdersRouter = router({
       }
       if (input.paymentStatus) {
         conditions.push(eq(orders.paymentStatus, input.paymentStatus as any));
+      }
+      if (input.fulfillmentType) {
+        conditions.push(eq(orders.fulfillmentType, input.fulfillmentType));
       }
 
       const where = conditions.length > 0 ? and(...conditions) : undefined;
@@ -96,9 +100,13 @@ export const adminOrdersRouter = router({
         subtotal: z.string(),
         tax: z.string().default("0"),
         total: z.string(),
-        deliveryType: z.enum(["pickup", "delivery"]).default("pickup"),
-        deliveryAddress: z.string().optional(),
-        branchId: z.number().optional(),
+        fulfillmentType: z.enum(["shipping", "pickup"]).default("pickup"),
+        shippingFee: z.string().default("0"),
+        shippingAddress: z.string().optional(),
+        pickupBranchId: z.number().optional(),
+        pickupDate: z.string().optional(),
+        pickupTime: z.string().optional(),
+        hasCakeItems: z.boolean().default(false),
         adminNotes: z.string().optional(),
         items: z.array(
           z.object({
@@ -169,7 +177,7 @@ export const adminOrdersRouter = router({
         if (order) {
           notifyOwner({
             title: `Order #${order.orderNumber} — ${input.status.toUpperCase()}`,
-            content: `Order ${order.orderNumber} status changed to ${input.status}.\nCustomer: ${order.customerName}`,
+            content: `Order ${order.orderNumber} status changed to ${input.status}.\nCustomer: ${order.customerName}\nFulfillment: ${order.fulfillmentType}`,
           }).catch(() => {});
         }
       }

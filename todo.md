@@ -85,3 +85,27 @@
 - [x] Update all admin pages typography (AdminLogin, AdminLayout, AdminDashboard, AdminProducts, AdminOrders, AdminShipping, AdminBookings, AdminCustomers, AdminBranches, AdminEnquiries, AdminPageImages)
 - [x] Remove all font-light usage across entire codebase
 - [x] Reduce excessive letter-spacing (tracking) across all pages
+
+## Fulfillment System Refinement
+
+- [x] Add product category field to distinguish cake vs non-cake products
+- [x] Cake products: pickup-only, non-cake products: shipping + pickup
+- [x] Admin product form: category selection (Merchandise, Postcards, Objects, Cakes)
+- [x] Admin product list: show fulfillment type badge (Pickup Only / Shipping + Pickup)
+- [x] Admin order details: show fulfillment method clearly
+- [x] Checkout: fulfillment method selection (Shipping vs Store Pickup) for non-cake orders
+- [x] Checkout: auto-detect cake in cart and force pickup-only with clear messaging
+- [x] Mixed cart rule: if any cake in cart, entire order becomes pickup-only
+- [x] Shipping option: fixed shipping fee for non-cake orders
+- [x] Pickup option: branch selection, pickup date/time for cake orders
+- [x] Customer messaging: clear labels for fulfillment type on product cards and checkout
+- [x] Store fulfillment method in orders table
+- [x] Update Stripe checkout to include fulfillment metadata
+- [x] Write vitest tests for fulfillment logic
+
+## Fulfillment Gap Resolution
+
+- [x] Verify AdminProducts form includes product type selection (Merchandise, Postcards, Objects, Cakes) and persists correctly
+- [x] Browser QA: test cake product in cart to verify pickup-only enforcement and messaging
+- [x] Browser QA: test mixed cart (cake + non-cake) to verify auto-pickup enforcement
+- [x] Browser QA: add a cake product to an otherwise empty cart and verify shipping is hidden/disabled, pickup is the only option
