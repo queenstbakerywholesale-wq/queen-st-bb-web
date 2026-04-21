@@ -8,6 +8,7 @@ import { orders, orderItems, customers } from "../../drizzle/schema";
 import { nanoid } from "nanoid";
 import { notifyOwner } from "../_core/notification";
 import { FIXED_SHIPPING_FEE_AUD, isPickupOnlyType } from "../../shared/const";
+import { calculateShipping, getQuickEstimate } from "../auspostShipping";
 
 function getStripe() {
   if (!ENV.stripeSecretKey) throw new Error("Stripe secret key not configured");
@@ -25,6 +26,32 @@ const cartItemSchema = z.object({
 });
 
 export const stripeCheckoutRouter = router({
+  /**
+   * Calculate shipping cost dynamically based on postcode.
+   * Used by the frontend to show real-time shipping estimates.
+   */
+  calculateShipping: publicProcedure
+    .input(
+      z.object({
+        postcode: z.string().min(3).max(6),
+      })
+    )
+    .query(async ({ input }) => {
+      const result = await calculateShipping(input.postcode);
+      return {
+        quotes: result.quotes.map((q) => ({
+          serviceName: q.serviceName,
+          serviceCode: q.serviceCode,
+          price: q.price,
+          estimatedDays: q.estimatedDays || null,
+          source: q.source,
+        })),
+        selectedPrice: result.selectedQuote.price,
+        selectedService: result.selectedQuote.serviceName,
+        estimatedDays: result.selectedQuote.estimatedDays || null,
+      };
+    }),
+
   createCheckoutSession: publicProcedure
     .input(
       z.object({
@@ -34,8 +61,12 @@ export const stripeCheckoutRouter = router({
         customerPhone: z.string().optional(),
         fulfillmentType: z.enum(["shipping", "pickup"]).default("pickup"),
         shippingAddress: z.string().optional(),
+        shippingPostcode: z.string().optional(),
+        shippingServiceCode: z.string().optional(),
         pickupBranchId: z.number().optional(),
         pickupBranchName: z.string().optional(),
+        pickupDate: z.string().optional(), // YYYY-MM-DD (for cake orders)
+        pickupTime: z.string().optional(), // HH:mm (for cake orders)
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -50,17 +81,61 @@ export const stripeCheckoutRouter = router({
       // Enforce: if cart has cake items, fulfillment MUST be pickup
       const effectiveFulfillment = hasCakeItems ? "pickup" : input.fulfillmentType;
 
-      // Validate: shipping requires address
+      // Validate: shipping requires address and postcode
       if (effectiveFulfillment === "shipping" && !input.shippingAddress) {
         throw new Error("Shipping address is required for shipping orders");
       }
 
-      // Calculate totals
+      // Validate: cake pickup requires date and time
+      if (hasCakeItems && effectiveFulfillment === "pickup") {
+        if (!input.pickupDate || !input.pickupTime) {
+          throw new Error("Pickup date and time are required for cake orders");
+        }
+        if (!input.pickupBranchId) {
+          throw new Error("Pickup branch is required for cake orders");
+        }
+      }
+
+      // Calculate subtotal
       const subtotal = input.items.reduce(
         (sum, item) => sum + item.price * item.quantity,
         0
       );
-      const shippingFee = effectiveFulfillment === "shipping" ? FIXED_SHIPPING_FEE_AUD : 0;
+
+      // Calculate shipping fee dynamically
+      let shippingFee = 0;
+      let shippingServiceName = "";
+      if (effectiveFulfillment === "shipping") {
+        if (input.shippingPostcode) {
+          try {
+            const shippingResult = await calculateShipping(input.shippingPostcode);
+            // If a specific service was selected, find it
+            if (input.shippingServiceCode) {
+              const selected = shippingResult.quotes.find(
+                (q) => q.serviceCode === input.shippingServiceCode
+              );
+              if (selected) {
+                shippingFee = selected.price;
+                shippingServiceName = selected.serviceName;
+              } else {
+                shippingFee = shippingResult.selectedQuote.price;
+                shippingServiceName = shippingResult.selectedQuote.serviceName;
+              }
+            } else {
+              shippingFee = shippingResult.selectedQuote.price;
+              shippingServiceName = shippingResult.selectedQuote.serviceName;
+            }
+          } catch {
+            // Fallback to default
+            shippingFee = FIXED_SHIPPING_FEE_AUD;
+            shippingServiceName = "Standard Parcel";
+          }
+        } else {
+          shippingFee = FIXED_SHIPPING_FEE_AUD;
+          shippingServiceName = "Standard Parcel";
+        }
+      }
+
       const total = subtotal + shippingFee;
 
       // Generate order number
@@ -87,7 +162,7 @@ export const stripeCheckoutRouter = router({
             currency: "aud",
             product_data: {
               name: "Shipping Fee",
-              description: "Standard shipping within Australia",
+              description: shippingServiceName || "Standard shipping within Australia",
             },
             unit_amount: Math.round(shippingFee * 100),
           },
@@ -109,8 +184,13 @@ export const stripeCheckoutRouter = router({
           fulfillment_type: effectiveFulfillment,
           has_cake_items: hasCakeItems ? "true" : "false",
           shipping_address: input.shippingAddress || "",
+          shipping_postcode: input.shippingPostcode || "",
+          shipping_service: shippingServiceName,
+          shipping_fee: shippingFee.toFixed(2),
           pickup_branch_id: input.pickupBranchId?.toString() || "",
           pickup_branch_name: input.pickupBranchName || "",
+          pickup_date: input.pickupDate || "",
+          pickup_time: input.pickupTime || "",
           items_json: JSON.stringify(
             input.items.map((i) => ({
               pid: i.productId,
@@ -168,6 +248,8 @@ export const stripeCheckoutRouter = router({
             shippingFee: shippingFee.toFixed(2),
             shippingAddress: effectiveFulfillment === "shipping" ? (input.shippingAddress || null) : null,
             pickupBranchId: effectiveFulfillment === "pickup" ? (input.pickupBranchId || null) : null,
+            pickupDate: input.pickupDate || null,
+            pickupTime: input.pickupTime || null,
             hasCakeItems,
             stripeSessionId: session.id,
           });
@@ -198,6 +280,7 @@ export const stripeCheckoutRouter = router({
         fulfillmentType: effectiveFulfillment,
         hasCakeItems,
         shippingFee,
+        shippingServiceName,
       };
     }),
 
@@ -215,7 +298,11 @@ export const stripeCheckoutRouter = router({
           fulfillmentType: (session.metadata?.fulfillment_type as string) || "pickup",
           hasCakeItems: session.metadata?.has_cake_items === "true",
           pickupBranchName: (session.metadata?.pickup_branch_name as string) || null,
+          pickupDate: (session.metadata?.pickup_date as string) || null,
+          pickupTime: (session.metadata?.pickup_time as string) || null,
           shippingAddress: (session.metadata?.shipping_address as string) || null,
+          shippingService: (session.metadata?.shipping_service as string) || null,
+          shippingFee: (session.metadata?.shipping_fee as string) || null,
         };
       } catch {
         return {
@@ -225,7 +312,11 @@ export const stripeCheckoutRouter = router({
           fulfillmentType: "pickup",
           hasCakeItems: false,
           pickupBranchName: null,
+          pickupDate: null,
+          pickupTime: null,
           shippingAddress: null,
+          shippingService: null,
+          shippingFee: null,
         };
       }
     }),

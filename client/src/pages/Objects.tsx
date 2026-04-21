@@ -3,20 +3,23 @@
  * Palette: brand-brown, parchment, cocoa, linen
  * Clean, premium presentation — focus on product and spacing
  * Fulfillment: shipping + pickup for regular items, pickup-only for cakes
+ * Features: dynamic AusPost shipping, cake pickup booking in checkout
  */
 import { useMemo, useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import PageLayout from "@/components/PageLayout";
 import { toast } from "sonner";
-import { X, ShoppingBag, Plus, Minus, Truck, Store, AlertTriangle } from "lucide-react";
+import {
+  X, ShoppingBag, Plus, Minus, Truck, Store,
+  AlertTriangle, MapPin, Calendar, Clock, Loader2, ChevronLeft,
+} from "lucide-react";
 import { usePageImage } from "@/hooks/usePageImage";
-import { isPickupOnlyType, FIXED_SHIPPING_FEE_AUD } from "@shared/const";
+import { isPickupOnlyType, DEFAULT_SHIPPING_FEE_AUD } from "@shared/const";
 
 const DEFAULT_HERO =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-objects-aKrCAfQFaFKVp7bwFWiYN7.webp";
 
-// Cart item type
 type CartItem = {
   productId: number;
   productName: string;
@@ -61,26 +64,68 @@ const fade = {
   transition: { duration: 0.6 },
 };
 
+// Generate next 14 days for date picker
+function getAvailableDates(): { value: string; label: string }[] {
+  const dates: { value: string; label: string }[] = [];
+  const today = new Date();
+  for (let i = 1; i <= 14; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() + i);
+    const value = d.toISOString().split("T")[0];
+    const label = d.toLocaleDateString("en-AU", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+    dates.push({ value, label });
+  }
+  return dates;
+}
+
 export default function Objects() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [checkoutStep, setCheckoutStep] = useState<"cart" | "details" | "pickup">("cart");
   const [fulfillmentType, setFulfillmentType] = useState<"shipping" | "pickup">("shipping");
   const [checkoutForm, setCheckoutForm] = useState({
     name: "",
     email: "",
     phone: "",
     shippingAddress: "",
+    shippingPostcode: "",
     pickupBranchId: 0,
+    pickupDate: "",
+    pickupTime: "",
   });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [postcodeInput, setPostcodeInput] = useState("");
+  const [shippingQuote, setShippingQuote] = useState<{
+    price: number;
+    serviceName: string;
+    estimatedDays: string | null;
+    serviceCode: string;
+  } | null>(null);
+  const [isCalculatingShipping, setIsCalculatingShipping] = useState(false);
 
-  const { data: liveProducts } = trpc.publicProducts.list.useQuery({
-    limit: 100,
-  });
+  const { data: liveProducts } = trpc.publicProducts.list.useQuery({ limit: 100 });
   const { data: liveCategories } = trpc.publicProducts.categories.useQuery();
   const { data: branchesData } = trpc.publicBookings.branches.useQuery();
   const checkoutMutation = trpc.stripe.createCheckoutSession.useMutation();
+  const shippingCalcQuery = trpc.stripe.calculateShipping.useQuery(
+    { postcode: postcodeInput },
+    { enabled: postcodeInput.length >= 4, staleTime: 60000 }
+  );
+
+  // Slot availability for cake pickup
+  const slotsQuery = trpc.publicBookings.checkSlots.useQuery(
+    { branchId: checkoutForm.pickupBranchId, date: checkoutForm.pickupDate },
+    {
+      enabled: checkoutForm.pickupBranchId > 0 && checkoutForm.pickupDate.length > 0,
+      staleTime: 30000,
+    }
+  );
+
+  const availableDates = useMemo(() => getAvailableDates(), []);
 
   // Detect if cart has cake items
   const hasCakeItems = useMemo(
@@ -95,17 +140,26 @@ export default function Objects() {
     }
   }, [hasCakeItems, fulfillmentType]);
 
-  // Group live products by category, or fall back to static data
+  // Update shipping quote when API returns
+  useEffect(() => {
+    if (shippingCalcQuery.data && !shippingCalcQuery.isLoading) {
+      setShippingQuote({
+        price: shippingCalcQuery.data.selectedPrice,
+        serviceName: shippingCalcQuery.data.selectedService,
+        estimatedDays: shippingCalcQuery.data.estimatedDays,
+        serviceCode: shippingCalcQuery.data.quotes[0]?.serviceCode || "",
+      });
+      setIsCalculatingShipping(false);
+    }
+  }, [shippingCalcQuery.data, shippingCalcQuery.isLoading]);
+
+  // Group live products by category
   const displayData = useMemo(() => {
     if (!liveProducts || liveProducts.length === 0) return fallbackObjects;
-
     const categoryMap = new Map<number, string>();
     if (liveCategories) {
-      for (const c of liveCategories) {
-        categoryMap.set(c.id, c.name);
-      }
+      for (const c of liveCategories) categoryMap.set(c.id, c.name);
     }
-
     const grouped: Record<string, { id: number; name: string; detail: string; price: number; imageUrl: string; productType: string }[]> = {};
     for (const p of liveProducts) {
       const catName = p.categoryId ? categoryMap.get(p.categoryId) || "Other" : "Other";
@@ -119,7 +173,6 @@ export default function Objects() {
         productType: p.productType,
       });
     }
-
     return Object.entries(grouped).map(([category, items]) => ({ category, items }));
   }, [liveProducts, liveCategories]);
 
@@ -127,66 +180,57 @@ export default function Objects() {
     setCart((prev) => {
       const existing = prev.find((c) => c.productId === item.id);
       if (existing) {
-        return prev.map((c) =>
-          c.productId === item.id ? { ...c, quantity: c.quantity + 1 } : c
-        );
+        return prev.map((c) => c.productId === item.id ? { ...c, quantity: c.quantity + 1 } : c);
       }
-      return [
-        ...prev,
-        {
-          productId: item.id,
-          productName: item.name,
-          price: item.price,
-          quantity: 1,
-          imageUrl: item.imageUrl || undefined,
-          productType: item.productType,
-        },
-      ];
+      return [...prev, { productId: item.id, productName: item.name, price: item.price, quantity: 1, imageUrl: item.imageUrl || undefined, productType: item.productType }];
     });
     toast.success(`${item.name} added to bag`);
   }, []);
 
   const updateQuantity = useCallback((productId: number, delta: number) => {
-    setCart((prev) =>
-      prev
-        .map((c) =>
-          c.productId === productId ? { ...c, quantity: c.quantity + delta } : c
-        )
-        .filter((c) => c.quantity > 0)
-    );
+    setCart((prev) => prev.map((c) => c.productId === productId ? { ...c, quantity: c.quantity + delta } : c).filter((c) => c.quantity > 0));
   }, []);
 
   const removeFromCart = useCallback((productId: number) => {
     setCart((prev) => prev.filter((c) => c.productId !== productId));
   }, []);
 
-  const cartSubtotal = useMemo(
-    () => cart.reduce((sum, c) => sum + c.price * c.quantity, 0),
-    [cart]
-  );
-  const shippingFee = fulfillmentType === "shipping" ? FIXED_SHIPPING_FEE_AUD : 0;
+  const cartSubtotal = useMemo(() => cart.reduce((sum, c) => sum + c.price * c.quantity, 0), [cart]);
+  const shippingFee = fulfillmentType === "shipping" ? (shippingQuote?.price ?? DEFAULT_SHIPPING_FEE_AUD) : 0;
   const cartTotal = cartSubtotal + shippingFee;
-  const cartCount = useMemo(
-    () => cart.reduce((sum, c) => sum + c.quantity, 0),
-    [cart]
-  );
+  const cartCount = useMemo(() => cart.reduce((sum, c) => sum + c.quantity, 0), [cart]);
 
   const selectedBranch = useMemo(() => {
     if (!branchesData || !checkoutForm.pickupBranchId) return null;
     return branchesData.find((b: any) => b.id === checkoutForm.pickupBranchId) || null;
   }, [branchesData, checkoutForm.pickupBranchId]);
 
+  const handlePostcodeChange = (value: string) => {
+    const cleaned = value.replace(/\D/g, "").slice(0, 4);
+    setPostcodeInput(cleaned);
+    setCheckoutForm((f) => ({ ...f, shippingPostcode: cleaned }));
+    if (cleaned.length >= 4) {
+      setIsCalculatingShipping(true);
+      setShippingQuote(null);
+    }
+  };
+
+  // Validate before proceeding to payment
+  const canProceedToPayment = useMemo(() => {
+    if (!checkoutForm.name || !checkoutForm.email) return false;
+    if (fulfillmentType === "shipping") {
+      if (!checkoutForm.shippingAddress || postcodeInput.length < 4) return false;
+    }
+    if (fulfillmentType === "pickup") {
+      if (!checkoutForm.pickupBranchId) return false;
+      if (hasCakeItems && (!checkoutForm.pickupDate || !checkoutForm.pickupTime)) return false;
+    }
+    return true;
+  }, [checkoutForm, fulfillmentType, postcodeInput, hasCakeItems]);
+
   const handleCheckout = async () => {
-    if (!checkoutForm.name || !checkoutForm.email) {
-      toast.error("Please enter your name and email");
-      return;
-    }
-    if (fulfillmentType === "shipping" && !checkoutForm.shippingAddress) {
-      toast.error("Please enter your shipping address");
-      return;
-    }
-    if (fulfillmentType === "pickup" && !checkoutForm.pickupBranchId) {
-      toast.error("Please select a pickup location");
+    if (!canProceedToPayment) {
+      toast.error("Please complete all required fields");
       return;
     }
     setIsProcessing(true);
@@ -202,8 +246,12 @@ export default function Objects() {
         customerPhone: checkoutForm.phone || undefined,
         fulfillmentType,
         shippingAddress: fulfillmentType === "shipping" ? checkoutForm.shippingAddress : undefined,
+        shippingPostcode: fulfillmentType === "shipping" ? postcodeInput : undefined,
+        shippingServiceCode: fulfillmentType === "shipping" && shippingQuote ? shippingQuote.serviceCode : undefined,
         pickupBranchId: fulfillmentType === "pickup" ? checkoutForm.pickupBranchId : undefined,
         pickupBranchName: fulfillmentType === "pickup" && selectedBranch ? (selectedBranch as any).name : undefined,
+        pickupDate: hasCakeItems ? checkoutForm.pickupDate : undefined,
+        pickupTime: hasCakeItems ? checkoutForm.pickupTime : undefined,
       });
       if (result.checkoutUrl) {
         toast.success("Redirecting to secure checkout...");
@@ -222,6 +270,27 @@ export default function Objects() {
   const parchment = "oklch(0.95 0.01 75)";
   const midBrown = "oklch(0.45 0.06 45)";
   const borderColor = "oklch(0.84 0.025 72 / 0.4)";
+  const accent = "oklch(0.55 0.12 35)";
+
+  const inputStyle = {
+    fontFamily: "var(--font-body)",
+    borderColor,
+    backgroundColor: "transparent",
+    color: brown,
+  };
+
+  const labelStyle = {
+    fontFamily: "var(--font-body)",
+    fontWeight: 500 as const,
+    letterSpacing: "0.05em",
+    color: `${brown}80`,
+  };
+
+  // Available time slots for cake pickup
+  const availableSlots = useMemo(() => {
+    if (!slotsQuery.data?.slots) return [];
+    return slotsQuery.data.slots.filter((s: any) => s.available);
+  }, [slotsQuery.data]);
 
   return (
     <PageLayout
@@ -234,13 +303,13 @@ export default function Objects() {
         <motion.button
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          onClick={() => { setCartOpen(true); setCheckoutOpen(false); }}
+          onClick={() => { setCartOpen(true); setCheckoutStep("cart"); }}
           className="fixed bottom-8 right-8 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg cursor-pointer"
           style={{ backgroundColor: brown, color: cream }}
         >
           <ShoppingBag size={20} />
           <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-[10px] font-medium flex items-center justify-center"
-            style={{ backgroundColor: "oklch(0.55 0.12 35)", color: "#fff" }}>
+            style={{ backgroundColor: accent, color: "#fff" }}>
             {cartCount}
           </span>
         </motion.button>
@@ -266,91 +335,102 @@ export default function Objects() {
               className="fixed top-0 right-0 h-full w-full max-w-md z-[70] flex flex-col shadow-2xl"
               style={{ backgroundColor: parchment }}
             >
-              {/* Cart Header */}
+              {/* Header */}
               <div className="flex items-center justify-between p-6 border-b" style={{ borderColor }}>
-                <h2 className="text-lg" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: brown }}>
-                  Your Bag ({cartCount})
-                </h2>
+                {checkoutStep !== "cart" ? (
+                  <button
+                    onClick={() => setCheckoutStep(checkoutStep === "pickup" ? "details" : "cart")}
+                    className="flex items-center gap-1 cursor-pointer"
+                    style={{ color: `${brown}99` }}
+                  >
+                    <ChevronLeft size={18} />
+                    <span className="text-xs uppercase" style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.04em" }}>Back</span>
+                  </button>
+                ) : (
+                  <h2 className="text-lg" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: brown }}>
+                    Your Bag ({cartCount})
+                  </h2>
+                )}
                 <button onClick={() => setCartOpen(false)} className="p-1 cursor-pointer" style={{ color: `${brown}99` }}>
                   <X size={20} />
                 </button>
               </div>
 
-              {/* Cart Items */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                {cart.length === 0 ? (
-                  <p className="text-center text-sm py-12" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: `${brown}80` }}>
-                    Your bag is empty
-                  </p>
-                ) : (
-                  <>
-                    {cart.map((item) => (
-                      <div key={item.productId} className="flex gap-4">
-                        <div className="w-16 h-20 flex-shrink-0 overflow-hidden" style={{ backgroundColor: cream }}>
-                          {item.imageUrl ? (
-                            <img src={item.imageUrl} alt={item.productName} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <ShoppingBag size={14} style={{ color: "oklch(0.72 0.03 65)" }} />
+              {/* === STEP: CART === */}
+              {checkoutStep === "cart" && (
+                <>
+                  <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                    {cart.length === 0 ? (
+                      <p className="text-center text-sm py-12" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: `${brown}80` }}>
+                        Your bag is empty
+                      </p>
+                    ) : (
+                      <>
+                        {cart.map((item) => (
+                          <div key={item.productId} className="flex gap-4">
+                            <div className="w-16 h-20 flex-shrink-0 overflow-hidden" style={{ backgroundColor: cream }}>
+                              {item.imageUrl ? (
+                                <img src={item.imageUrl} alt={item.productName} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <ShoppingBag size={14} style={{ color: "oklch(0.72 0.03 65)" }} />
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-sm mb-1" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: brown }}>
-                            {item.productName}
-                          </h3>
-                          <div className="flex items-center gap-2 mb-2">
-                            <p className="text-xs" style={{ fontFamily: "var(--font-body)", color: midBrown }}>
-                              ${item.price.toFixed(0)}
+                            <div className="flex-1">
+                              <h3 className="text-sm mb-1" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: brown }}>
+                                {item.productName}
+                              </h3>
+                              <div className="flex items-center gap-2 mb-2">
+                                <p className="text-xs" style={{ fontFamily: "var(--font-body)", color: midBrown }}>
+                                  ${item.price.toFixed(0)}
+                                </p>
+                                {isPickupOnlyType(item.productType) && (
+                                  <span className="text-[9px] uppercase px-1.5 py-0.5" style={{
+                                    fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.05em",
+                                    backgroundColor: `${accent}18`, color: accent,
+                                  }}>
+                                    Pickup Only
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <button onClick={() => updateQuantity(item.productId, -1)} className="w-6 h-6 flex items-center justify-center border cursor-pointer" style={{ borderColor, color: `${brown}99` }}>
+                                  <Minus size={12} />
+                                </button>
+                                <span className="text-xs" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: brown }}>
+                                  {item.quantity}
+                                </span>
+                                <button onClick={() => updateQuantity(item.productId, 1)} className="w-6 h-6 flex items-center justify-center border cursor-pointer" style={{ borderColor, color: `${brown}99` }}>
+                                  <Plus size={12} />
+                                </button>
+                                <button onClick={() => removeFromCart(item.productId)} className="ml-auto text-[10px] uppercase cursor-pointer" style={{ fontFamily: "var(--font-body)", letterSpacing: "0.1em", color: `${brown}66` }}>
+                                  Remove
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* Cake items notice */}
+                        {hasCakeItems && (
+                          <div className="flex items-start gap-3 p-4 rounded" style={{ backgroundColor: `${accent}0A`, border: `1px solid ${accent}26` }}>
+                            <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" style={{ color: accent }} />
+                            <p className="text-xs leading-relaxed" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: accent }}>
+                              Your bag contains cake items. Cakes are available for pickup only. Shipping has been disabled for this order.
                             </p>
-                            {isPickupOnlyType(item.productType) && (
-                              <span className="text-[9px] uppercase px-1.5 py-0.5" style={{
-                                fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.05em",
-                                backgroundColor: "oklch(0.55 0.12 35 / 0.1)", color: "oklch(0.55 0.12 35)",
-                              }}>
-                                Pickup Only
-                              </span>
-                            )}
                           </div>
-                          <div className="flex items-center gap-3">
-                            <button onClick={() => updateQuantity(item.productId, -1)} className="w-6 h-6 flex items-center justify-center border cursor-pointer" style={{ borderColor: `${borderColor}`, color: `${brown}99` }}>
-                              <Minus size={12} />
-                            </button>
-                            <span className="text-xs" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: brown }}>
-                              {item.quantity}
-                            </span>
-                            <button onClick={() => updateQuantity(item.productId, 1)} className="w-6 h-6 flex items-center justify-center border cursor-pointer" style={{ borderColor: `${borderColor}`, color: `${brown}99` }}>
-                              <Plus size={12} />
-                            </button>
-                            <button onClick={() => removeFromCart(item.productId)} className="ml-auto text-[10px] uppercase cursor-pointer" style={{ fontFamily: "var(--font-body)", letterSpacing: "0.1em", color: `${brown}66` }}>
-                              Remove
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* Cake items notice */}
-                    {hasCakeItems && (
-                      <div className="flex items-start gap-3 p-4 rounded" style={{ backgroundColor: "oklch(0.55 0.12 35 / 0.06)", border: "1px solid oklch(0.55 0.12 35 / 0.15)" }}>
-                        <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" style={{ color: "oklch(0.55 0.12 35)" }} />
-                        <p className="text-xs leading-relaxed" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "oklch(0.55 0.12 35)" }}>
-                          Your bag contains cake items. Cakes are available for pickup only. Shipping has been disabled for this order.
-                        </p>
-                      </div>
+                        )}
+                      </>
                     )}
-                  </>
-                )}
-              </div>
+                  </div>
 
-              {/* Cart Footer */}
-              {cart.length > 0 && (
-                <div className="p-6 border-t" style={{ borderColor }}>
-                  {!checkoutOpen ? (
-                    <>
+                  {/* Cart Footer */}
+                  {cart.length > 0 && (
+                    <div className="p-6 border-t" style={{ borderColor }}>
                       {/* Fulfillment Type Selector */}
                       <div className="mb-4">
-                        <p className="text-[10px] uppercase mb-2" style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.05em", color: `${brown}80` }}>
+                        <p className="text-[10px] uppercase mb-2" style={labelStyle}>
                           Fulfillment Method
                         </p>
                         <div className="flex gap-2">
@@ -382,13 +462,15 @@ export default function Objects() {
                             Store Pickup
                           </button>
                         </div>
-                        {!hasCakeItems && (
-                          <p className="text-[10px] mt-1.5" style={{ fontFamily: "var(--font-body)", color: `${brown}60` }}>
-                            {fulfillmentType === "shipping"
-                              ? `Shipping fee: $${FIXED_SHIPPING_FEE_AUD.toFixed(2)} AUD`
+                        <p className="text-[10px] mt-1.5" style={{ fontFamily: "var(--font-body)", color: `${brown}60` }}>
+                          {hasCakeItems
+                            ? "Pickup required — cakes cannot be shipped"
+                            : fulfillmentType === "shipping"
+                              ? shippingQuote
+                                ? `${shippingQuote.serviceName}: $${shippingQuote.price.toFixed(2)} AUD${shippingQuote.estimatedDays ? ` (${shippingQuote.estimatedDays} business days)` : ""}`
+                                : `Estimated from $${DEFAULT_SHIPPING_FEE_AUD.toFixed(2)} AUD — enter postcode for exact rate`
                               : "Free — collect from our store"}
-                          </p>
-                        )}
+                        </p>
                       </div>
 
                       {/* Order Summary */}
@@ -401,7 +483,10 @@ export default function Objects() {
                         </div>
                         {fulfillmentType === "shipping" && (
                           <div className="flex justify-between">
-                            <span className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: `${brown}99` }}>Shipping</span>
+                            <span className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: `${brown}99` }}>
+                              Shipping
+                              {isCalculatingShipping && <Loader2 size={10} className="inline ml-1 animate-spin" />}
+                            </span>
                             <span className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: brown }}>
                               ${shippingFee.toFixed(2)}
                             </span>
@@ -416,124 +501,324 @@ export default function Objects() {
                       </div>
 
                       <button
-                        onClick={() => setCheckoutOpen(true)}
+                        onClick={() => setCheckoutStep("details")}
                         className="w-full py-3 text-[11px] uppercase cursor-pointer transition-opacity hover:opacity-80"
                         style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.04em", backgroundColor: brown, color: cream }}
                       >
                         Proceed to Checkout
                       </button>
-                    </>
-                  ) : (
-                    <div className="space-y-3">
-                      <input
-                        type="text"
-                        placeholder="Full Name *"
-                        value={checkoutForm.name}
-                        onChange={(e) => setCheckoutForm((f) => ({ ...f, name: e.target.value }))}
-                        className="w-full px-4 py-3 text-sm border outline-none"
-                        style={{ fontFamily: "var(--font-body)", borderColor, backgroundColor: "transparent", color: brown }}
-                      />
-                      <input
-                        type="email"
-                        placeholder="Email Address *"
-                        value={checkoutForm.email}
-                        onChange={(e) => setCheckoutForm((f) => ({ ...f, email: e.target.value }))}
-                        className="w-full px-4 py-3 text-sm border outline-none"
-                        style={{ fontFamily: "var(--font-body)", borderColor, backgroundColor: "transparent", color: brown }}
-                      />
-                      <input
-                        type="tel"
-                        placeholder="Phone (optional)"
-                        value={checkoutForm.phone}
-                        onChange={(e) => setCheckoutForm((f) => ({ ...f, phone: e.target.value }))}
-                        className="w-full px-4 py-3 text-sm border outline-none"
-                        style={{ fontFamily: "var(--font-body)", borderColor, backgroundColor: "transparent", color: brown }}
-                      />
+                    </div>
+                  )}
+                </>
+              )}
 
-                      {/* Fulfillment-specific fields */}
-                      {fulfillmentType === "shipping" ? (
-                        <div>
-                          <textarea
-                            placeholder="Shipping Address *"
-                            value={checkoutForm.shippingAddress}
-                            onChange={(e) => setCheckoutForm((f) => ({ ...f, shippingAddress: e.target.value }))}
-                            rows={3}
-                            className="w-full px-4 py-3 text-sm border outline-none resize-none"
-                            style={{ fontFamily: "var(--font-body)", borderColor, backgroundColor: "transparent", color: brown }}
-                          />
-                          <p className="text-[10px] mt-1" style={{ fontFamily: "var(--font-body)", color: `${brown}60` }}>
-                            Shipping within Australia — ${FIXED_SHIPPING_FEE_AUD.toFixed(2)} AUD
-                          </p>
+              {/* === STEP: DETAILS (customer info + shipping/pickup) === */}
+              {checkoutStep === "details" && (
+                <>
+                  <div className="flex-1 overflow-y-auto p-6 space-y-5">
+                    <h3 className="text-base mb-1" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: brown }}>
+                      Your Details
+                    </h3>
+
+                    <input
+                      type="text"
+                      placeholder="Full Name *"
+                      value={checkoutForm.name}
+                      onChange={(e) => setCheckoutForm((f) => ({ ...f, name: e.target.value }))}
+                      className="w-full px-4 py-3 text-sm border outline-none"
+                      style={inputStyle}
+                    />
+                    <input
+                      type="email"
+                      placeholder="Email Address *"
+                      value={checkoutForm.email}
+                      onChange={(e) => setCheckoutForm((f) => ({ ...f, email: e.target.value }))}
+                      className="w-full px-4 py-3 text-sm border outline-none"
+                      style={inputStyle}
+                    />
+                    <input
+                      type="tel"
+                      placeholder="Phone (optional)"
+                      value={checkoutForm.phone}
+                      onChange={(e) => setCheckoutForm((f) => ({ ...f, phone: e.target.value }))}
+                      className="w-full px-4 py-3 text-sm border outline-none"
+                      style={inputStyle}
+                    />
+
+                    {/* === SHIPPING FIELDS === */}
+                    {fulfillmentType === "shipping" && (
+                      <div className="space-y-4 pt-2">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Truck size={14} style={{ color: midBrown }} />
+                          <p className="text-[10px] uppercase" style={labelStyle}>Shipping Details</p>
                         </div>
-                      ) : (
+
+                        <textarea
+                          placeholder="Shipping Address *"
+                          value={checkoutForm.shippingAddress}
+                          onChange={(e) => setCheckoutForm((f) => ({ ...f, shippingAddress: e.target.value }))}
+                          rows={2}
+                          className="w-full px-4 py-3 text-sm border outline-none resize-none"
+                          style={inputStyle}
+                        />
+
                         <div>
-                          <p className="text-[10px] uppercase mb-2" style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.05em", color: `${brown}80` }}>
-                            Pickup Location *
-                          </p>
-                          {branchesData && branchesData.length > 0 ? (
-                            <div className="space-y-2">
-                              {branchesData.map((branch: any) => (
-                                <button
-                                  key={branch.id}
-                                  onClick={() => setCheckoutForm((f) => ({ ...f, pickupBranchId: branch.id }))}
-                                  className="w-full text-left p-3 border cursor-pointer transition-all"
-                                  style={{
-                                    fontFamily: "var(--font-body)",
-                                    borderColor: checkoutForm.pickupBranchId === branch.id ? brown : borderColor,
-                                    backgroundColor: checkoutForm.pickupBranchId === branch.id ? `${brown}08` : "transparent",
-                                  }}
-                                >
-                                  <p className="text-sm" style={{ fontWeight: 500, color: brown }}>{branch.name}</p>
-                                  <p className="text-xs mt-0.5" style={{ color: `${brown}70` }}>{branch.address}</p>
-                                </button>
-                              ))}
+                          <div className="relative">
+                            <input
+                              type="text"
+                              placeholder="Postcode *"
+                              value={postcodeInput}
+                              onChange={(e) => handlePostcodeChange(e.target.value)}
+                              maxLength={4}
+                              className="w-full px-4 py-3 text-sm border outline-none pr-10"
+                              style={inputStyle}
+                            />
+                            {isCalculatingShipping && (
+                              <Loader2 size={14} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin" style={{ color: midBrown }} />
+                            )}
+                          </div>
+                          {shippingQuote && (
+                            <div className="mt-2 p-3 rounded" style={{ backgroundColor: `${cream}`, border: `1px solid ${borderColor}` }}>
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <p className="text-xs" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: brown }}>
+                                    {shippingQuote.serviceName}
+                                  </p>
+                                  {shippingQuote.estimatedDays && (
+                                    <p className="text-[10px] mt-0.5" style={{ fontFamily: "var(--font-body)", color: `${brown}70` }}>
+                                      Est. {shippingQuote.estimatedDays} business days
+                                    </p>
+                                  )}
+                                </div>
+                                <p className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: brown }}>
+                                  ${shippingQuote.price.toFixed(2)}
+                                </p>
+                              </div>
                             </div>
-                          ) : (
-                            <p className="text-xs p-3 border" style={{ fontFamily: "var(--font-body)", borderColor, color: `${brown}60` }}>
-                              No pickup locations available. Please contact us.
+                          )}
+                          {!shippingQuote && postcodeInput.length < 4 && (
+                            <p className="text-[10px] mt-1" style={{ fontFamily: "var(--font-body)", color: `${brown}60` }}>
+                              Enter your 4-digit postcode for an accurate shipping quote
                             </p>
                           )}
                         </div>
-                      )}
-
-                      {/* Order Summary */}
-                      <div className="space-y-1 pt-2">
-                        <div className="flex justify-between">
-                          <span className="text-xs" style={{ fontFamily: "var(--font-body)", color: `${brown}80` }}>Subtotal</span>
-                          <span className="text-xs" style={{ fontFamily: "var(--font-body)", color: brown }}>${cartSubtotal.toFixed(2)}</span>
-                        </div>
-                        {fulfillmentType === "shipping" && (
-                          <div className="flex justify-between">
-                            <span className="text-xs" style={{ fontFamily: "var(--font-body)", color: `${brown}80` }}>Shipping</span>
-                            <span className="text-xs" style={{ fontFamily: "var(--font-body)", color: brown }}>${shippingFee.toFixed(2)}</span>
-                          </div>
-                        )}
-                        <div className="flex justify-between pt-1 border-t" style={{ borderColor }}>
-                          <span className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: brown }}>Total</span>
-                          <span className="text-sm" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: brown }}>
-                            ${cartTotal.toFixed(2)} AUD
-                          </span>
-                        </div>
                       </div>
+                    )}
 
+                    {/* === PICKUP FIELDS === */}
+                    {fulfillmentType === "pickup" && (
+                      <div className="space-y-4 pt-2">
+                        <div className="flex items-center gap-2 mb-1">
+                          <MapPin size={14} style={{ color: midBrown }} />
+                          <p className="text-[10px] uppercase" style={labelStyle}>Pickup Location *</p>
+                        </div>
+
+                        {branchesData && branchesData.length > 0 ? (
+                          <div className="space-y-2">
+                            {branchesData.map((branch: any) => (
+                              <button
+                                key={branch.id}
+                                onClick={() => {
+                                  setCheckoutForm((f) => ({ ...f, pickupBranchId: branch.id, pickupDate: "", pickupTime: "" }));
+                                }}
+                                className="w-full text-left p-3 border cursor-pointer transition-all"
+                                style={{
+                                  fontFamily: "var(--font-body)",
+                                  borderColor: checkoutForm.pickupBranchId === branch.id ? brown : borderColor,
+                                  backgroundColor: checkoutForm.pickupBranchId === branch.id ? `${brown}08` : "transparent",
+                                }}
+                              >
+                                <p className="text-sm" style={{ fontWeight: 500, color: brown }}>{branch.name}</p>
+                                <p className="text-xs mt-0.5" style={{ color: `${brown}70` }}>{branch.address}</p>
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs p-3 border" style={{ fontFamily: "var(--font-body)", borderColor, color: `${brown}60` }}>
+                            No pickup locations available. Please contact us.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Details Footer */}
+                  <div className="p-6 border-t" style={{ borderColor }}>
+                    {/* Summary */}
+                    <div className="space-y-1 mb-4">
+                      <div className="flex justify-between">
+                        <span className="text-xs" style={{ fontFamily: "var(--font-body)", color: `${brown}80` }}>Subtotal</span>
+                        <span className="text-xs" style={{ fontFamily: "var(--font-body)", color: brown }}>${cartSubtotal.toFixed(2)}</span>
+                      </div>
+                      {fulfillmentType === "shipping" && (
+                        <div className="flex justify-between">
+                          <span className="text-xs" style={{ fontFamily: "var(--font-body)", color: `${brown}80` }}>Shipping</span>
+                          <span className="text-xs" style={{ fontFamily: "var(--font-body)", color: brown }}>${shippingFee.toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between pt-1 border-t" style={{ borderColor }}>
+                        <span className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: brown }}>Total</span>
+                        <span className="text-sm" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: brown }}>
+                          ${cartTotal.toFixed(2)} AUD
+                        </span>
+                      </div>
+                    </div>
+
+                    {hasCakeItems && checkoutForm.pickupBranchId > 0 ? (
+                      <button
+                        onClick={() => setCheckoutStep("pickup")}
+                        className="w-full py-3 text-[11px] uppercase cursor-pointer transition-opacity hover:opacity-80"
+                        style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.04em", backgroundColor: brown, color: cream }}
+                      >
+                        Select Pickup Date & Time
+                      </button>
+                    ) : (
                       <button
                         onClick={handleCheckout}
-                        disabled={isProcessing}
+                        disabled={isProcessing || !canProceedToPayment}
                         className="w-full py-3 text-[11px] uppercase cursor-pointer transition-opacity hover:opacity-80 disabled:opacity-50"
                         style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.04em", backgroundColor: brown, color: cream }}
                       >
                         {isProcessing ? "Processing..." : "Pay with Stripe"}
                       </button>
-                      <button
-                        onClick={() => setCheckoutOpen(false)}
-                        className="w-full py-2 text-[10px] uppercase tracking-[0.15em] cursor-pointer"
-                        style={{ fontFamily: "var(--font-body)", color: `${brown}80` }}
-                      >
-                        Back to Bag
-                      </button>
+                    )}
+                    <button
+                      onClick={() => setCheckoutStep("cart")}
+                      className="w-full py-2 text-[10px] uppercase tracking-[0.15em] cursor-pointer mt-1"
+                      style={{ fontFamily: "var(--font-body)", color: `${brown}80` }}
+                    >
+                      Back to Bag
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* === STEP: PICKUP DATE/TIME (for cake orders) === */}
+              {checkoutStep === "pickup" && (
+                <>
+                  <div className="flex-1 overflow-y-auto p-6 space-y-5">
+                    <h3 className="text-base mb-1" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: brown }}>
+                      Cake Pickup Booking
+                    </h3>
+                    <p className="text-xs" style={{ fontFamily: "var(--font-body)", color: `${brown}80` }}>
+                      Pickup from: <strong style={{ color: brown }}>{(selectedBranch as any)?.name || "Selected branch"}</strong>
+                    </p>
+
+                    {/* Date Selection */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Calendar size={14} style={{ color: midBrown }} />
+                        <p className="text-[10px] uppercase" style={labelStyle}>Select Pickup Date *</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {availableDates.map((d) => (
+                          <button
+                            key={d.value}
+                            onClick={() => setCheckoutForm((f) => ({ ...f, pickupDate: d.value, pickupTime: "" }))}
+                            className="text-left p-2.5 border cursor-pointer transition-all text-xs"
+                            style={{
+                              fontFamily: "var(--font-body)", fontWeight: 400,
+                              borderColor: checkoutForm.pickupDate === d.value ? brown : borderColor,
+                              backgroundColor: checkoutForm.pickupDate === d.value ? `${brown}08` : "transparent",
+                              color: checkoutForm.pickupDate === d.value ? brown : `${brown}99`,
+                            }}
+                          >
+                            {d.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  )}
-                </div>
+
+                    {/* Time Slot Selection */}
+                    {checkoutForm.pickupDate && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Clock size={14} style={{ color: midBrown }} />
+                          <p className="text-[10px] uppercase" style={labelStyle}>Select Pickup Time *</p>
+                        </div>
+
+                        {slotsQuery.isLoading ? (
+                          <div className="flex items-center justify-center py-6">
+                            <Loader2 size={16} className="animate-spin" style={{ color: midBrown }} />
+                            <span className="ml-2 text-xs" style={{ fontFamily: "var(--font-body)", color: `${brown}80` }}>
+                              Checking availability...
+                            </span>
+                          </div>
+                        ) : availableSlots.length > 0 ? (
+                          <div className="grid grid-cols-3 gap-2">
+                            {availableSlots.map((slot: any) => (
+                              <button
+                                key={slot.time}
+                                onClick={() => setCheckoutForm((f) => ({ ...f, pickupTime: slot.time }))}
+                                className="p-2.5 border cursor-pointer transition-all text-xs text-center"
+                                style={{
+                                  fontFamily: "var(--font-body)", fontWeight: 400,
+                                  borderColor: checkoutForm.pickupTime === slot.time ? brown : borderColor,
+                                  backgroundColor: checkoutForm.pickupTime === slot.time ? `${brown}08` : "transparent",
+                                  color: checkoutForm.pickupTime === slot.time ? brown : `${brown}99`,
+                                }}
+                              >
+                                {slot.time}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="p-4 text-center rounded" style={{ backgroundColor: `${accent}0A`, border: `1px solid ${accent}26` }}>
+                            <p className="text-xs" style={{ fontFamily: "var(--font-body)", color: accent }}>
+                              No available time slots for this date. Please select another date.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Booking Summary */}
+                    {checkoutForm.pickupDate && checkoutForm.pickupTime && (
+                      <div className="p-4 rounded" style={{ backgroundColor: cream, border: `1px solid ${borderColor}` }}>
+                        <p className="text-[10px] uppercase mb-2" style={labelStyle}>Pickup Booking Summary</p>
+                        <div className="space-y-1">
+                          <p className="text-xs" style={{ fontFamily: "var(--font-body)", color: brown }}>
+                            <strong>Location:</strong> {(selectedBranch as any)?.name}
+                          </p>
+                          <p className="text-xs" style={{ fontFamily: "var(--font-body)", color: brown }}>
+                            <strong>Date:</strong> {new Date(checkoutForm.pickupDate + "T12:00:00").toLocaleDateString("en-AU", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+                          </p>
+                          <p className="text-xs" style={{ fontFamily: "var(--font-body)", color: brown }}>
+                            <strong>Time:</strong> {checkoutForm.pickupTime}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Pickup Footer */}
+                  <div className="p-6 border-t" style={{ borderColor }}>
+                    <div className="space-y-1 mb-4">
+                      <div className="flex justify-between pt-1">
+                        <span className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: brown }}>Total</span>
+                        <span className="text-sm" style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: brown }}>
+                          ${cartTotal.toFixed(2)} AUD
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={handleCheckout}
+                      disabled={isProcessing || !canProceedToPayment}
+                      className="w-full py-3 text-[11px] uppercase cursor-pointer transition-opacity hover:opacity-80 disabled:opacity-50"
+                      style={{ fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.04em", backgroundColor: brown, color: cream }}
+                    >
+                      {isProcessing ? "Processing..." : "Pay with Stripe"}
+                    </button>
+                    <button
+                      onClick={() => setCheckoutStep("details")}
+                      className="w-full py-2 text-[10px] uppercase tracking-[0.15em] cursor-pointer mt-1"
+                      style={{ fontFamily: "var(--font-body)", color: `${brown}80` }}
+                    >
+                      Back to Details
+                    </button>
+                  </div>
+                </>
               )}
             </motion.div>
           </>
@@ -557,7 +842,7 @@ export default function Objects() {
         </div>
       </section>
 
-      {/* Product Grid — minimal shop layout */}
+      {/* Product Grid */}
       <section className="pb-20 md:pb-28 px-6 md:px-10">
         <div className="max-w-5xl mx-auto">
           {displayData.map((category, ci) => (
@@ -569,7 +854,6 @@ export default function Objects() {
               transition={{ duration: 0.6, delay: ci * 0.1 }}
               className="mb-16 md:mb-20 last:mb-0"
             >
-              {/* Category Header */}
               <div className="flex items-center gap-4 mb-10">
                 <span
                   className="text-[10px] font-medium uppercase"
@@ -580,7 +864,6 @@ export default function Objects() {
                 <div className="flex-1 h-[1px]" style={{ backgroundColor: borderColor }} />
               </div>
 
-              {/* Items — clean grid with generous spacing */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
                 {category.items.map((item, ii) => (
                   <motion.div
@@ -591,28 +874,16 @@ export default function Objects() {
                     transition={{ duration: 0.5, delay: ii * 0.08 }}
                     className="group"
                   >
-                    {/* Product image or placeholder */}
-                    <div
-                      className="aspect-[4/5] mb-5 overflow-hidden relative"
-                      style={{ backgroundColor: cream }}
-                    >
+                    <div className="aspect-[4/5] mb-5 overflow-hidden relative" style={{ backgroundColor: cream }}>
                       {item.imageUrl ? (
-                        <img
-                          src={item.imageUrl}
-                          alt={item.name}
-                          className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
-                        />
+                        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <span
-                            className="text-[10px] uppercase"
-                            style={{ fontFamily: "var(--font-body)", fontWeight: 400, letterSpacing: "0.04em", color: "oklch(0.72 0.03 65)" }}
-                          >
+                          <span className="text-[10px] uppercase" style={{ fontFamily: "var(--font-body)", fontWeight: 400, letterSpacing: "0.04em", color: "oklch(0.72 0.03 65)" }}>
                             {category.category}
                           </span>
                         </div>
                       )}
-                      {/* Pickup-only badge */}
                       {isPickupOnlyType(item.productType) && (
                         <div className="absolute top-3 left-3 px-2 py-1 text-[9px] uppercase" style={{
                           fontFamily: "var(--font-body)", fontWeight: 500, letterSpacing: "0.05em",
@@ -621,36 +892,22 @@ export default function Objects() {
                           Pickup Only
                         </div>
                       )}
-                      {/* Add to bag overlay */}
                       <button
                         onClick={() => addToCart({ id: item.id, name: item.name, price: item.price, imageUrl: item.imageUrl, productType: item.productType })}
                         className="absolute bottom-0 left-0 right-0 py-3 text-[10px] font-medium uppercase tracking-[0.2em] text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
-                        style={{
-                          fontFamily: "var(--font-body)",
-                          backgroundColor: "oklch(0.34 0.05 45 / 0.9)",
-                          color: cream,
-                        }}
+                        style={{ fontFamily: "var(--font-body)", backgroundColor: "oklch(0.34 0.05 45 / 0.9)", color: cream }}
                       >
                         Add to Bag
                       </button>
                     </div>
-                    <h3
-                      className="text-base md:text-lg mb-1 group-hover:opacity-60 transition-opacity duration-400"
-                      style={{ fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "0.005em", color: brown }}
-                    >
+                    <h3 className="text-base md:text-lg mb-1 group-hover:opacity-60 transition-opacity duration-400" style={{ fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "0.005em", color: brown }}>
                       {item.name}
                     </h3>
-                    <p
-                      className="text-[11px] mb-2"
-                      style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: `${brown}73` }}
-                    >
+                    <p className="text-[11px] mb-2" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: `${brown}73` }}>
                       {item.detail}
                     </p>
                     <div className="flex items-center gap-2">
-                      <span
-                        className="text-sm"
-                        style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: midBrown }}
-                      >
+                      <span className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: midBrown }}>
                         ${item.price.toFixed(0)}
                       </span>
                       {!isPickupOnlyType(item.productType) && (
@@ -668,16 +925,10 @@ export default function Objects() {
       </section>
 
       {/* Quote */}
-      <section
-        className="py-20 md:py-28 px-6 md:px-10"
-        style={{ backgroundColor: cream }}
-      >
+      <section className="py-20 md:py-28 px-6 md:px-10" style={{ backgroundColor: cream }}>
         <div className="max-w-2xl mx-auto text-center">
           <motion.div {...fade}>
-            <p
-              className="text-xl md:text-2xl italic"
-              style={{ fontFamily: "var(--font-display)", fontWeight: 500, lineHeight: 1.5, color: brown }}
-            >
+            <p className="text-xl md:text-2xl italic" style={{ fontFamily: "var(--font-display)", fontWeight: 500, lineHeight: 1.5, color: brown }}>
               "The objects we choose shape the rituals we keep."
             </p>
             <div className="editorial-rule mx-auto mt-8" />

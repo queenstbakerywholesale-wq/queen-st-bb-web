@@ -109,3 +109,33 @@
 - [x] Browser QA: test cake product in cart to verify pickup-only enforcement and messaging
 - [x] Browser QA: test mixed cart (cake + non-cake) to verify auto-pickup enforcement
 - [x] Browser QA: add a cake product to an otherwise empty cart and verify shipping is hidden/disabled, pickup is the only option
+
+## Australia Post Dynamic Shipping
+
+- [x] Create server-side Australia Post shipping calculator module
+- [x] Integrate AusPost PAC API for real-time rate calculation (postcode-based)
+- [x] Fallback to flat rate ($14 AUD) if API unavailable or errors
+- [x] Frontend: add postcode input at checkout for shipping cost calculation
+- [x] Frontend: display calculated shipping cost before payment
+- [x] Update Stripe checkout session to include dynamic shipping fee
+- [x] Store shipping cost in order record
+
+## Order Confirmation & Notification System
+
+- [x] Create email template system for order confirmations
+- [x] Send customer confirmation email after successful payment (via webhook)
+- [x] Email includes: order number, product details, total, fulfillment method
+- [x] Email includes shipping address OR pickup details based on fulfillment type
+- [x] Send admin notification for each new order
+- [x] Handle webhook event for payment completion to trigger emails
+
+## Cake Pickup Booking in Checkout
+
+- [x] Add pickup branch selector to checkout form (required for cake orders)
+- [x] Add pickup date selector with closed-day validation
+- [x] Add pickup time selector with available time slots
+- [x] Make branch/date/time required before payment for cake orders
+- [x] Store booking data (branch, date, time) in order record
+- [x] Display booking info in admin order view
+- [x] Include booking info in customer confirmation email
+- [x] Ensure seamless integration with pickup-only rule for cakes

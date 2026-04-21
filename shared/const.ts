@@ -8,7 +8,8 @@ export const NOT_ADMIN_ERR_MSG = 'You do not have required permission (10002)';
 // Fulfillment constants
 export const CAKE_PRODUCT_TYPES = ['cake'] as const;
 export const PICKUP_ONLY_TYPES = CAKE_PRODUCT_TYPES;
-export const FIXED_SHIPPING_FEE_AUD = 12.00;
+export const DEFAULT_SHIPPING_FEE_AUD = 14.00; // Fallback when dynamic calc unavailable
+export const FIXED_SHIPPING_FEE_AUD = DEFAULT_SHIPPING_FEE_AUD; // Backward compat alias
 export const PRODUCT_TYPES = ['tiramisu', 'gelato', 'cake', 'merchandise', 'postcards', 'objects', 'wholesale'] as const;
 
 /** Returns true if the product type is pickup-only (no shipping) */

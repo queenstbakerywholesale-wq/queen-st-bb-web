@@ -176,6 +176,8 @@ describe("stripeCheckout fulfillment logic", () => {
       fulfillmentType: "pickup",
       pickupBranchId: 1,
       pickupBranchName: "Queen St Branch",
+      pickupDate: "2026-05-01",
+      pickupTime: "10:00",
     });
 
     expect(result.checkoutUrl).toBeTruthy();
@@ -209,6 +211,10 @@ describe("stripeCheckout fulfillment logic", () => {
       customerEmail: "test@example.com",
       fulfillmentType: "shipping", // Requesting shipping, but cart has cake
       shippingAddress: "123 Test St, Sydney NSW 2000",
+      pickupBranchId: 1,
+      pickupBranchName: "Queen St Branch",
+      pickupDate: "2026-05-01",
+      pickupTime: "10:00",
     });
 
     // Should be forced to pickup because of cake
@@ -315,6 +321,10 @@ describe("stripeCheckout fulfillment logic", () => {
       customerName: "Test User",
       customerEmail: "test@example.com",
       fulfillmentType: "pickup",
+      pickupBranchId: 1,
+      pickupBranchName: "Queen St Branch",
+      pickupDate: "2026-05-01",
+      pickupTime: "10:00",
     });
 
     expect(result.fulfillmentType).toBe("pickup");

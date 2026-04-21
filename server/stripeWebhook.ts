@@ -5,6 +5,7 @@ import { ENV } from "./_core/env";
 import { getDb } from "./db";
 import { orders, customers } from "../drizzle/schema";
 import { notifyOwner } from "./_core/notification";
+import { sendOrderConfirmation } from "./orderEmail";
 
 function getStripe() {
   if (!ENV.stripeSecretKey) throw new Error("Stripe secret key not configured");
@@ -97,7 +98,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       })
       .where(eq(orders.orderNumber, orderNumber));
 
-    // Update customer totalOrders
+    // Update customer totalOrders and totalSpent
     const orderRows = await db
       .select()
       .from(orders)
@@ -105,23 +106,48 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       .limit(1);
 
     if (orderRows.length > 0 && orderRows[0].customerId) {
-      await db
-        .update(customers)
-        .set({
-          totalOrders: (orderRows[0] as any).totalOrders
-            ? (orderRows[0] as any).totalOrders + 1
-            : 1,
-        })
-        .where(eq(customers.id, orderRows[0].customerId));
+      const existingCustomer = await db
+        .select()
+        .from(customers)
+        .where(eq(customers.id, orderRows[0].customerId))
+        .limit(1);
+
+      if (existingCustomer.length > 0) {
+        const newTotal = existingCustomer[0].totalOrders + 1;
+        const newSpent = (
+          parseFloat(existingCustomer[0].totalSpent) +
+          parseFloat(orderRows[0].total)
+        ).toFixed(2);
+
+        await db
+          .update(customers)
+          .set({
+            totalOrders: newTotal,
+            totalSpent: newSpent,
+          })
+          .where(eq(customers.id, orderRows[0].customerId));
+      }
     }
 
-    // Notify owner
-    await notifyOwner({
-      title: `New Paid Order: ${orderNumber}`,
-      content: `Order ${orderNumber} has been paid via Stripe.\nCustomer: ${session.metadata?.customer_name || "Unknown"}\nEmail: ${session.customer_email || session.metadata?.customer_email || "N/A"}\nAmount: $${((session.amount_total || 0) / 100).toFixed(2)} AUD`,
-    });
-
     console.log(`[Stripe Webhook] Order ${orderNumber} marked as paid`);
+
+    // Send order confirmation email and admin notification
+    try {
+      await sendOrderConfirmation(orderNumber);
+      console.log(`[Stripe Webhook] Order confirmation sent for ${orderNumber}`);
+    } catch (emailErr) {
+      console.error(`[Stripe Webhook] Failed to send order confirmation for ${orderNumber}:`, emailErr);
+      // Non-critical — order is still marked as paid
+      // Fallback: send basic admin notification
+      try {
+        await notifyOwner({
+          title: `New Paid Order: ${orderNumber}`,
+          content: `Order ${orderNumber} has been paid via Stripe.\nCustomer: ${session.metadata?.customer_name || "Unknown"}\nEmail: ${session.customer_email || session.metadata?.customer_email || "N/A"}\nAmount: $${((session.amount_total || 0) / 100).toFixed(2)} AUD\n\nNote: Detailed confirmation email failed to send.`,
+        });
+      } catch {
+        // Notification service unavailable
+      }
+    }
   } catch (err) {
     console.error("[Stripe Webhook] Failed to update order:", err);
   }

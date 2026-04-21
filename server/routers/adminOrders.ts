@@ -2,7 +2,7 @@ import { z } from "zod";
 import { eq, sql, like, and, or, count } from "drizzle-orm";
 import { publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { orders, orderItems, shippingTracking } from "../../drizzle/schema";
+import { orders, orderItems, shippingTracking, branches } from "../../drizzle/schema";
 import { notifyOwner } from "../_core/notification";
 
 export const adminOrdersRouter = router({
@@ -85,7 +85,17 @@ export const adminOrdersRouter = router({
         .from(shippingTracking)
         .where(eq(shippingTracking.orderId, input.id));
 
-      return { ...order, items, tracking: tracking[0] ?? null };
+      // Resolve branch name for pickup orders
+      let pickupBranchName: string | null = null;
+      if (order.pickupBranchId) {
+        const [branch] = await db
+          .select({ name: branches.name, address: branches.address })
+          .from(branches)
+          .where(eq(branches.id, order.pickupBranchId));
+        if (branch) pickupBranchName = branch.name;
+      }
+
+      return { ...order, items, tracking: tracking[0] ?? null, pickupBranchName };
     }),
 
   create: publicProcedure

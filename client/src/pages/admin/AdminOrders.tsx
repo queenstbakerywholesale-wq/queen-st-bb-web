@@ -205,9 +205,9 @@ export default function AdminOrders() {
                     <Store className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "#E65100" }} />
                     <div>
                       <p className="text-xs" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: "#5A3A2E" }}>Store Pickup</p>
-                      {orderDetail.data.pickupBranchId && (
+                      {(orderDetail.data.pickupBranchName || orderDetail.data.pickupBranchId) && (
                         <p className="text-xs" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: "#5A3A2E80" }}>
-                          Branch ID: {orderDetail.data.pickupBranchId}
+                          Branch: {orderDetail.data.pickupBranchName || `#${orderDetail.data.pickupBranchId}`}
                         </p>
                       )}
                       {orderDetail.data.pickupDate && (

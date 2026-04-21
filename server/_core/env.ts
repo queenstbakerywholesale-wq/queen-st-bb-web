@@ -10,4 +10,7 @@ export const ENV = {
   adminPassword: process.env.ADMIN_PASSWORD ?? "",
   stripeSecretKey: process.env.STRIPE_SECRET_KEY ?? "",
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? "",
+  auspostApiKey: process.env.AUSPOST_API_KEY ?? "",
+  resendApiKey: process.env.RESEND_API_KEY ?? "",
+  senderEmail: process.env.SENDER_EMAIL ?? "orders@queenstbb.com",
 };
