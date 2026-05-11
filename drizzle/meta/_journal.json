@@ -36,6 +36,13 @@
       "when": 1778480303504,
       "tag": "0004_spotty_wrecker",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1778484311314,
+      "tag": "0005_living_proudstar",
+      "breakpoints": true
     }
   ]
 }

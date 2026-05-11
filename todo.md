@@ -186,3 +186,34 @@
 - [x] Auto-send gift card email to recipient when email is provided
 - [x] Email includes card image, code, amount, and personal message
 - [x] Confirmation to purchaser that card was sent to recipient
+
+## Admin Brand Sticker Management
+- [x] Create brand_stickers DB table (id, name, imageUrl, imageKey, sortOrder, createdAt)
+- [x] Server: admin upload sticker endpoint (JPG/PNG upload to S3)
+- [x] Server: admin delete sticker endpoint
+- [x] Server: admin list stickers + public list stickers endpoints
+- [x] Admin UI: sticker management page with upload, preview, reorder, delete
+- [x] Gift card editor: load brand stickers from server dynamically
+
+## Order Fulfillment System (Goods Only)
+- [x] Use existing orders.status field for fulfillment workflow (pending → paid → preparing → ready → shipped → completed)
+- [x] Use existing shippingTracking table for trackingNumber and courierName
+- [x] Server: update order fulfillment status endpoint
+- [x] Server: add tracking code endpoint with email notification
+- [x] Admin UI: real-time order list with fulfillment status badges and filters
+- [x] Admin UI: "Mark Packing" and "Mark Ready" buttons
+- [x] Admin UI: "Ship" button with tracking code/carrier input
+- [x] Admin UI: send tracking email to customer on ship
+- [x] Restrict fulfillment workflow to goods orders only (not cake/pickup)
+
+## PWA Admin App
+- [x] Create PWA manifest.json with app name, icons, theme color
+- [x] Add service worker for basic caching
+- [x] Add install prompt banner for mobile users on admin pages
+- [x] Ensure all admin pages are mobile-responsive
+
+## Customer Gift Card Balance Page
+- [x] Create customer /gift-cards/balance page
+- [x] Balance check by code (no auth required)
+- [x] Display balance, transaction history per card
+- [x] Link from gift cards page and navigation

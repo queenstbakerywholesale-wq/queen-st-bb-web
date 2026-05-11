@@ -358,3 +358,16 @@ export const giftCardTransactions = mysqlTable("gift_card_transactions", {
 });
 export type GiftCardTransaction = typeof giftCardTransactions.$inferSelect;
 export type InsertGiftCardTransaction = typeof giftCardTransactions.$inferInsert;
+
+// ─── Brand Stickers (for Gift Card Editor) ──────────────────────
+export const brandStickers = mysqlTable("brand_stickers", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(),
+  imageUrl: text("imageUrl").notNull(),
+  imageKey: varchar("imageKey", { length: 500 }).notNull(),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type BrandSticker = typeof brandStickers.$inferSelect;
+export type InsertBrandSticker = typeof brandStickers.$inferInsert;

@@ -16,6 +16,7 @@ import CustomerCare from "./pages/CustomerCare";
 import OrderSuccess from "./pages/OrderSuccess";
 import GiftCards from "./pages/GiftCards";
 import GiftCardSuccess from "./pages/GiftCardSuccess";
+import MyGiftCards from "./pages/MyGiftCards";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -28,6 +29,7 @@ import AdminBranches from "./pages/admin/AdminBranches";
 import AdminEnquiries from "./pages/admin/AdminEnquiries";
 import AdminPageImages from "./pages/admin/AdminPageImages";
 import AdminGiftCards from "./pages/admin/AdminGiftCards";
+import AdminBrandStickers from "./pages/admin/AdminBrandStickers";
 
 const ADMIN_BASE = "/admin-angela91";
 
@@ -47,6 +49,7 @@ function Router() {
       <Route path="/order-success" component={OrderSuccess} />
       <Route path="/gift-cards" component={GiftCards} />
       <Route path="/gift-cards/success" component={GiftCardSuccess} />
+      <Route path="/gift-cards/balance" component={MyGiftCards} />
 
       {/* Admin login */}
       <Route path={`${ADMIN_BASE}/login`} component={AdminLogin} />
@@ -100,6 +103,11 @@ function Router() {
       <Route path={`${ADMIN_BASE}/gift-cards`}>
         <AdminLayout>
           <AdminGiftCards />
+        </AdminLayout>
+      </Route>
+      <Route path={`${ADMIN_BASE}/brand-stickers`}>
+        <AdminLayout>
+          <AdminBrandStickers />
         </AdminLayout>
       </Route>
 

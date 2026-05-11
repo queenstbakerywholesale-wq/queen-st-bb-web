@@ -17,6 +17,7 @@ import { publicEnquiriesRouter } from "./routers/publicEnquiries";
 import { adminEnquiriesRouter } from "./routers/adminEnquiries";
 import { adminPageImagesRouter, publicPageImagesRouter } from "./routers/adminPageImages";
 import { giftCardRouter } from "./routers/giftCards";
+import { adminBrandStickersRouter } from "./routers/adminBrandStickers";
 
 export const appRouter = router({
   system: systemRouter,
@@ -40,6 +41,7 @@ export const appRouter = router({
   adminUpload: adminUploadRouter,
   adminEnquiries: adminEnquiriesRouter,
   adminPageImages: adminPageImagesRouter,
+  adminBrandStickers: adminBrandStickersRouter,
 
   // Public APIs
   publicProducts: publicProductsRouter,

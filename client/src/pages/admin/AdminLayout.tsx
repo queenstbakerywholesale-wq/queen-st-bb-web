@@ -1,5 +1,6 @@
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import AdminLogin from "./AdminLogin";
+import PwaInstallPrompt from "@/components/PwaInstallPrompt";
 import { Link, useLocation } from "wouter";
 import {
   LayoutDashboard,
@@ -12,6 +13,7 @@ import {
   MessageSquare,
   ImageIcon,
   Gift,
+  Sticker,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -51,6 +53,7 @@ const menuItems = [
   { icon: MessageSquare, label: "Enquiries", path: "/enquiries" },
   { icon: ImageIcon, label: "Page Images", path: "/page-images" },
   { icon: Gift, label: "Gift Cards", path: "/gift-cards" },
+  { icon: Sticker, label: "Brand Stickers", path: "/brand-stickers" },
 ];
 
 export default function AdminLayout({
@@ -236,6 +239,7 @@ export default function AdminLayout({
 
         {/* Page content */}
         <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
+        <PwaInstallPrompt />
       </div>
     </div>
   );

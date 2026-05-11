@@ -136,16 +136,29 @@ export const giftCardRouter = router({
         .where(eq(giftCards.code, input.code.toUpperCase().trim()));
 
       if (!card || card.status === "pending") return null;
-
+      // Fetch transaction history
+      const transactions = await db
+        .select()
+        .from(giftCardTransactions)
+        .where(eq(giftCardTransactions.giftCardId, card.id))
+        .orderBy(desc(giftCardTransactions.createdAt));
       return {
         code: card.code,
         initialAmount: card.initialAmount,
         currentBalance: card.currentBalance,
         status: card.status,
         recipientName: card.recipientName,
+        purchaserName: card.purchaserName,
+        recipientMessage: card.personalMessage,
         selectedImage: card.selectedImage,
         expiresAt: card.expiresAt,
         createdAt: card.createdAt,
+        transactions: transactions.map((t) => ({
+          type: t.type,
+          amount: t.amount,
+          note: t.note,
+          createdAt: t.createdAt,
+        })),
       };
     }),
 

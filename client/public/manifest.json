@@ -1,0 +1,25 @@
+{
+  "name": "Queen St BB Admin",
+  "short_name": "QSB Admin",
+  "description": "Queen St BB — Staff Admin Panel",
+  "start_url": "/admin/orders",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FAFAF8",
+  "theme_color": "#5A3A2E",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/manus-storage/pwa-icon-192_ba2242fa.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/manus-storage/pwa-icon-512_46a6dc40.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

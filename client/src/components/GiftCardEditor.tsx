@@ -7,6 +7,7 @@
  * 4. Export the final design as a PNG image
  */
 import { useRef, useState, useCallback, useEffect } from "react";
+import { trpc } from "@/lib/trpc";
 import {
   Upload, Type, Image as ImageIcon, Move, Trash2, Download,
   RotateCcw, Plus, Minus, X, Check, Palette,
@@ -119,6 +120,9 @@ export default function GiftCardEditor({
   isModal = false,
   stickerUrls = [],
 }: EditorProps) {
+  // Load brand stickers from server
+  const { data: serverBrandStickers } = trpc.adminBrandStickers.publicList.useQuery();
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const stickerInputRef = useRef<HTMLInputElement>(null);
@@ -766,10 +770,32 @@ export default function GiftCardEditor({
               ))}
             </div>
 
-            {stickerUrls.length > 0 && (
+            {/* Server Brand Stickers */}
+            {serverBrandStickers && serverBrandStickers.length > 0 && (
               <>
                 <p className="text-[10px] uppercase tracking-wider pt-2" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: "#8B7355" }}>
                   Brand Stickers
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {serverBrandStickers.map((sticker) => (
+                    <button
+                      key={sticker.id}
+                      onClick={() => addSticker(sticker.imageUrl)}
+                      className="aspect-square rounded-md border overflow-hidden hover:border-[#3A2A1E] transition-colors p-1"
+                      style={{ borderColor: "#E8DDD0", backgroundColor: "#FAFAF8" }}
+                      title={sticker.name}
+                    >
+                      <img src={sticker.imageUrl} alt={sticker.name} className="w-full h-full object-contain" />
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {stickerUrls.length > 0 && (
+              <>
+                <p className="text-[10px] uppercase tracking-wider pt-2" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: "#8B7355" }}>
+                  My Uploads
                 </p>
                 <div className="grid grid-cols-3 gap-2">
                   {stickerUrls.map((url, i) => (
