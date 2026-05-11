@@ -315,6 +315,69 @@ export const giftCardRouter = router({
       };
     }),
 
+  /** Redeem gift card for an order (used at checkout) */
+  redeemForOrder: publicProcedure
+    .input(
+      z.object({
+        code: z.string().min(1),
+        amount: z.number().min(0.01),
+        orderId: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const [card] = await db
+        .select()
+        .from(giftCards)
+        .where(eq(giftCards.code, input.code.trim().toUpperCase()));
+
+      if (!card) throw new Error("Gift card not found");
+      if (card.status !== "active") throw new Error("Gift card is not active");
+
+      const currentBalance = parseFloat(card.currentBalance);
+      if (input.amount > currentBalance) {
+        throw new Error(`Insufficient balance. Available: $${currentBalance.toFixed(2)}`);
+      }
+
+      const newBalance = currentBalance - input.amount;
+      const newStatus = newBalance <= 0 ? "depleted" : "active";
+
+      await db
+        .update(giftCards)
+        .set({
+          currentBalance: newBalance.toFixed(2),
+          status: newStatus as any,
+        })
+        .where(eq(giftCards.id, card.id));
+
+      await db.insert(giftCardTransactions).values({
+        giftCardId: card.id,
+        type: "redemption",
+        amount: input.amount.toFixed(2),
+        balanceAfter: newBalance.toFixed(2),
+        note: input.orderId ? `Order: ${input.orderId}` : "Online order redemption",
+        performedBy: "Customer",
+      });
+
+      // Sync with Square if configured
+      if (card.squareGiftCardId) {
+        await redeemSquareGiftCard(
+          card.squareGiftCardId,
+          input.amount,
+          `order-${input.orderId || Date.now()}`
+        ).catch((err: any) => console.error("[Square] Sync failed:", err));
+      }
+
+      return {
+        success: true,
+        amountDeducted: input.amount.toFixed(2),
+        newBalance: newBalance.toFixed(2),
+        cardCode: card.code,
+      };
+    }),
+
   /** Admin: void/cancel a gift card */
   adminVoidCard: publicProcedure
     .input(

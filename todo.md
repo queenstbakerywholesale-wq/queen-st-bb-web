@@ -161,3 +161,28 @@
 - [x] Square POS integration: create gift card in Square on purchase
 - [x] Square POS integration: sync redemptions between systems
 - [x] Navigation: add Gift Cards link to main nav
+
+## Gift Card Custom Design Editor
+
+- [x] Build canvas-based gift card editor with drag-and-drop functionality
+- [x] Allow users to drag stickers, logos, and decorations onto the card
+- [x] Allow users to upload their own photos as card background
+- [x] Include brand stickers/logos as default decorative elements
+- [x] Support text overlay with custom message on the card
+- [x] Generate final card image from canvas for download
+- [x] Integrate editor into the gift card purchase flow
+
+## Gift Card as Payment Method
+
+- [x] Add gift card code input field to Objects checkout
+- [x] Server: validate gift card code and check balance
+- [x] Server: apply gift card balance as discount to order total
+- [x] Server: deduct gift card balance on successful payment
+- [x] Handle partial payment (gift card + Stripe for remainder)
+- [x] Show applied gift card discount in checkout summary
+
+## Gift Card Auto-Send to Recipient
+
+- [x] Auto-send gift card email to recipient when email is provided
+- [x] Email includes card image, code, amount, and personal message
+- [x] Confirmation to purchaser that card was sent to recipient

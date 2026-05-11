@@ -1,13 +1,15 @@
 /**
  * Gift Cards — Public purchase page
- * Luxury editorial design with amount selection, image selection, and Stripe checkout
+ * Luxury editorial design with amount selection, image selection, custom editor, and Stripe checkout
+ * Features: preset designs, custom photo upload, drag-and-drop editor, recipient email auto-send
  */
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
-import { Gift, Check, Download, Search } from "lucide-react";
+import { Gift, Check, Search, Paintbrush } from "lucide-react";
+import GiftCardEditor from "@/components/GiftCardEditor";
 
 const AMOUNTS = [30, 50, 70, 100, 150, 200];
 
@@ -49,13 +51,13 @@ function GiftCardPreview({
   amount,
   recipientName,
   message,
-  code,
+  customImageUrl,
 }: {
   image: string;
   amount: number;
   recipientName?: string;
   message?: string;
-  code?: string;
+  customImageUrl?: string | null;
 }) {
   const style = CARD_IMAGES[image] || CARD_IMAGES.classic;
   const isDark = ["classic", "coffee", "celebration"].includes(image);
@@ -65,122 +67,132 @@ function GiftCardPreview({
   return (
     <div
       className="relative w-full aspect-[1.6/1] rounded-xl overflow-hidden shadow-xl"
-      style={{ background: style.gradient }}
+      style={{ background: customImageUrl ? undefined : style.gradient }}
     >
-      {/* Brand */}
-      <div className="absolute top-5 left-6">
-        <p
-          className="text-lg md:text-xl"
-          style={{
-            fontFamily: "var(--font-display)",
-            fontWeight: 500,
-            color: textColor,
-            letterSpacing: "0.02em",
-          }}
-        >
-          Queen St BB
-        </p>
-        <p
-          className="text-[9px] uppercase mt-0.5"
-          style={{
-            fontFamily: "var(--font-body)",
-            fontWeight: 500,
-            letterSpacing: "0.08em",
-            color: subtextColor,
-          }}
-        >
-          Gift Card
-        </p>
-      </div>
+      {customImageUrl && (
+        <img
+          src={customImageUrl}
+          alt="Custom gift card design"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      )}
+      {!customImageUrl && (
+        <>
+          {/* Brand */}
+          <div className="absolute top-5 left-6">
+            <p
+              className="text-lg md:text-xl"
+              style={{
+                fontFamily: "var(--font-display)",
+                fontWeight: 500,
+                color: textColor,
+                letterSpacing: "0.02em",
+              }}
+            >
+              Queen St BB
+            </p>
+            <p
+              className="text-[9px] uppercase mt-0.5"
+              style={{
+                fontFamily: "var(--font-body)",
+                fontWeight: 500,
+                letterSpacing: "0.08em",
+                color: subtextColor,
+              }}
+            >
+              Gift Card
+            </p>
+          </div>
 
-      {/* Amount */}
-      <div className="absolute top-5 right-6 text-right">
-        <p
-          className="text-2xl md:text-3xl"
-          style={{
-            fontFamily: "var(--font-display)",
-            fontWeight: 500,
-            color: style.accent,
-          }}
-        >
-          ${amount}
-        </p>
-        <p
-          className="text-[10px] uppercase"
-          style={{
-            fontFamily: "var(--font-body)",
-            fontWeight: 500,
-            letterSpacing: "0.05em",
-            color: subtextColor,
-          }}
-        >
-          AUD
-        </p>
-      </div>
+          {/* Amount */}
+          <div className="absolute top-5 right-6 text-right">
+            <p
+              className="text-2xl md:text-3xl"
+              style={{
+                fontFamily: "var(--font-display)",
+                fontWeight: 500,
+                color: style.accent,
+              }}
+            >
+              ${amount}
+            </p>
+            <p
+              className="text-[10px] uppercase"
+              style={{
+                fontFamily: "var(--font-body)",
+                fontWeight: 500,
+                letterSpacing: "0.05em",
+                color: subtextColor,
+              }}
+            >
+              AUD
+            </p>
+          </div>
 
-      {/* Recipient & Message */}
-      <div className="absolute bottom-14 left-6 right-6">
-        {recipientName && (
-          <p
-            className="text-sm"
+          {/* Recipient & Message */}
+          <div className="absolute bottom-14 left-6 right-6">
+            {recipientName && (
+              <p
+                className="text-sm"
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontWeight: 500,
+                  color: textColor,
+                }}
+              >
+                For: {recipientName}
+              </p>
+            )}
+            {message && (
+              <p
+                className="text-xs mt-1 opacity-80 line-clamp-2"
+                style={{
+                  fontFamily: "var(--font-body)",
+                  color: subtextColor,
+                  fontStyle: "italic",
+                }}
+              >
+                "{message}"
+              </p>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="absolute bottom-4 left-6 right-6 flex items-end justify-between">
+            <p
+              className="text-[10px] font-mono tracking-wider"
+              style={{ color: subtextColor }}
+            >
+              QSB-XXXX-XXXX-XXXX
+            </p>
+            <p
+              className="text-[9px] uppercase"
+              style={{
+                fontFamily: "var(--font-body)",
+                fontWeight: 500,
+                letterSpacing: "0.05em",
+                color: subtextColor,
+              }}
+            >
+              A Dessert Atelier
+            </p>
+          </div>
+
+          {/* Decorative corner */}
+          <div
+            className="absolute top-0 right-0 w-20 h-20 opacity-10"
             style={{
-              fontFamily: "var(--font-body)",
-              fontWeight: 500,
-              color: textColor,
+              background: `radial-gradient(circle at top right, ${style.accent}, transparent)`,
             }}
-          >
-            For: {recipientName}
-          </p>
-        )}
-        {message && (
-          <p
-            className="text-xs mt-1 opacity-80 line-clamp-2"
-            style={{
-              fontFamily: "var(--font-body)",
-              fontWeight: 400,
-              color: subtextColor,
-              fontStyle: "italic",
-            }}
-          >
-            "{message}"
-          </p>
-        )}
-      </div>
-
-      {/* Code */}
-      <div className="absolute bottom-4 left-6 right-6 flex items-end justify-between">
-        <p
-          className="text-[11px] font-mono tracking-wider"
-          style={{ color: subtextColor }}
-        >
-          {code || "QSB-XXXX-XXXX-XXXX"}
-        </p>
-        <p
-          className="text-[9px] uppercase"
-          style={{
-            fontFamily: "var(--font-body)",
-            fontWeight: 500,
-            letterSpacing: "0.05em",
-            color: subtextColor,
-          }}
-        >
-          A Dessert Atelier
-        </p>
-      </div>
-
-      {/* Decorative corner */}
-      <div
-        className="absolute top-0 right-0 w-20 h-20 opacity-10"
-        style={{
-          background: `radial-gradient(circle at top right, ${style.accent}, transparent)`,
-        }}
-      />
+          />
+        </>
+      )}
     </div>
   );
 }
 
 export default function GiftCards() {
-  const [step, setStep] = useState<"select" | "details" | "processing">("select");
+  const [step, setStep] = useState<"select" | "customise" | "details" | "processing">("select");
   const [selectedAmount, setSelectedAmount] = useState<number>(50);
   const [selectedImage, setSelectedImage] = useState<string>("classic");
   const [purchaserName, setPurchaserName] = useState("");
@@ -188,6 +200,7 @@ export default function GiftCards() {
   const [recipientName, setRecipientName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [personalMessage, setPersonalMessage] = useState("");
+  const [customDesignUrl, setCustomDesignUrl] = useState<string | null>(null);
 
   // Balance check
   const [checkCode, setCheckCode] = useState("");
@@ -195,7 +208,7 @@ export default function GiftCards() {
 
   const balanceQuery = trpc.giftCards.checkBalance.useQuery(
     { code: checkCode },
-    { enabled: checkCode.length >= 10 }
+    { enabled: showBalanceCheck && checkCode.length >= 10 }
   );
 
   const purchaseMutation = trpc.giftCards.purchaseGiftCard.useMutation({
@@ -232,6 +245,12 @@ export default function GiftCards() {
     });
   };
 
+  const handleEditorExport = (dataUrl: string) => {
+    setCustomDesignUrl(dataUrl);
+    setStep("details");
+    toast.success("Custom design saved! Continue to purchase.");
+  };
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#FAF7F2" }}>
       <Navigation variant="solid" />
@@ -260,8 +279,8 @@ export default function GiftCards() {
               lineHeight: 1.6,
             }}
           >
-            Share the joy of artisan desserts. Choose an amount, select a beautiful design,
-            and send a digital gift card to someone special.
+            Share the joy of artisan desserts. Choose an amount, select a beautiful design
+            or create your own, and send a digital gift card to someone special.
           </p>
         </div>
       </section>
@@ -269,315 +288,381 @@ export default function GiftCards() {
       {/* Main Content */}
       <section className="pb-24 px-6 md:px-10">
         <div className="max-w-5xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-start">
-            {/* Left — Preview */}
-            <div className="sticky top-28">
-              <GiftCardPreview
-                image={selectedImage}
-                amount={selectedAmount}
-                recipientName={recipientName}
-                message={personalMessage}
-              />
-              <p
-                className="text-center mt-4 text-xs"
+          {/* Customise Step — Full Width Editor */}
+          {step === "customise" && (
+            <div className="mb-12">
+              <button
+                onClick={() => setStep("select")}
+                className="text-sm mb-6 flex items-center gap-1"
                 style={{
                   fontFamily: "var(--font-body)",
-                  fontWeight: 400,
+                  fontWeight: 500,
                   color: "#8B7355",
                 }}
               >
-                Preview — your gift card will look like this
-              </p>
+                ← Back to selection
+              </button>
+              <GiftCardEditor
+                backgroundGradient={CARD_IMAGES[selectedImage]?.gradient}
+                amount={selectedAmount}
+                recipientName={recipientName}
+                personalMessage={personalMessage}
+                onExport={handleEditorExport}
+              />
             </div>
+          )}
 
-            {/* Right — Form */}
-            <div>
-              {step === "select" && (
-                <div className="space-y-8">
-                  {/* Amount Selection */}
-                  <div>
-                    <h3
-                      className="text-sm uppercase mb-4"
-                      style={{
-                        fontFamily: "var(--font-body)",
-                        fontWeight: 500,
-                        letterSpacing: "0.05em",
-                        color: "#5A4A3E",
-                      }}
-                    >
-                      Select Amount
-                    </h3>
-                    <div className="grid grid-cols-3 gap-3">
-                      {AMOUNTS.map((amount) => (
-                        <button
-                          key={amount}
-                          onClick={() => setSelectedAmount(amount)}
-                          className="py-4 rounded-lg border-2 transition-all duration-300"
-                          style={{
-                            borderColor:
-                              selectedAmount === amount
-                                ? "#3A2A1E"
-                                : "#E8DDD0",
-                            backgroundColor:
-                              selectedAmount === amount
-                                ? "#3A2A1E"
-                                : "transparent",
-                          }}
-                        >
-                          <span
-                            className="text-lg"
-                            style={{
-                              fontFamily: "var(--font-display)",
-                              fontWeight: 500,
-                              color:
-                                selectedAmount === amount
-                                  ? "#FFFFFF"
-                                  : "#3A2A1E",
-                            }}
-                          >
-                            ${amount}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Image Selection */}
-                  <div>
-                    <h3
-                      className="text-sm uppercase mb-4"
-                      style={{
-                        fontFamily: "var(--font-body)",
-                        fontWeight: 500,
-                        letterSpacing: "0.05em",
-                        color: "#5A4A3E",
-                      }}
-                    >
-                      Choose Design
-                    </h3>
-                    <div className="grid grid-cols-3 gap-3">
-                      {Object.entries(CARD_IMAGES).map(([id, style]) => (
-                        <button
-                          key={id}
-                          onClick={() => setSelectedImage(id)}
-                          className="relative aspect-[1.6/1] rounded-lg overflow-hidden border-2 transition-all duration-300"
-                          style={{
-                            borderColor:
-                              selectedImage === id ? "#3A2A1E" : "#E8DDD0",
-                            background: style.gradient,
-                          }}
-                        >
-                          {selectedImage === id && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                              <Check className="w-5 h-5 text-white" />
-                            </div>
-                          )}
-                          <span
-                            className="absolute bottom-1.5 left-2 text-[9px] uppercase"
-                            style={{
-                              fontFamily: "var(--font-body)",
-                              fontWeight: 500,
-                              letterSpacing: "0.04em",
-                              color: ["classic", "coffee", "celebration"].includes(id)
-                                ? "rgba(255,255,255,0.8)"
-                                : "#5A4A3E",
-                            }}
-                          >
-                            {style.label}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
+          {/* Select & Details Steps — Two Column Layout */}
+          {step !== "customise" && (
+            <div className="grid lg:grid-cols-2 gap-12 items-start">
+              {/* Left — Preview */}
+              <div className="sticky top-28">
+                <GiftCardPreview
+                  image={selectedImage}
+                  amount={selectedAmount}
+                  recipientName={recipientName}
+                  message={personalMessage}
+                  customImageUrl={customDesignUrl}
+                />
+                <p
+                  className="text-center mt-4 text-xs"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontWeight: 400,
+                    color: "#8B7355",
+                  }}
+                >
+                  {customDesignUrl
+                    ? "Your custom design — this will be your gift card"
+                    : "Preview — your gift card will look like this"}
+                </p>
+                {customDesignUrl && (
                   <button
-                    onClick={() => setStep("details")}
-                    disabled={!canProceed}
-                    className="w-full py-4 rounded-lg text-sm uppercase tracking-wider transition-all duration-300 disabled:opacity-40"
-                    style={{
-                      fontFamily: "var(--font-body)",
-                      fontWeight: 500,
-                      backgroundColor: "#3A2A1E",
-                      color: "#FFFFFF",
-                      letterSpacing: "0.06em",
-                    }}
+                    onClick={() => { setCustomDesignUrl(null); setStep("customise"); }}
+                    className="block mx-auto mt-2 text-xs underline"
+                    style={{ fontFamily: "var(--font-body)", color: "#8B7355" }}
                   >
-                    Continue — ${selectedAmount} AUD
+                    Edit custom design
                   </button>
-                </div>
-              )}
+                )}
+              </div>
 
-              {step === "details" && (
-                <div className="space-y-6">
-                  <button
-                    onClick={() => setStep("select")}
-                    className="text-sm mb-2 flex items-center gap-1"
-                    style={{
-                      fontFamily: "var(--font-body)",
-                      fontWeight: 500,
-                      color: "#8B7355",
-                    }}
-                  >
-                    ← Back to selection
-                  </button>
-
-                  {/* Your Details */}
-                  <div>
-                    <h3
-                      className="text-sm uppercase mb-3"
-                      style={{
-                        fontFamily: "var(--font-body)",
-                        fontWeight: 500,
-                        letterSpacing: "0.05em",
-                        color: "#5A4A3E",
-                      }}
-                    >
-                      Your Details
-                    </h3>
-                    <div className="space-y-3">
-                      <input
-                        type="text"
-                        placeholder="Your Name *"
-                        value={purchaserName}
-                        onChange={(e) => setPurchaserName(e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg border text-sm"
+              {/* Right — Form */}
+              <div>
+                {step === "select" && (
+                  <div className="space-y-8">
+                    {/* Amount Selection */}
+                    <div>
+                      <h3
+                        className="text-sm uppercase mb-4"
                         style={{
                           fontFamily: "var(--font-body)",
-                          fontWeight: 400,
-                          borderColor: "#E8DDD0",
-                          backgroundColor: "#FFFFFF",
-                          color: "#3A2A1E",
+                          fontWeight: 500,
+                          letterSpacing: "0.05em",
+                          color: "#5A4A3E",
                         }}
-                      />
-                      <input
-                        type="email"
-                        placeholder="Your Email *"
-                        value={purchaserEmail}
-                        onChange={(e) => setPurchaserEmail(e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg border text-sm"
-                        style={{
-                          fontFamily: "var(--font-body)",
-                          fontWeight: 400,
-                          borderColor: "#E8DDD0",
-                          backgroundColor: "#FFFFFF",
-                          color: "#3A2A1E",
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Recipient (Optional) */}
-                  <div>
-                    <h3
-                      className="text-sm uppercase mb-3"
-                      style={{
-                        fontFamily: "var(--font-body)",
-                        fontWeight: 500,
-                        letterSpacing: "0.05em",
-                        color: "#5A4A3E",
-                      }}
-                    >
-                      Recipient (Optional)
-                    </h3>
-                    <div className="space-y-3">
-                      <input
-                        type="text"
-                        placeholder="Recipient's Name"
-                        value={recipientName}
-                        onChange={(e) => setRecipientName(e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg border text-sm"
-                        style={{
-                          fontFamily: "var(--font-body)",
-                          fontWeight: 400,
-                          borderColor: "#E8DDD0",
-                          backgroundColor: "#FFFFFF",
-                          color: "#3A2A1E",
-                        }}
-                      />
-                      <input
-                        type="email"
-                        placeholder="Recipient's Email (to send card directly)"
-                        value={recipientEmail}
-                        onChange={(e) => setRecipientEmail(e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg border text-sm"
-                        style={{
-                          fontFamily: "var(--font-body)",
-                          fontWeight: 400,
-                          borderColor: "#E8DDD0",
-                          backgroundColor: "#FFFFFF",
-                          color: "#3A2A1E",
-                        }}
-                      />
-                      <textarea
-                        placeholder="Personal message (max 500 characters)"
-                        value={personalMessage}
-                        onChange={(e) => setPersonalMessage(e.target.value.slice(0, 500))}
-                        rows={3}
-                        className="w-full px-4 py-3 rounded-lg border text-sm resize-none"
-                        style={{
-                          fontFamily: "var(--font-body)",
-                          fontWeight: 400,
-                          borderColor: "#E8DDD0",
-                          backgroundColor: "#FFFFFF",
-                          color: "#3A2A1E",
-                        }}
-                      />
-                      <p
-                        className="text-right text-[11px]"
-                        style={{ color: "#8B7355" }}
                       >
-                        {personalMessage.length}/500
-                      </p>
+                        Select Amount
+                      </h3>
+                      <div className="grid grid-cols-3 gap-3">
+                        {AMOUNTS.map((amount) => (
+                          <button
+                            key={amount}
+                            onClick={() => setSelectedAmount(amount)}
+                            className="py-4 rounded-lg border-2 transition-all duration-300"
+                            style={{
+                              borderColor:
+                                selectedAmount === amount
+                                  ? "#3A2A1E"
+                                  : "#E8DDD0",
+                              backgroundColor:
+                                selectedAmount === amount
+                                  ? "#3A2A1E"
+                                  : "transparent",
+                            }}
+                          >
+                            <span
+                              className="text-lg"
+                              style={{
+                                fontFamily: "var(--font-display)",
+                                fontWeight: 500,
+                                color:
+                                  selectedAmount === amount
+                                    ? "#FFFFFF"
+                                    : "#3A2A1E",
+                              }}
+                            >
+                              ${amount}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
+
+                    {/* Image Selection */}
+                    <div>
+                      <h3
+                        className="text-sm uppercase mb-4"
+                        style={{
+                          fontFamily: "var(--font-body)",
+                          fontWeight: 500,
+                          letterSpacing: "0.05em",
+                          color: "#5A4A3E",
+                        }}
+                      >
+                        Choose Design
+                      </h3>
+                      <div className="grid grid-cols-3 gap-3">
+                        {Object.entries(CARD_IMAGES).map(([id, style]) => (
+                          <button
+                            key={id}
+                            onClick={() => { setSelectedImage(id); setCustomDesignUrl(null); }}
+                            className="relative aspect-[1.6/1] rounded-lg overflow-hidden border-2 transition-all duration-300"
+                            style={{
+                              borderColor:
+                                selectedImage === id && !customDesignUrl ? "#3A2A1E" : "#E8DDD0",
+                              background: style.gradient,
+                            }}
+                          >
+                            {selectedImage === id && !customDesignUrl && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                                <Check className="w-5 h-5 text-white" />
+                              </div>
+                            )}
+                            <span
+                              className="absolute bottom-1.5 left-2 text-[9px] uppercase"
+                              style={{
+                                fontFamily: "var(--font-body)",
+                                fontWeight: 500,
+                                letterSpacing: "0.04em",
+                                color: ["classic", "coffee", "celebration"].includes(id)
+                                  ? "rgba(255,255,255,0.8)"
+                                  : "#5A4A3E",
+                              }}
+                            >
+                              {style.label}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Customise Button */}
+                    <button
+                      onClick={() => setStep("customise")}
+                      className="w-full py-3.5 rounded-lg border-2 text-sm uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 hover:bg-[#3A2A1E]/5"
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        fontWeight: 500,
+                        borderColor: "#3A2A1E",
+                        color: "#3A2A1E",
+                        letterSpacing: "0.06em",
+                      }}
+                    >
+                      <Paintbrush className="w-4 h-4" />
+                      Customise Design — Add Photos & Text
+                    </button>
+
+                    <button
+                      onClick={() => setStep("details")}
+                      disabled={!canProceed}
+                      className="w-full py-4 rounded-lg text-sm uppercase tracking-wider transition-all duration-300 disabled:opacity-40"
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        fontWeight: 500,
+                        backgroundColor: "#3A2A1E",
+                        color: "#FFFFFF",
+                        letterSpacing: "0.06em",
+                      }}
+                    >
+                      Continue — ${selectedAmount} AUD
+                    </button>
                   </div>
+                )}
 
-                  <button
-                    onClick={handlePurchase}
-                    disabled={!canProceed || purchaseMutation.isPending}
-                    className="w-full py-4 rounded-lg text-sm uppercase tracking-wider transition-all duration-300 disabled:opacity-40 flex items-center justify-center gap-2"
-                    style={{
-                      fontFamily: "var(--font-body)",
-                      fontWeight: 500,
-                      backgroundColor: "#3A2A1E",
-                      color: "#FFFFFF",
-                      letterSpacing: "0.06em",
-                    }}
-                  >
-                    <Gift className="w-4 h-4" />
-                    {purchaseMutation.isPending
-                      ? "Creating..."
-                      : `Pay $${selectedAmount} AUD with Stripe`}
-                  </button>
+                {step === "details" && (
+                  <div className="space-y-6">
+                    <button
+                      onClick={() => setStep("select")}
+                      className="text-sm mb-2 flex items-center gap-1"
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        fontWeight: 500,
+                        color: "#8B7355",
+                      }}
+                    >
+                      ← Back to selection
+                    </button>
 
-                  <p
-                    className="text-center text-xs"
-                    style={{
-                      fontFamily: "var(--font-body)",
-                      color: "#8B7355",
-                    }}
-                  >
-                    You'll be redirected to Stripe for secure payment.
-                    Gift card will be activated instantly after payment.
-                  </p>
-                </div>
-              )}
+                    {/* Your Details */}
+                    <div>
+                      <h3
+                        className="text-sm uppercase mb-3"
+                        style={{
+                          fontFamily: "var(--font-body)",
+                          fontWeight: 500,
+                          letterSpacing: "0.05em",
+                          color: "#5A4A3E",
+                        }}
+                      >
+                        Your Details
+                      </h3>
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          placeholder="Your Name *"
+                          value={purchaserName}
+                          onChange={(e) => setPurchaserName(e.target.value)}
+                          className="w-full px-4 py-3 rounded-lg border text-sm"
+                          style={{
+                            fontFamily: "var(--font-body)",
+                            fontWeight: 400,
+                            borderColor: "#E8DDD0",
+                            backgroundColor: "#FFFFFF",
+                            color: "#3A2A1E",
+                          }}
+                        />
+                        <input
+                          type="email"
+                          placeholder="Your Email *"
+                          value={purchaserEmail}
+                          onChange={(e) => setPurchaserEmail(e.target.value)}
+                          className="w-full px-4 py-3 rounded-lg border text-sm"
+                          style={{
+                            fontFamily: "var(--font-body)",
+                            fontWeight: 400,
+                            borderColor: "#E8DDD0",
+                            backgroundColor: "#FFFFFF",
+                            color: "#3A2A1E",
+                          }}
+                        />
+                      </div>
+                    </div>
 
-              {step === "processing" && (
-                <div className="text-center py-12">
-                  <div className="animate-spin w-8 h-8 border-2 border-[#3A2A1E] border-t-transparent rounded-full mx-auto mb-4" />
-                  <p
-                    className="text-sm"
-                    style={{
-                      fontFamily: "var(--font-body)",
-                      color: "#5A4A3E",
-                    }}
-                  >
-                    Creating your gift card...
-                  </p>
-                </div>
-              )}
+                    {/* Recipient */}
+                    <div>
+                      <h3
+                        className="text-sm uppercase mb-3"
+                        style={{
+                          fontFamily: "var(--font-body)",
+                          fontWeight: 500,
+                          letterSpacing: "0.05em",
+                          color: "#5A4A3E",
+                        }}
+                      >
+                        Recipient
+                      </h3>
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          placeholder="Recipient's Name"
+                          value={recipientName}
+                          onChange={(e) => setRecipientName(e.target.value)}
+                          className="w-full px-4 py-3 rounded-lg border text-sm"
+                          style={{
+                            fontFamily: "var(--font-body)",
+                            fontWeight: 400,
+                            borderColor: "#E8DDD0",
+                            backgroundColor: "#FFFFFF",
+                            color: "#3A2A1E",
+                          }}
+                        />
+                        <input
+                          type="email"
+                          placeholder="Recipient's Email (auto-sends gift card)"
+                          value={recipientEmail}
+                          onChange={(e) => setRecipientEmail(e.target.value)}
+                          className="w-full px-4 py-3 rounded-lg border text-sm"
+                          style={{
+                            fontFamily: "var(--font-body)",
+                            fontWeight: 400,
+                            borderColor: "#E8DDD0",
+                            backgroundColor: "#FFFFFF",
+                            color: "#3A2A1E",
+                          }}
+                        />
+                        {recipientEmail.trim() && (
+                          <p
+                            className="text-xs flex items-center gap-1.5 px-1"
+                            style={{ fontFamily: "var(--font-body)", color: "#2E7D32" }}
+                          >
+                            <Check className="w-3 h-3" />
+                            Gift card will be automatically emailed to {recipientEmail.trim()} after purchase
+                          </p>
+                        )}
+                        <textarea
+                          placeholder="Personal message (max 500 characters)"
+                          value={personalMessage}
+                          onChange={(e) => setPersonalMessage(e.target.value.slice(0, 500))}
+                          rows={3}
+                          className="w-full px-4 py-3 rounded-lg border text-sm resize-none"
+                          style={{
+                            fontFamily: "var(--font-body)",
+                            fontWeight: 400,
+                            borderColor: "#E8DDD0",
+                            backgroundColor: "#FFFFFF",
+                            color: "#3A2A1E",
+                          }}
+                        />
+                        <p
+                          className="text-right text-[11px]"
+                          style={{ color: "#8B7355" }}
+                        >
+                          {personalMessage.length}/500
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={handlePurchase}
+                      disabled={!canProceed || purchaseMutation.isPending}
+                      className="w-full py-4 rounded-lg text-sm uppercase tracking-wider transition-all duration-300 disabled:opacity-40 flex items-center justify-center gap-2"
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        fontWeight: 500,
+                        backgroundColor: "#3A2A1E",
+                        color: "#FFFFFF",
+                        letterSpacing: "0.06em",
+                      }}
+                    >
+                      <Gift className="w-4 h-4" />
+                      {purchaseMutation.isPending
+                        ? "Creating..."
+                        : `Pay $${selectedAmount} AUD with Stripe`}
+                    </button>
+
+                    <p
+                      className="text-center text-xs"
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        color: "#8B7355",
+                      }}
+                    >
+                      You'll be redirected to Stripe for secure payment.
+                      {recipientEmail.trim()
+                        ? " Gift card will be emailed to the recipient automatically."
+                        : " Gift card will be activated instantly after payment."}
+                    </p>
+                  </div>
+                )}
+
+                {step === "processing" && (
+                  <div className="text-center py-12">
+                    <div className="animate-spin w-8 h-8 border-2 border-[#3A2A1E] border-t-transparent rounded-full mx-auto mb-4" />
+                    <p
+                      className="text-sm"
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        color: "#5A4A3E",
+                      }}
+                    >
+                      Creating your gift card...
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Balance Check Section */}
           <div className="mt-24 pt-16 border-t" style={{ borderColor: "#E8DDD0" }}>
@@ -596,7 +681,9 @@ export default function GiftCards() {
                 className="text-sm mb-6"
                 style={{
                   fontFamily: "var(--font-body)",
+                  fontWeight: 400,
                   color: "#8B7355",
+                  lineHeight: 1.6,
                 }}
               >
                 Enter your gift card code to check the remaining balance.

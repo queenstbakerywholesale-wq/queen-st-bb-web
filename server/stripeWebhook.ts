@@ -3,7 +3,7 @@ import { Request, Response, Express } from "express";
 import { eq } from "drizzle-orm";
 import { ENV } from "./_core/env";
 import { getDb } from "./db";
-import { orders, customers } from "../drizzle/schema";
+import { orders, customers, giftCards, giftCardTransactions } from "../drizzle/schema";
 import { notifyOwner } from "./_core/notification";
 import { sendOrderConfirmation } from "./orderEmail";
 import { activateGiftCard } from "./routers/giftCards";
@@ -136,6 +136,48 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }
 
     console.log(`[Stripe Webhook] Order ${orderNumber} marked as paid`);
+
+    // Deduct gift card balance if a gift card was applied
+    const giftCardCode = session.metadata?.gift_card_code;
+    const giftCardDiscountStr = session.metadata?.gift_card_discount;
+    if (giftCardCode && giftCardDiscountStr) {
+      const discountAmount = parseFloat(giftCardDiscountStr);
+      if (discountAmount > 0) {
+        try {
+          const [gc] = await db
+            .select()
+            .from(giftCards)
+            .where(eq(giftCards.code, giftCardCode.trim().toUpperCase()));
+
+          if (gc && gc.status === "active") {
+            const currentBalance = parseFloat(gc.currentBalance);
+            const newBalance = Math.max(0, currentBalance - discountAmount);
+            const newStatus = newBalance <= 0 ? "depleted" : "active";
+
+            await db
+              .update(giftCards)
+              .set({
+                currentBalance: newBalance.toFixed(2),
+                status: newStatus as any,
+              })
+              .where(eq(giftCards.id, gc.id));
+
+            await db.insert(giftCardTransactions).values({
+              giftCardId: gc.id,
+              type: "redemption",
+              amount: discountAmount.toFixed(2),
+              balanceAfter: newBalance.toFixed(2),
+              note: `Order: ${orderNumber}`,
+              performedBy: "System",
+            });
+
+            console.log(`[Stripe Webhook] Gift card ${giftCardCode} deducted $${discountAmount.toFixed(2)}, new balance: $${newBalance.toFixed(2)}`);
+          }
+        } catch (gcErr) {
+          console.error(`[Stripe Webhook] Failed to deduct gift card balance:`, gcErr);
+        }
+      }
+    }
 
     // Send order confirmation email and admin notification
     try {

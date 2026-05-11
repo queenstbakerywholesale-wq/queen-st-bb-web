@@ -67,6 +67,8 @@ export const stripeCheckoutRouter = router({
         pickupBranchName: z.string().optional(),
         pickupDate: z.string().optional(), // YYYY-MM-DD (for cake orders)
         pickupTime: z.string().optional(), // HH:mm (for cake orders)
+        giftCardCode: z.string().optional(), // Gift card code to apply
+        giftCardAmount: z.number().min(0).optional(), // Amount to deduct from gift card
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -138,6 +140,32 @@ export const stripeCheckoutRouter = router({
 
       const total = subtotal + shippingFee;
 
+      // Gift card discount
+      let giftCardDiscount = 0;
+      let giftCardApplied = false;
+      if (input.giftCardCode && input.giftCardAmount && input.giftCardAmount > 0) {
+        // Validate the gift card exists and has sufficient balance
+        const { giftCards: gcTable } = await import("../../drizzle/schema");
+        const db2 = await getDb();
+        if (db2) {
+          const [gc] = await db2
+            .select()
+            .from(gcTable)
+            .where(eq(gcTable.code, input.giftCardCode.trim().toUpperCase()));
+          if (!gc) throw new Error("Gift card not found");
+          if (gc.status !== "active") throw new Error("Gift card is not active");
+          const gcBalance = parseFloat(gc.currentBalance);
+          if (input.giftCardAmount > gcBalance) {
+            throw new Error(`Gift card balance insufficient. Available: $${gcBalance.toFixed(2)}`);
+          }
+          // Cap the discount at the total
+          giftCardDiscount = Math.min(input.giftCardAmount, total);
+          giftCardApplied = true;
+        }
+      }
+
+      const stripeTotal = total - giftCardDiscount;
+
       // Generate order number
       const orderNumber = `QSB-${Date.now().toString(36).toUpperCase()}-${nanoid(4).toUpperCase()}`;
 
@@ -170,17 +198,34 @@ export const stripeCheckoutRouter = router({
         });
       }
 
+      // Create a one-time Stripe coupon for gift card discount
+      let stripeCouponId: string | undefined;
+      if (giftCardDiscount > 0) {
+        const coupon = await stripe.coupons.create({
+          amount_off: Math.round(giftCardDiscount * 100),
+          currency: "aud",
+          duration: "once",
+          name: `Gift Card ${input.giftCardCode}`,
+          max_redemptions: 1,
+        });
+        stripeCouponId = coupon.id;
+      }
+
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         mode: "payment",
         line_items: lineItems,
         customer_email: input.customerEmail,
-        allow_promotion_codes: true,
+        ...(stripeCouponId
+          ? { discounts: [{ coupon: stripeCouponId }] }
+          : { allow_promotion_codes: true }),
         metadata: {
           order_number: orderNumber,
           customer_name: input.customerName,
           customer_email: input.customerEmail,
           customer_phone: input.customerPhone || "",
+          gift_card_code: input.giftCardCode || "",
+          gift_card_discount: giftCardDiscount.toFixed(2),
           fulfillment_type: effectiveFulfillment,
           has_cake_items: hasCakeItems ? "true" : "false",
           shipping_address: input.shippingAddress || "",
@@ -281,6 +326,8 @@ export const stripeCheckoutRouter = router({
         hasCakeItems,
         shippingFee,
         shippingServiceName,
+        giftCardApplied,
+        giftCardDiscount,
       };
     }),
 

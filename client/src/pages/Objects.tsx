@@ -12,7 +12,7 @@ import PageLayout from "@/components/PageLayout";
 import { toast } from "sonner";
 import {
   X, ShoppingBag, Plus, Minus, Truck, Store,
-  AlertTriangle, MapPin, Calendar, Clock, Loader2, ChevronLeft,
+  AlertTriangle, MapPin, Calendar, Clock, Loader2, ChevronLeft, Gift, Check,
 } from "lucide-react";
 import { usePageImage } from "@/hooks/usePageImage";
 import { isPickupOnlyType, DEFAULT_SHIPPING_FEE_AUD } from "@shared/const";
@@ -98,6 +98,9 @@ export default function Objects() {
     pickupTime: "",
   });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [giftCardCode, setGiftCardCode] = useState("");
+  const [giftCardApplied, setGiftCardApplied] = useState<{ code: string; balance: number; discount: number } | null>(null);
+  const [isCheckingGiftCard, setIsCheckingGiftCard] = useState(false);
   const [postcodeInput, setPostcodeInput] = useState("");
   const [shippingQuote, setShippingQuote] = useState<{
     price: number;
@@ -197,7 +200,8 @@ export default function Objects() {
 
   const cartSubtotal = useMemo(() => cart.reduce((sum, c) => sum + c.price * c.quantity, 0), [cart]);
   const shippingFee = fulfillmentType === "shipping" ? (shippingQuote?.price ?? DEFAULT_SHIPPING_FEE_AUD) : 0;
-  const cartTotal = cartSubtotal + shippingFee;
+  const giftCardDiscount = giftCardApplied?.discount || 0;
+  const cartTotal = Math.max(0, cartSubtotal + shippingFee - giftCardDiscount);
   const cartCount = useMemo(() => cart.reduce((sum, c) => sum + c.quantity, 0), [cart]);
 
   const selectedBranch = useMemo(() => {
@@ -228,6 +232,41 @@ export default function Objects() {
     return true;
   }, [checkoutForm, fulfillmentType, postcodeInput, hasCakeItems]);
 
+  const balanceCheckMutation = trpc.giftCards.checkBalance.useQuery(
+    { code: giftCardCode },
+    { enabled: false }
+  );
+
+  const handleApplyGiftCard = async () => {
+    if (!giftCardCode.trim()) return;
+    setIsCheckingGiftCard(true);
+    try {
+      const res = await fetch(`/api/trpc/giftCards.checkBalance?input=${encodeURIComponent(JSON.stringify({ code: giftCardCode.trim().toUpperCase() }))}`);
+      const json = await res.json();
+      const result = json?.result?.data;
+      if (!result || result.status !== "active") {
+        toast.error("Gift card is not active or not found");
+        setIsCheckingGiftCard(false);
+        return;
+      }
+      const balance = parseFloat(result.currentBalance);
+      const totalBeforeDiscount = cartSubtotal + shippingFee;
+      const discount = Math.min(balance, totalBeforeDiscount);
+      setGiftCardApplied({ code: giftCardCode.trim().toUpperCase(), balance, discount });
+      toast.success(`Gift card applied! -$${discount.toFixed(2)}`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to verify gift card");
+    } finally {
+      setIsCheckingGiftCard(false);
+    }
+  };
+
+  const handleRemoveGiftCard = () => {
+    setGiftCardApplied(null);
+    setGiftCardCode("");
+    toast.info("Gift card removed");
+  };
+
   const handleCheckout = async () => {
     if (!canProceedToPayment) {
       toast.error("Please complete all required fields");
@@ -252,6 +291,8 @@ export default function Objects() {
         pickupBranchName: fulfillmentType === "pickup" && selectedBranch ? (selectedBranch as any).name : undefined,
         pickupDate: hasCakeItems ? checkoutForm.pickupDate : undefined,
         pickupTime: hasCakeItems ? checkoutForm.pickupTime : undefined,
+        giftCardCode: giftCardApplied?.code || undefined,
+        giftCardAmount: giftCardApplied?.discount || undefined,
       });
       if (result.checkoutUrl) {
         toast.success("Redirecting to secure checkout...");
@@ -644,6 +685,52 @@ export default function Objects() {
 
                   {/* Details Footer */}
                   <div className="p-6 border-t" style={{ borderColor }}>
+                    {/* Gift Card Input */}
+                    <div className="mb-4">
+                      {!giftCardApplied ? (
+                        <div>
+                          <label className="text-[10px] uppercase tracking-[0.08em] mb-1.5 block" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: `${brown}80` }}>
+                            <Gift className="w-3 h-3 inline mr-1" />Gift Card Code
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="QSB-XXXX-XXXX-XXXX"
+                              value={giftCardCode}
+                              onChange={(e) => setGiftCardCode(e.target.value.toUpperCase())}
+                              className="flex-1 px-3 py-2 rounded border text-xs font-mono tracking-wider"
+                              style={{ ...inputStyle, fontSize: "11px" }}
+                            />
+                            <button
+                              onClick={handleApplyGiftCard}
+                              disabled={isCheckingGiftCard || !giftCardCode.trim()}
+                              className="px-3 py-2 rounded text-[10px] uppercase tracking-wider transition-opacity hover:opacity-80 disabled:opacity-40"
+                              style={{ fontFamily: "var(--font-body)", fontWeight: 500, backgroundColor: brown, color: cream }}
+                            >
+                              {isCheckingGiftCard ? <Loader2 className="w-3 h-3 animate-spin" /> : "Apply"}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between p-2.5 rounded" style={{ backgroundColor: `${brown}08`, border: `1px solid ${borderColor}` }}>
+                          <div className="flex items-center gap-2">
+                            <Check className="w-3.5 h-3.5" style={{ color: "#2E7D32" }} />
+                            <div>
+                              <p className="text-[10px] font-mono" style={{ color: brown }}>{giftCardApplied.code}</p>
+                              <p className="text-[9px]" style={{ color: `${brown}80` }}>Balance: ${giftCardApplied.balance.toFixed(2)}</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={handleRemoveGiftCard}
+                            className="text-[10px] underline cursor-pointer"
+                            style={{ fontFamily: "var(--font-body)", color: `${brown}80` }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
                     {/* Summary */}
                     <div className="space-y-1 mb-4">
                       <div className="flex justify-between">
@@ -654,6 +741,12 @@ export default function Objects() {
                         <div className="flex justify-between">
                           <span className="text-xs" style={{ fontFamily: "var(--font-body)", color: `${brown}80` }}>Shipping</span>
                           <span className="text-xs" style={{ fontFamily: "var(--font-body)", color: brown }}>${shippingFee.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {giftCardDiscount > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-xs" style={{ fontFamily: "var(--font-body)", color: "#2E7D32" }}>Gift Card Discount</span>
+                          <span className="text-xs" style={{ fontFamily: "var(--font-body)", color: "#2E7D32" }}>-${giftCardDiscount.toFixed(2)}</span>
                         </div>
                       )}
                       <div className="flex justify-between pt-1 border-t" style={{ borderColor }}>
