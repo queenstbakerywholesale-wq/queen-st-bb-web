@@ -139,3 +139,25 @@
 - [x] Display booking info in admin order view
 - [x] Include booking info in customer confirmation email
 - [x] Ensure seamless integration with pickup-only rule for cakes
+
+## Gift Card System
+
+- [x] Database schema: gift_cards table (id, code, initialAmount, currentBalance, status, purchaserName, purchaserEmail, recipientName, recipientMessage, selectedImage, stripePaymentId, squareGiftCardId, createdAt, redeemedAt, expiresAt)
+- [x] Database schema: gift_card_transactions table (id, giftCardId, type, amount, note, performedBy, createdAt)
+- [x] Server: gift card purchase flow — create pending card, Stripe checkout, activate on payment success
+- [x] Server: gift card balance check endpoint (by code)
+- [x] Server: gift card partial deduction endpoint (admin only)
+- [x] Server: gift card transaction history endpoint
+- [x] Public page: /gift-cards with amount selection ($30, $50, $70, $100, $150, $200)
+- [x] Public page: gift card image selection (multiple beautiful designs)
+- [x] Public page: recipient name, message, purchaser info form
+- [x] Public page: Stripe payment integration for gift card purchase
+- [x] Public page: after purchase — downloadable gift card image with code, amount, message
+- [x] Admin: gift card management page — list all cards, search by code
+- [x] Admin: view gift card details — balance, transaction history
+- [x] Admin: deduct balance (partial redemption) with note
+- [x] Admin: void/cancel gift card
+- [x] Square POS integration: optional sync when SQUARE_ACCESS_TOKEN configured
+- [x] Square POS integration: create gift card in Square on purchase
+- [x] Square POS integration: sync redemptions between systems
+- [x] Navigation: add Gift Cards link to main nav

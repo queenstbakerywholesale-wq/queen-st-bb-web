@@ -16,6 +16,7 @@ import { stripeCheckoutRouter } from "./routers/stripeCheckout";
 import { publicEnquiriesRouter } from "./routers/publicEnquiries";
 import { adminEnquiriesRouter } from "./routers/adminEnquiries";
 import { adminPageImagesRouter, publicPageImagesRouter } from "./routers/adminPageImages";
+import { giftCardRouter } from "./routers/giftCards";
 
 export const appRouter = router({
   system: systemRouter,
@@ -46,6 +47,7 @@ export const appRouter = router({
   stripe: stripeCheckoutRouter,
   publicEnquiries: publicEnquiriesRouter,
   publicPageImages: publicPageImagesRouter,
+  giftCards: giftCardRouter,
 });
 
 export type AppRouter = typeof appRouter;

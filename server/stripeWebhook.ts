@@ -6,6 +6,7 @@ import { getDb } from "./db";
 import { orders, customers } from "../drizzle/schema";
 import { notifyOwner } from "./_core/notification";
 import { sendOrderConfirmation } from "./orderEmail";
+import { activateGiftCard } from "./routers/giftCards";
 
 function getStripe() {
   if (!ENV.stripeSecretKey) throw new Error("Stripe secret key not configured");
@@ -60,7 +61,12 @@ async function handleWebhook(req: Request, res: Response) {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        await handleCheckoutCompleted(session);
+        // Check if this is a gift card purchase
+        if (session.metadata?.type === "gift_card") {
+          await handleGiftCardCheckoutCompleted(session);
+        } else {
+          await handleCheckoutCompleted(session);
+        }
         break;
       }
       case "payment_intent.succeeded": {
@@ -150,5 +156,33 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }
   } catch (err) {
     console.error("[Stripe Webhook] Failed to update order:", err);
+  }
+}
+
+async function handleGiftCardCheckoutCompleted(session: Stripe.Checkout.Session) {
+  const giftCardId = session.metadata?.gift_card_id;
+  const giftCardCode = session.metadata?.gift_card_code;
+
+  if (!giftCardId) {
+    console.warn("[Stripe Webhook] Gift card checkout missing gift_card_id in metadata");
+    return;
+  }
+
+  const paymentIntentId = (session.payment_intent as string) || "";
+
+  try {
+    const activated = await activateGiftCard(Number(giftCardId), paymentIntentId);
+    if (activated) {
+      console.log(`[Stripe Webhook] Gift card ${giftCardCode} activated successfully`);
+    } else {
+      console.warn(`[Stripe Webhook] Gift card ${giftCardCode} activation returned false`);
+    }
+  } catch (err) {
+    console.error(`[Stripe Webhook] Gift card activation failed for ${giftCardCode}:`, err);
+    // Notify admin of failure
+    await notifyOwner({
+      title: `Gift Card Activation Failed: ${giftCardCode}`,
+      content: `Payment was received but gift card activation failed.\nGift Card ID: ${giftCardId}\nCode: ${giftCardCode}\nPayment Intent: ${paymentIntentId}\n\nPlease activate manually.`,
+    }).catch(() => {});
   }
 }

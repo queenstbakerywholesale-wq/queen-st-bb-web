@@ -11,6 +11,7 @@ import {
   Store,
   MessageSquare,
   ImageIcon,
+  Gift,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -49,6 +50,7 @@ const menuItems = [
   { icon: Store, label: "Branches", path: "/branches" },
   { icon: MessageSquare, label: "Enquiries", path: "/enquiries" },
   { icon: ImageIcon, label: "Page Images", path: "/page-images" },
+  { icon: Gift, label: "Gift Cards", path: "/gift-cards" },
 ];
 
 export default function AdminLayout({

@@ -13,4 +13,7 @@ export const ENV = {
   auspostApiKey: process.env.AUSPOST_API_KEY ?? "",
   resendApiKey: process.env.RESEND_API_KEY ?? "",
   senderEmail: process.env.SENDER_EMAIL ?? "orders@queenstbb.com",
+  squareAccessToken: process.env.SQUARE_ACCESS_TOKEN ?? "",
+  squareLocationId: process.env.SQUARE_LOCATION_ID ?? "",
+  squareEnvironment: (process.env.SQUARE_ENVIRONMENT ?? "sandbox") as "sandbox" | "production",
 };

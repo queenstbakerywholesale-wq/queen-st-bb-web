@@ -320,3 +320,41 @@ export const pageImages = mysqlTable("page_images", {
 
 export type PageImage = typeof pageImages.$inferSelect;
 export type InsertPageImage = typeof pageImages.$inferInsert;
+
+// ─── Gift Cards ─────────────────────────────────────────────────
+export const giftCards = mysqlTable("gift_cards", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 20 }).notNull().unique(),
+  initialAmount: decimal("initialAmount", { precision: 10, scale: 2 }).notNull(),
+  currentBalance: decimal("currentBalance", { precision: 10, scale: 2 }).notNull(),
+  status: mysqlEnum("giftCardStatus", ["pending", "active", "depleted", "expired", "voided"]).default("pending").notNull(),
+  purchaserName: varchar("purchaserName", { length: 200 }).notNull(),
+  purchaserEmail: varchar("purchaserEmail", { length: 320 }).notNull(),
+  recipientName: varchar("recipientName", { length: 200 }),
+  recipientEmail: varchar("recipientEmail", { length: 320 }),
+  personalMessage: text("personalMessage"),
+  selectedImage: varchar("selectedImage", { length: 50 }).default("classic").notNull(),
+  stripeSessionId: varchar("stripeSessionId", { length: 255 }),
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
+  squareGiftCardId: varchar("squareGiftCardId", { length: 255 }),
+  squareGan: varchar("squareGan", { length: 50 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  activatedAt: timestamp("activatedAt"),
+  expiresAt: timestamp("expiresAt"),
+});
+export type GiftCard = typeof giftCards.$inferSelect;
+export type InsertGiftCard = typeof giftCards.$inferInsert;
+
+// ─── Gift Card Transactions ─────────────────────────────────────
+export const giftCardTransactions = mysqlTable("gift_card_transactions", {
+  id: int("id").autoincrement().primaryKey(),
+  giftCardId: int("giftCardId").notNull(),
+  type: mysqlEnum("transactionType", ["activation", "redemption", "refund", "void", "adjustment"]).notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  balanceAfter: decimal("balanceAfter", { precision: 10, scale: 2 }).notNull(),
+  note: text("note"),
+  performedBy: varchar("performedBy", { length: 200 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type GiftCardTransaction = typeof giftCardTransactions.$inferSelect;
+export type InsertGiftCardTransaction = typeof giftCardTransactions.$inferInsert;

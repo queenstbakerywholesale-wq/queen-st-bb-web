@@ -14,6 +14,8 @@ import CakeBooking from "./pages/CakeBooking";
 import About from "./pages/About";
 import CustomerCare from "./pages/CustomerCare";
 import OrderSuccess from "./pages/OrderSuccess";
+import GiftCards from "./pages/GiftCards";
+import GiftCardSuccess from "./pages/GiftCardSuccess";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -25,6 +27,7 @@ import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminBranches from "./pages/admin/AdminBranches";
 import AdminEnquiries from "./pages/admin/AdminEnquiries";
 import AdminPageImages from "./pages/admin/AdminPageImages";
+import AdminGiftCards from "./pages/admin/AdminGiftCards";
 
 const ADMIN_BASE = "/admin-angela91";
 
@@ -42,6 +45,8 @@ function Router() {
       <Route path="/about" component={About} />
       <Route path="/customer-care" component={CustomerCare} />
       <Route path="/order-success" component={OrderSuccess} />
+      <Route path="/gift-cards" component={GiftCards} />
+      <Route path="/gift-cards/success" component={GiftCardSuccess} />
 
       {/* Admin login */}
       <Route path={`${ADMIN_BASE}/login`} component={AdminLogin} />
@@ -90,6 +95,11 @@ function Router() {
       <Route path={`${ADMIN_BASE}/page-images`}>
         <AdminLayout>
           <AdminPageImages />
+        </AdminLayout>
+      </Route>
+      <Route path={`${ADMIN_BASE}/gift-cards`}>
+        <AdminLayout>
+          <AdminGiftCards />
         </AdminLayout>
       </Route>
 

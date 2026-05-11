@@ -15,6 +15,7 @@ const navLinks = [
   { label: "Objects", href: "/objects" },
   { label: "Wholesale", href: "/wholesale" },
   { label: "Cake Booking", href: "/cake-booking" },
+  { label: "Gift Cards", href: "/gift-cards" },
 ];
 
 const allLinks = [

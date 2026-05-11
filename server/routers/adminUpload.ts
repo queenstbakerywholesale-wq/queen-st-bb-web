@@ -15,7 +15,7 @@ export const adminUploadRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      let buffer = Buffer.from(input.base64, "base64");
+      let buffer: any = Buffer.from(input.base64, "base64");
       const ext = input.filename.split(".").pop() || "jpg";
       const key = `products/${nanoid()}.${ext}`;
 
