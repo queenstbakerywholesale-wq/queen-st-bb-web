@@ -17,6 +17,7 @@ import OrderSuccess from "./pages/OrderSuccess";
 import GiftCards from "./pages/GiftCards";
 import GiftCardSuccess from "./pages/GiftCardSuccess";
 import MyGiftCards from "./pages/MyGiftCards";
+import MyPage from "./pages/MyPage";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -50,6 +51,7 @@ function Router() {
       <Route path="/gift-cards" component={GiftCards} />
       <Route path="/gift-cards/success" component={GiftCardSuccess} />
       <Route path="/gift-cards/balance" component={MyGiftCards} />
+      <Route path="/my-page" component={MyPage} />
 
       {/* Admin login */}
       <Route path={`${ADMIN_BASE}/login`} component={AdminLogin} />

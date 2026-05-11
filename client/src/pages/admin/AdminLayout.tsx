@@ -1,6 +1,7 @@
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import AdminLogin from "./AdminLogin";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
+import AdminOrderNotification from "@/components/AdminOrderNotification";
 import { Link, useLocation } from "wouter";
 import {
   LayoutDashboard,
@@ -235,9 +236,16 @@ export default function AdminLayout({
           >
             QSB Admin
           </span>
+          <div className="ml-auto">
+            <AdminOrderNotification />
+          </div>
         </header>
 
         {/* Page content */}
+        {/* Desktop notification bar */}
+        <div className="hidden lg:flex items-center justify-end px-8 py-2 border-b" style={{ borderColor: "#5A3A2E10", backgroundColor: "#FAFAF7" }}>
+          <AdminOrderNotification />
+        </div>
         <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
         <PwaInstallPrompt />
       </div>

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, sql, like, and, or, count } from "drizzle-orm";
+import { eq, sql, like, and, or, count, gt } from "drizzle-orm";
 import { publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { orders, orderItems, shippingTracking, branches } from "../../drizzle/schema";
@@ -224,6 +224,32 @@ export const adminOrdersRouter = router({
         .set({ adminNotes: input.adminNotes })
         .where(eq(orders.id, input.id));
       return { success: true };
+    }),
+
+  /** Check for new orders since a given timestamp (for real-time notifications) */
+  newOrdersCheck: publicProcedure
+    .input(z.object({ since: z.number() })) // Unix timestamp in ms
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { newOrders: [], count: 0 };
+
+      const sinceDate = new Date(input.since);
+      const newOrders = await db
+        .select({
+          id: orders.id,
+          orderNumber: orders.orderNumber,
+          customerName: orders.customerName,
+          total: orders.total,
+          fulfillmentType: orders.fulfillmentType,
+          status: orders.status,
+          createdAt: orders.createdAt,
+        })
+        .from(orders)
+        .where(gt(orders.createdAt, sinceDate))
+        .orderBy(sql`${orders.createdAt} DESC`)
+        .limit(10);
+
+      return { newOrders, count: newOrders.length };
     }),
 
   delete: publicProcedure

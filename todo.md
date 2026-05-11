@@ -217,3 +217,20 @@
 - [x] Balance check by code (no auth required)
 - [x] Display balance, transaction history per card
 - [x] Link from gift cards page and navigation
+
+## Admin Real-time Order Notification
+- [x] Server: add endpoint to check for new orders since last check timestamp
+- [x] Admin UI: polling mechanism to check for new orders every 15-30 seconds
+- [x] Admin UI: play notification sound when new order detected
+- [x] Admin UI: show popup/toast notification with order summary
+- [x] Admin UI: notification badge on Orders menu item showing unread count
+- [x] Admin UI: sound toggle to enable/disable notification sound
+
+## Customer My Page
+- [x] Server: customer order history endpoint (by email, authenticated)
+- [x] Server: customer order detail with shipping tracking info
+- [x] Server: customer gift card usage history (by email)
+- [x] Customer UI: /my-page route with order list, status badges, shipping tracking
+- [x] Customer UI: order detail view with items, fulfillment status, tracking info
+- [x] Customer UI: gift card section showing balance and transaction history
+- [x] Navigation: add My Page link (visible when logged in)

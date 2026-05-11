@@ -4,9 +4,10 @@
  * Brand wordmark: Playfair Display weight 500
  * Pure white text over images, no opacity reduction
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 const navLinks = [
   { label: "Tiramisu", href: "/tiramisu" },
@@ -18,7 +19,7 @@ const navLinks = [
   { label: "Gift Cards", href: "/gift-cards" },
 ];
 
-const allLinks = [
+const baseAllLinks = [
   ...navLinks,
   { label: "About", href: "/about" },
   { label: "Customer Care", href: "/customer-care" },
@@ -32,6 +33,15 @@ export default function Navigation({ variant = "solid" }: NavigationProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [location] = useLocation();
+  const { isAuthenticated } = useAuth();
+
+  const allLinks = useMemo(
+    () =>
+      isAuthenticated
+        ? [...baseAllLinks, { label: "My Page", href: "/my-page" }]
+        : baseAllLinks,
+    [isAuthenticated]
+  );
 
   const isTransparent = variant === "transparent";
 

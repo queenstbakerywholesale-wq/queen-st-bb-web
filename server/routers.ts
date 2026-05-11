@@ -18,6 +18,7 @@ import { adminEnquiriesRouter } from "./routers/adminEnquiries";
 import { adminPageImagesRouter, publicPageImagesRouter } from "./routers/adminPageImages";
 import { giftCardRouter } from "./routers/giftCards";
 import { adminBrandStickersRouter } from "./routers/adminBrandStickers";
+import { customerMyPageRouter } from "./routers/customerMyPage";
 
 export const appRouter = router({
   system: systemRouter,
@@ -50,6 +51,7 @@ export const appRouter = router({
   publicEnquiries: publicEnquiriesRouter,
   publicPageImages: publicPageImagesRouter,
   giftCards: giftCardRouter,
+  myPage: customerMyPageRouter,
 });
 
 export type AppRouter = typeof appRouter;
