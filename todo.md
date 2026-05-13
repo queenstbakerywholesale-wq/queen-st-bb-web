@@ -234,3 +234,19 @@
 - [x] Customer UI: order detail view with items, fulfillment status, tracking info
 - [x] Customer UI: gift card section showing balance and transaction history
 - [x] Navigation: add My Page link (visible when logged in)
+
+## Resend Email API Setup
+- [x] Request RESEND_API_KEY and SENDER_EMAIL secrets from user
+- [x] Verify email sending works with Resend API
+- [x] Write vitest test to validate Resend configuration
+
+## Australia Post API Setup
+- [x] Request AUSPOST_API_KEY secret from user (user declined — using zone-based fallback rates)
+- [x] Verify zone-based fallback shipping rate calculation works correctly
+- [x] Write vitest test to validate AusPost shipping configuration
+
+## Test Products & Stripe Payment Flow
+- [x] Register sample test products via admin panel (Tiramisu Cup $12, Vanilla Bean Gelato $8.50, Postcard Set $5)
+- [x] Fix Stripe "Not a valid URL" error (product image URLs must be absolute for Stripe)
+- [x] Verify Stripe checkout flow end-to-end — checkout session created successfully
+- [x] Document testing instructions for the user

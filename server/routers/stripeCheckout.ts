@@ -170,13 +170,18 @@ export const stripeCheckoutRouter = router({
       const orderNumber = `QSB-${Date.now().toString(36).toUpperCase()}-${nanoid(4).toUpperCase()}`;
 
       // Create Stripe Checkout Session line items
+      // Stripe requires absolute URLs for product images
+      const makeAbsoluteUrl = (url: string) => {
+        if (url.startsWith('http://') || url.startsWith('https://')) return url;
+        return `${origin}${url.startsWith('/') ? '' : '/'}${url}`;
+      };
       const lineItems = input.items.map((item) => ({
         price_data: {
           currency: "aud",
           product_data: {
             name: item.productName,
             ...(item.size ? { description: `Size: ${item.size}` } : {}),
-            ...(item.imageUrl ? { images: [item.imageUrl] } : {}),
+            ...(item.imageUrl ? { images: [makeAbsoluteUrl(item.imageUrl)] } : {}),
           },
           unit_amount: Math.round(item.price * 100), // cents
         },
