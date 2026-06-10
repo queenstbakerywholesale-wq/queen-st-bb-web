@@ -318,3 +318,12 @@
 - [x] Staff can see cake pickup orders for their branch (pickup filter)
 - [x] Staff can update order status (paid → preparing → ready → shipped → completed)
 - [x] Staff cannot access admin settings, sales, or staff management (separate auth)
+
+## POS Redesign (Square-style)
+- [x] Register all categories from Square: bb goods, post card, Envelope/sticker, Tumbler, MUG, eco bag, Tshirts, classic coffee, Italian coffee, Black coffee, White coffee, BB non coffee, AU Wine, spritz, BB Pairing, BB Gelato, Beverage, italian beer, etc, surcharges
+- [x] Redesign POS layout: left sidebar (Keypad/Library/Favourites), center tile grid, right order panel
+- [x] Large square tile buttons with abbreviation + name (like Square POS)
+- [x] Bottom navigation: Checkout, Transactions, Orders
+- [x] Keypad mode for manual amount entry
+- [x] Surcharge buttons (10% weekend, 15% holiday) as special items
+- [x] Create staff accounts for Hawthorn (sarah_h), Windsor (windsor_staff), CBD (cbd_staff) — all password: staff123

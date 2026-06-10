@@ -1,6 +1,7 @@
 /**
- * Staff POS — Tablet/PC optimized point-of-sale interface
- * Features: item selection, weight input, custom price, cash payment, receipt
+ * Staff POS — Square-style tablet/PC optimized point-of-sale interface
+ * Layout: Left sidebar (Keypad/Library/Favourites) | Center tile grid | Right order panel
+ * Bottom tabs: Checkout, Transactions, Orders
  */
 import { useState, useEffect, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
@@ -39,6 +40,10 @@ export default function StaffPOS() {
   const [customPrice, setCustomPrice] = useState("");
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<"checkout" | "transactions" | "orders">("checkout");
+  const [sidebarMode, setSidebarMode] = useState<"keypad" | "library" | "favourites">("library");
+  const [keypadValue, setKeypadValue] = useState("");
 
   // Auth check
   const { data: authData, isLoading: authLoading } = trpc.staffAuth.verify.useQuery();
@@ -55,9 +60,6 @@ export default function StaffPOS() {
       setStaffData(authData.staff);
     }
   }, [authData]);
-
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<"pos" | "orders">("pos");
 
   const branchId = staffData?.branchId;
 
@@ -121,7 +123,6 @@ export default function StaffPOS() {
       setCustomPrice("");
       return;
     }
-    // Fixed price — add or increment
     setCart((prev) => {
       const existing = prev.find((c) => c.menuItemId === item.id && c.priceType === "fixed");
       if (existing) {
@@ -199,39 +200,55 @@ export default function StaffPOS() {
     });
   };
 
+  // Keypad functions
+  const handleKeypad = (key: string) => {
+    if (key === "C") { setKeypadValue(""); return; }
+    if (key === "⌫") { setKeypadValue((v) => v.slice(0, -1)); return; }
+    if (key === "." && keypadValue.includes(".")) return;
+    setKeypadValue((v) => v + key);
+  };
+
+  const addKeypadAmount = () => {
+    const amount = parseFloat(keypadValue);
+    if (!amount || amount <= 0) return;
+    setCart((prev) => [...prev, {
+      itemName: `Custom $${amount.toFixed(2)}`,
+      quantity: 1,
+      unitPrice: amount,
+      totalPrice: amount,
+      priceType: "custom" as const,
+    }]);
+    setKeypadValue("");
+    toast.success(`Added $${amount.toFixed(2)}`);
+  };
+
   // ─── Login Screen ─────────────────────────────────────────────
   if (authLoading) {
     return (
-      <div className="h-screen flex items-center justify-center" style={{ backgroundColor: "oklch(0.34 0.05 45)" }}>
-        <p className="text-sm animate-pulse" style={{ color: "oklch(0.94 0.015 80)" }}>Loading...</p>
+      <div className="h-screen flex items-center justify-center bg-neutral-900">
+        <p className="text-sm animate-pulse text-neutral-400">Loading...</p>
       </div>
     );
   }
 
   if (!staffData) {
     return (
-      <div className="h-screen flex items-center justify-center" style={{ backgroundColor: "oklch(0.34 0.05 45)" }}>
-        <div className="w-full max-w-sm p-8 space-y-6" style={{ backgroundColor: "oklch(0.94 0.015 80)" }}>
+      <div className="h-screen flex items-center justify-center bg-neutral-900">
+        <div className="w-full max-w-sm p-8 space-y-6 bg-white rounded-lg">
           <div className="text-center">
-            <h1 className="text-xl font-medium" style={{ fontFamily: "var(--font-display)", color: "oklch(0.34 0.05 45)" }}>
-              Queen St BB
-            </h1>
-            <p className="text-[10px] uppercase mt-1" style={{ fontFamily: "var(--font-body)", letterSpacing: "0.2em", color: "oklch(0.34 0.05 45 / 0.5)" }}>
-              Staff POS Login
-            </p>
+            <h1 className="text-xl font-semibold text-neutral-900">Queen St BB</h1>
+            <p className="text-xs text-neutral-400 mt-1 uppercase tracking-wider">Staff POS Login</p>
           </div>
           <div className="space-y-3">
             <input
-              className="w-full p-3 text-sm"
-              style={{ fontFamily: "var(--font-body)", border: "1px solid oklch(0.84 0.025 72 / 0.5)", color: "oklch(0.34 0.05 45)" }}
+              className="w-full p-3 text-sm border border-neutral-200 rounded focus:outline-none focus:border-neutral-400"
               placeholder="Username"
               value={loginForm.username}
               onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
               onKeyDown={(e) => e.key === "Enter" && loginMutation.mutate(loginForm)}
             />
             <input
-              className="w-full p-3 text-sm"
-              style={{ fontFamily: "var(--font-body)", border: "1px solid oklch(0.84 0.025 72 / 0.5)", color: "oklch(0.34 0.05 45)" }}
+              className="w-full p-3 text-sm border border-neutral-200 rounded focus:outline-none focus:border-neutral-400"
               type="password"
               placeholder="Password"
               value={loginForm.password}
@@ -241,10 +258,9 @@ export default function StaffPOS() {
             <button
               onClick={() => loginMutation.mutate(loginForm)}
               disabled={loginMutation.isPending}
-              className="w-full py-3 text-xs uppercase transition-all hover:opacity-80 disabled:opacity-40"
-              style={{ fontFamily: "var(--font-body)", letterSpacing: "0.2em", backgroundColor: "oklch(0.34 0.05 45)", color: "oklch(0.94 0.015 80)" }}
+              className="w-full py-3 text-sm font-medium bg-neutral-900 text-white rounded hover:bg-neutral-800 disabled:opacity-40 transition-colors"
             >
-              {loginMutation.isPending ? "..." : "Login"}
+              {loginMutation.isPending ? "..." : "LOGIN"}
             </button>
           </div>
         </div>
@@ -252,281 +268,368 @@ export default function StaffPOS() {
     );
   }
 
-
   const filteredItems = selectedCategory
     ? menuItems.filter((item: any) => item.categoryId === selectedCategory)
     : menuItems;
 
+  // Get abbreviation for category tile
+  const getAbbrev = (name: string) => {
+    const words = name.split(" ");
+    if (words.length === 1) return name.slice(0, 2);
+    return words.map(w => w[0]).join("").slice(0, 2);
+  };
+
   return (
-    <div className="h-screen flex flex-col" style={{ backgroundColor: "oklch(0.96 0.008 80)" }}>
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2" style={{ backgroundColor: "oklch(0.34 0.05 45)" }}>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setActiveTab("pos")}
-            className="text-sm font-medium px-2 py-0.5"
-            style={{ fontFamily: "var(--font-display)", color: activeTab === "pos" ? "oklch(0.94 0.015 80)" : "oklch(0.94 0.015 80 / 0.4)", borderBottom: activeTab === "pos" ? "2px solid oklch(0.94 0.015 80)" : "2px solid transparent" }}
-          >
-            POS
-          </button>
-          <button
-            onClick={() => setActiveTab("orders")}
-            className="text-sm font-medium px-2 py-0.5"
-            style={{ fontFamily: "var(--font-display)", color: activeTab === "orders" ? "oklch(0.94 0.015 80)" : "oklch(0.94 0.015 80 / 0.4)", borderBottom: activeTab === "orders" ? "2px solid oklch(0.94 0.015 80)" : "2px solid transparent" }}
-          >
-            Online Orders
-          </button>
-          <span className="text-[10px] uppercase ml-2" style={{ fontFamily: "var(--font-body)", letterSpacing: "0.1em", color: "oklch(0.94 0.015 80 / 0.6)" }}>
-            {staffData.displayName}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={toggleFullscreen}
-            className="text-[10px] uppercase px-3 py-1"
-            style={{ fontFamily: "var(--font-body)", letterSpacing: "0.1em", color: "oklch(0.94 0.015 80 / 0.6)", border: "1px solid oklch(0.94 0.015 80 / 0.3)" }}
-          >
-            {isFullscreen ? "Exit FS" : "Fullscreen"}
-          </button>
-          <button
-            onClick={() => logoutMutation.mutate()}
-            className="text-[10px] uppercase px-3 py-1"
-            style={{ fontFamily: "var(--font-body)", letterSpacing: "0.1em", color: "oklch(0.94 0.015 80 / 0.6)", border: "1px solid oklch(0.94 0.015 80 / 0.3)" }}
-          >
-            Logout
-          </button>
-        </div>
-      </div>
-
-      {activeTab === "orders" ? (
-        <StaffOnlineOrders branchId={branchId} />
-      ) : (
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left: Menu Items */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Category Tabs */}
-          <div className="flex gap-1 p-2 overflow-x-auto flex-shrink-0" style={{ borderBottom: "1px solid oklch(0.84 0.025 72 / 0.3)" }}>
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className="px-3 py-1.5 text-[10px] uppercase whitespace-nowrap transition-all"
-              style={{
-                fontFamily: "var(--font-body)",
-                letterSpacing: "0.1em",
-                backgroundColor: !selectedCategory ? "oklch(0.34 0.05 45)" : "transparent",
-                color: !selectedCategory ? "oklch(0.94 0.015 80)" : "oklch(0.34 0.05 45 / 0.6)",
-                border: "1px solid oklch(0.34 0.05 45 / 0.3)",
-              }}
-            >
-              All
-            </button>
-            {categories.map((cat: any) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className="px-3 py-1.5 text-[10px] uppercase whitespace-nowrap transition-all"
-                style={{
-                  fontFamily: "var(--font-body)",
-                  letterSpacing: "0.1em",
-                  backgroundColor: selectedCategory === cat.id ? (cat.color || "oklch(0.34 0.05 45)") : "transparent",
-                  color: selectedCategory === cat.id ? "white" : "oklch(0.34 0.05 45 / 0.6)",
-                  border: `1px solid ${cat.color || "oklch(0.34 0.05 45 / 0.3)"}`,
-                }}
-              >
-                {cat.name}
-              </button>
-            ))}
-          </div>
-
-          {/* Items Grid */}
-          <div className="flex-1 overflow-y-auto p-2">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-              {filteredItems.map((item: any) => (
+    <div className="h-screen flex flex-col bg-neutral-100 select-none">
+      {/* Main Content Area */}
+      {activeTab === "checkout" ? (
+        <div className="flex flex-1 overflow-hidden">
+          {/* Left Sidebar */}
+          <div className="w-44 flex flex-col bg-white border-r border-neutral-200">
+            <div className="flex flex-col">
+              {(["keypad", "library", "favourites"] as const).map((mode) => (
                 <button
-                  key={item.id}
-                  onClick={() => addToCart(item)}
-                  className="p-3 text-left transition-all hover:scale-[1.02] active:scale-95"
-                  style={{
-                    backgroundColor: "oklch(0.94 0.015 80)",
-                    border: "1px solid oklch(0.84 0.025 72 / 0.5)",
-                  }}
+                  key={mode}
+                  onClick={() => setSidebarMode(mode)}
+                  className={`px-4 py-3 text-left text-sm capitalize border-b border-neutral-100 transition-colors ${
+                    sidebarMode === mode ? "bg-neutral-100 font-medium text-neutral-900" : "text-neutral-500 hover:bg-neutral-50"
+                  }`}
                 >
-                  <p className="text-sm font-medium truncate" style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45)" }}>
-                    {item.name}
-                  </p>
-                  <p className="text-[10px] uppercase mt-1" style={{ fontFamily: "var(--font-body)", letterSpacing: "0.1em", color: "oklch(0.34 0.05 45 / 0.5)" }}>
-                    {item.priceType === "weight" ? `$${item.unitPrice}/100g` : item.priceType === "custom" ? "Custom" : `$${item.unitPrice}`}
-                  </p>
+                  {mode === "keypad" ? "Keypad" : mode === "library" ? "Library" : "Favourites"}
                 </button>
               ))}
             </div>
-            {filteredItems.length === 0 && (
-              <div className="text-center py-12" style={{ color: "oklch(0.34 0.05 45 / 0.3)" }}>
-                <p className="text-sm" style={{ fontFamily: "var(--font-body)" }}>No items in this category</p>
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* Right: Cart */}
-        <div className="w-80 flex flex-col border-l" style={{ borderColor: "oklch(0.84 0.025 72 / 0.5)", backgroundColor: "oklch(0.94 0.015 80)" }}>
-          <div className="p-3 flex-shrink-0" style={{ borderBottom: "1px solid oklch(0.84 0.025 72 / 0.3)" }}>
-            <p className="text-[10px] uppercase" style={{ fontFamily: "var(--font-body)", letterSpacing: "0.15em", color: "oklch(0.34 0.05 45 / 0.5)" }}>
-              Current Order ({cart.length} items)
-            </p>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-2 space-y-1">
-            {cart.map((item, i) => (
-              <div key={i} className="flex items-center justify-between p-2" style={{ borderBottom: "1px solid oklch(0.84 0.025 72 / 0.2)" }}>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs truncate" style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45)" }}>
-                    {item.itemName}
-                  </p>
-                  <p className="text-[9px]" style={{ color: "oklch(0.34 0.05 45 / 0.4)" }}>
-                    {item.priceType === "weight" ? `${item.weightGrams}g @ $${item.unitPrice}/100g` : item.priceType === "custom" ? "Custom" : `$${item.unitPrice} ea`}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1">
-                  {item.priceType === "fixed" && (
-                    <>
+            {/* Sidebar Content */}
+            <div className="flex-1 overflow-y-auto p-2">
+              {sidebarMode === "keypad" && (
+                <div className="space-y-2">
+                  <div className="text-right p-2 bg-neutral-50 rounded text-lg font-mono min-h-[40px]">
+                    {keypadValue || "0.00"}
+                  </div>
+                  <div className="grid grid-cols-3 gap-1">
+                    {["7","8","9","4","5","6","1","2","3",".","0","⌫"].map((k) => (
                       <button
-                        onClick={() => adjustQuantity(i, -1)}
-                        className="w-6 h-6 flex items-center justify-center text-xs"
-                        style={{ border: "1px solid oklch(0.84 0.025 72 / 0.5)", color: "oklch(0.34 0.05 45)" }}
-                      >−</button>
-                      <span className="w-6 text-center text-xs" style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45)" }}>
-                        {item.quantity}
-                      </span>
-                      <button
-                        onClick={() => adjustQuantity(i, 1)}
-                        className="w-6 h-6 flex items-center justify-center text-xs"
-                        style={{ border: "1px solid oklch(0.84 0.025 72 / 0.5)", color: "oklch(0.34 0.05 45)" }}
-                      >+</button>
-                    </>
-                  )}
-                  <span className="text-sm font-medium ml-2" style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45)" }}>
-                    ${item.totalPrice.toFixed(2)}
-                  </span>
-                  <button onClick={() => removeFromCart(i)} className="text-xs ml-1" style={{ color: "oklch(0.5 0.15 25)" }}>×</button>
+                        key={k}
+                        onClick={() => handleKeypad(k)}
+                        className="py-3 text-center text-sm font-medium bg-neutral-50 hover:bg-neutral-200 rounded transition-colors"
+                      >
+                        {k}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={addKeypadAmount}
+                    disabled={!keypadValue || parseFloat(keypadValue) <= 0}
+                    className="w-full py-2 text-xs font-medium bg-neutral-900 text-white rounded disabled:opacity-30"
+                  >
+                    ADD ${keypadValue || "0.00"}
+                  </button>
+                  <button
+                    onClick={() => handleKeypad("C")}
+                    className="w-full py-2 text-xs text-neutral-500 border border-neutral-200 rounded"
+                  >
+                    CLEAR
+                  </button>
                 </div>
-              </div>
-            ))}
-          </div>
+              )}
 
-          {/* Total & Payment */}
-          <div className="p-3 space-y-3 flex-shrink-0" style={{ borderTop: "2px solid oklch(0.34 0.05 45)" }}>
-            <div className="flex items-center justify-between">
-              <span className="text-sm uppercase" style={{ fontFamily: "var(--font-body)", letterSpacing: "0.1em", color: "oklch(0.34 0.05 45 / 0.5)" }}>Total</span>
-              <span className="text-2xl font-medium" style={{ fontFamily: "var(--font-display)", color: "oklch(0.34 0.05 45)" }}>
-                ${cartTotal.toFixed(2)}
-              </span>
+              {sidebarMode === "library" && (
+                <div className="space-y-1">
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className={`w-full text-left px-3 py-2 text-xs rounded transition-colors ${
+                      !selectedCategory ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"
+                    }`}
+                  >
+                    All Items
+                  </button>
+                  {categories.map((cat: any) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`w-full text-left px-3 py-2 text-xs rounded transition-colors ${
+                        selectedCategory === cat.id ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"
+                      }`}
+                    >
+                      {cat.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {sidebarMode === "favourites" && (
+                <div className="space-y-1">
+                  <p className="text-[10px] text-neutral-400 uppercase tracking-wider px-2 py-1">Quick Access</p>
+                  {menuItems.slice(0, 10).map((item: any) => (
+                    <button
+                      key={item.id}
+                      onClick={() => addToCart(item)}
+                      className="w-full text-left px-3 py-2 text-xs text-neutral-700 hover:bg-neutral-100 rounded transition-colors"
+                    >
+                      {item.name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+          </div>
 
-            {showPayment ? (
-              <div className="space-y-2">
-                <input
-                  type="number"
-                  step="0.01"
-                  placeholder="Cash received"
-                  value={cashReceived}
-                  onChange={(e) => setCashReceived(e.target.value)}
-                  className="w-full p-2 text-lg text-center"
-                  style={{ fontFamily: "var(--font-body)", border: "1px solid oklch(0.84 0.025 72 / 0.5)", color: "oklch(0.34 0.05 45)" }}
-                  autoFocus
-                />
-                {change > 0 && (
-                  <p className="text-center text-sm" style={{ color: "oklch(0.45 0.15 145)" }}>
-                    Change: ${change.toFixed(2)}
-                  </p>
-                )}
-                <div className="grid grid-cols-2 gap-2">
+          {/* Center: Category Tile Grid */}
+          <div className="flex-1 overflow-y-auto p-3">
+            {!selectedCategory ? (
+              /* Show category tiles (Square-style large buttons) */
+              <div className="grid grid-cols-4 lg:grid-cols-5 gap-2">
+                {categories.map((cat: any) => (
                   <button
-                    onClick={() => processPayment("cash")}
-                    disabled={createOrderMutation.isPending}
-                    className="py-3 text-xs uppercase font-medium disabled:opacity-40"
-                    style={{ fontFamily: "var(--font-body)", letterSpacing: "0.15em", backgroundColor: "oklch(0.45 0.15 145)", color: "white" }}
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className="aspect-square flex flex-col items-center justify-center rounded-lg transition-all hover:scale-[1.02] active:scale-95"
+                    style={{ backgroundColor: cat.color || "#8B8B8B" }}
                   >
-                    Cash
+                    <span className="text-xl font-bold text-white uppercase">
+                      {getAbbrev(cat.name)}
+                    </span>
+                    <span className="text-[10px] text-white/80 mt-1 text-center px-1 leading-tight max-w-full truncate">
+                      {cat.name}
+                    </span>
                   </button>
-                  <button
-                    onClick={() => setShowPayment(false)}
-                    className="py-3 text-xs uppercase"
-                    style={{ fontFamily: "var(--font-body)", letterSpacing: "0.15em", border: "1px solid oklch(0.84 0.025 72 / 0.5)", color: "oklch(0.34 0.05 45 / 0.5)" }}
-                  >
-                    Back
-                  </button>
-                </div>
+                ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => setShowPayment(true)}
-                  disabled={cart.length === 0}
-                  className="py-3 text-xs uppercase font-medium disabled:opacity-30"
-                  style={{ fontFamily: "var(--font-body)", letterSpacing: "0.15em", backgroundColor: "oklch(0.45 0.15 145)", color: "white" }}
-                >
-                  Cash
-                </button>
-                <button
-                  onClick={() => processPayment("card")}
-                  disabled={cart.length === 0 || createOrderMutation.isPending}
-                  className="py-3 text-xs uppercase font-medium disabled:opacity-30"
-                  style={{ fontFamily: "var(--font-body)", letterSpacing: "0.15em", backgroundColor: "oklch(0.5 0.15 250)", color: "white" }}
-                >
-                  Card
-                </button>
+              /* Show items in selected category */
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className="text-xs text-neutral-500 hover:text-neutral-900 flex items-center gap-1"
+                  >
+                    ← Back
+                  </button>
+                  <h2 className="text-sm font-medium text-neutral-700">
+                    {categories.find((c: any) => c.id === selectedCategory)?.name}
+                  </h2>
+                </div>
+                <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+                  {filteredItems.map((item: any) => (
+                    <button
+                      key={item.id}
+                      onClick={() => addToCart(item)}
+                      className="p-3 rounded-lg text-left bg-white border border-neutral-200 hover:border-neutral-400 hover:shadow-sm transition-all active:scale-95"
+                    >
+                      <p className="text-sm font-medium text-neutral-800 truncate">{item.name}</p>
+                      <p className="text-xs text-neutral-400 mt-1">
+                        {item.priceType === "weight" ? `$${item.unitPrice}/100g` : item.priceType === "custom" ? "Custom $" : `$${item.unitPrice}`}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+                {filteredItems.length === 0 && (
+                  <div className="text-center py-12 text-neutral-300">
+                    <p className="text-sm">No items in this category</p>
+                  </div>
+                )}
               </div>
             )}
+          </div>
 
-            {cart.length > 0 && (
-              <button
-                onClick={() => { setCart([]); setShowPayment(false); setCashReceived(""); }}
-                className="w-full py-2 text-[10px] uppercase"
-                style={{ fontFamily: "var(--font-body)", letterSpacing: "0.1em", color: "oklch(0.5 0.15 25)" }}
-              >
-                Clear Order
-              </button>
-            )}
+          {/* Right: Order Panel */}
+          <div className="w-72 lg:w-80 flex flex-col bg-white border-l border-neutral-200">
+            {/* Order Header */}
+            <div className="px-4 py-3 border-b border-neutral-100 flex items-center justify-between">
+              <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">No sale</span>
+              <span className="text-xs text-neutral-400">For Here</span>
+            </div>
+
+            {/* Add Customer */}
+            <div className="px-4 py-2 border-b border-neutral-100 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-neutral-400">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span className="text-xs">Add customer</span>
+              </div>
+              <span className="text-neutral-300">›</span>
+            </div>
+
+            {/* Cart Items */}
+            <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
+              {cart.length === 0 ? (
+                <div className="text-center py-8 text-neutral-300">
+                  <p className="text-xs">Tap items to add to order</p>
+                </div>
+              ) : (
+                cart.map((item, i) => (
+                  <div key={i} className="flex items-center justify-between py-2 border-b border-neutral-50">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-neutral-800 truncate">{item.itemName}</p>
+                      <p className="text-[10px] text-neutral-400">
+                        {item.priceType === "weight" ? `${item.weightGrams}g @ $${item.unitPrice}/100g` : item.priceType === "custom" ? "Custom" : `$${item.unitPrice} × ${item.quantity}`}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {item.priceType === "fixed" && (
+                        <>
+                          <button onClick={() => adjustQuantity(i, -1)} className="w-5 h-5 flex items-center justify-center text-xs border border-neutral-200 rounded text-neutral-500 hover:bg-neutral-100">−</button>
+                          <span className="w-5 text-center text-xs text-neutral-700">{item.quantity}</span>
+                          <button onClick={() => adjustQuantity(i, 1)} className="w-5 h-5 flex items-center justify-center text-xs border border-neutral-200 rounded text-neutral-500 hover:bg-neutral-100">+</button>
+                        </>
+                      )}
+                      <span className="text-sm font-medium text-neutral-800 ml-2 w-14 text-right">${item.totalPrice.toFixed(2)}</span>
+                      <button onClick={() => removeFromCart(i)} className="text-neutral-300 hover:text-red-400 ml-1 text-xs">×</button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Charge Button */}
+            <div className="p-3 border-t border-neutral-200 space-y-2">
+              {showPayment ? (
+                <div className="space-y-2">
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="Cash received"
+                    value={cashReceived}
+                    onChange={(e) => setCashReceived(e.target.value)}
+                    className="w-full p-2 text-lg text-center border border-neutral-200 rounded focus:outline-none focus:border-neutral-400"
+                    autoFocus
+                  />
+                  {change > 0 && (
+                    <p className="text-center text-sm text-green-600">Change: ${change.toFixed(2)}</p>
+                  )}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => processPayment("cash")}
+                      disabled={createOrderMutation.isPending}
+                      className="py-3 text-xs font-medium bg-green-600 text-white rounded disabled:opacity-40"
+                    >
+                      CONFIRM CASH
+                    </button>
+                    <button
+                      onClick={() => setShowPayment(false)}
+                      className="py-3 text-xs text-neutral-500 border border-neutral-200 rounded"
+                    >
+                      BACK
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => cart.length > 0 && setShowPayment(true)}
+                    disabled={cart.length === 0}
+                    className="w-full py-4 text-sm font-medium bg-green-600 text-white rounded-lg disabled:bg-neutral-200 disabled:text-neutral-400 transition-colors"
+                  >
+                    Charge ${cartTotal.toFixed(2)}
+                  </button>
+                  <p className="text-[10px] text-center text-neutral-400">May incur 2.2% surcharge</p>
+                  {cart.length > 0 && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => processPayment("card")}
+                        className="py-2 text-[10px] font-medium text-neutral-500 border border-neutral-200 rounded hover:bg-neutral-50"
+                      >
+                        CARD
+                      </button>
+                      <button
+                        onClick={() => { setCart([]); setShowPayment(false); setCashReceived(""); }}
+                        className="py-2 text-[10px] text-red-400 border border-neutral-200 rounded hover:bg-red-50"
+                      >
+                        CLEAR ALL
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      ) : activeTab === "orders" ? (
+        <StaffOnlineOrders branchId={branchId} />
+      ) : (
+        <StaffTransactions branchId={branchId} />
       )}
+
+      {/* Bottom Tab Bar (Square-style) */}
+      <div className="flex items-center justify-between px-4 py-2 bg-white border-t border-neutral-200">
+        <div className="flex items-center gap-6">
+          <button
+            onClick={() => setActiveTab("checkout")}
+            className={`flex items-center gap-1.5 py-1 text-xs ${activeTab === "checkout" ? "text-neutral-900 font-medium" : "text-neutral-400"}`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            Checkout
+          </button>
+          <button
+            onClick={() => setActiveTab("transactions")}
+            className={`flex items-center gap-1.5 py-1 text-xs ${activeTab === "transactions" ? "text-neutral-900 font-medium" : "text-neutral-400"}`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+            </svg>
+            Transactions
+          </button>
+          <button
+            onClick={() => setActiveTab("orders")}
+            className={`flex items-center gap-1.5 py-1 text-xs ${activeTab === "orders" ? "text-neutral-900 font-medium" : "text-neutral-400"}`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            Orders
+          </button>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] text-neutral-400 uppercase tracking-wider">
+            {staffData?.displayName} • {staffData?.branchId === 1 ? "Hawthorn" : staffData?.branchId === 2 ? "Windsor" : "CBD"}
+          </span>
+          <button
+            onClick={toggleFullscreen}
+            className="text-[10px] text-neutral-400 hover:text-neutral-700 px-2 py-1 border border-neutral-200 rounded"
+          >
+            {isFullscreen ? "Exit" : "⛶"}
+          </button>
+          <button
+            onClick={() => logoutMutation.mutate()}
+            className="text-[10px] text-neutral-400 hover:text-neutral-700"
+          >
+            Log in
+          </button>
+        </div>
+      </div>
 
       {/* Weight Input Modal */}
       {weightInput && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "oklch(0.34 0.05 45 / 0.6)" }}>
-          <div className="p-6 w-full max-w-xs space-y-4" style={{ backgroundColor: "oklch(0.94 0.015 80)" }}>
-            <h3 className="text-sm font-medium" style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45)" }}>
-              {weightInput.name}
-            </h3>
-            <p className="text-[10px] uppercase" style={{ fontFamily: "var(--font-body)", letterSpacing: "0.1em", color: "oklch(0.34 0.05 45 / 0.5)" }}>
-              ${weightInput.unitPrice}/100g — Enter weight in grams
-            </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="p-6 w-full max-w-xs bg-white rounded-lg space-y-4">
+            <h3 className="text-sm font-medium text-neutral-800">{weightInput.name}</h3>
+            <p className="text-xs text-neutral-400">${weightInput.unitPrice}/100g — Enter weight in grams</p>
             <input
               type="number"
               value={weightValue}
               onChange={(e) => setWeightValue(e.target.value)}
               placeholder="Weight (g)"
-              className="w-full p-3 text-lg text-center"
-              style={{ fontFamily: "var(--font-body)", border: "1px solid oklch(0.84 0.025 72 / 0.5)", color: "oklch(0.34 0.05 45)" }}
+              className="w-full p-3 text-lg text-center border border-neutral-200 rounded focus:outline-none focus:border-neutral-400"
               autoFocus
               onKeyDown={(e) => e.key === "Enter" && confirmWeight()}
             />
             {weightValue && (
-              <p className="text-center text-sm" style={{ color: "oklch(0.34 0.05 45)" }}>
+              <p className="text-center text-sm text-neutral-700">
                 = ${((parseFloat(weightValue) / 100) * weightInput.unitPrice).toFixed(2)}
               </p>
             )}
             <div className="flex gap-2">
               <button onClick={confirmWeight} disabled={!weightValue}
-                className="flex-1 py-2 text-xs uppercase disabled:opacity-40"
-                style={{ fontFamily: "var(--font-body)", letterSpacing: "0.15em", backgroundColor: "oklch(0.34 0.05 45)", color: "oklch(0.94 0.015 80)" }}>
-                Add
+                className="flex-1 py-2 text-xs font-medium bg-neutral-900 text-white rounded disabled:opacity-40">
+                ADD
               </button>
               <button onClick={() => setWeightInput(null)}
-                className="flex-1 py-2 text-xs uppercase"
-                style={{ fontFamily: "var(--font-body)", letterSpacing: "0.15em", color: "oklch(0.34 0.05 45 / 0.5)", border: "1px solid oklch(0.84 0.025 72 / 0.5)" }}>
-                Cancel
+                className="flex-1 py-2 text-xs text-neutral-500 border border-neutral-200 rounded">
+                CANCEL
               </button>
             </div>
           </div>
@@ -535,43 +638,43 @@ export default function StaffPOS() {
 
       {/* Receipt Modal */}
       {receipt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "oklch(0.34 0.05 45 / 0.6)" }}>
-          <div className="p-6 w-full max-w-sm space-y-4" style={{ backgroundColor: "oklch(0.94 0.015 80)" }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="p-6 w-full max-w-sm bg-white rounded-lg space-y-4">
             <div className="text-center">
-              <p className="text-[10px] uppercase" style={{ fontFamily: "var(--font-body)", letterSpacing: "0.2em", color: "oklch(0.45 0.15 145)" }}>
-                ✔ Order Complete
-              </p>
-              <h3 className="text-lg font-medium mt-2" style={{ fontFamily: "var(--font-display)", color: "oklch(0.34 0.05 45)" }}>
-                {receipt.orderNumber}
-              </h3>
+              <div className="w-10 h-10 mx-auto bg-green-100 rounded-full flex items-center justify-center">
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-neutral-800 mt-2">{receipt.orderNumber}</h3>
+              <p className="text-xs text-neutral-400">Order Complete</p>
             </div>
-            <div className="space-y-1" style={{ borderTop: "1px solid oklch(0.84 0.025 72 / 0.3)", paddingTop: "12px" }}>
+            <div className="space-y-1 border-t border-neutral-100 pt-3">
               {receipt.items.map((item, i) => (
-                <div key={i} className="flex justify-between text-xs" style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45)" }}>
+                <div key={i} className="flex justify-between text-xs text-neutral-700">
                   <span>{item.itemName} {item.quantity > 1 ? `×${item.quantity}` : ""}{item.weightGrams ? ` (${item.weightGrams}g)` : ""}</span>
                   <span>${item.totalPrice.toFixed(2)}</span>
                 </div>
               ))}
             </div>
-            <div className="flex justify-between pt-2" style={{ borderTop: "2px solid oklch(0.34 0.05 45)" }}>
-              <span className="text-sm uppercase" style={{ fontFamily: "var(--font-body)", letterSpacing: "0.1em", color: "oklch(0.34 0.05 45)" }}>Total</span>
-              <span className="text-lg font-medium" style={{ fontFamily: "var(--font-display)", color: "oklch(0.34 0.05 45)" }}>${receipt.total}</span>
+            <div className="flex justify-between pt-2 border-t-2 border-neutral-800">
+              <span className="text-sm font-medium text-neutral-800">Total</span>
+              <span className="text-lg font-bold text-neutral-800">${receipt.total}</span>
             </div>
             {receipt.paymentMethod === "cash" && (
-              <div className="text-xs space-y-1" style={{ color: "oklch(0.34 0.05 45 / 0.6)" }}>
+              <div className="text-xs text-neutral-500 space-y-0.5">
                 {receipt.cashReceived && <p>Cash received: ${receipt.cashReceived}</p>}
                 {receipt.changeGiven && <p>Change: ${receipt.changeGiven}</p>}
               </div>
             )}
-            <div className="text-center text-[9px]" style={{ color: "oklch(0.34 0.05 45 / 0.4)" }}>
-              <p>{receipt.staffName} • {receipt.timestamp.toLocaleTimeString()}</p>
-            </div>
+            <p className="text-center text-[10px] text-neutral-400">
+              {receipt.staffName} • {receipt.timestamp.toLocaleTimeString()}
+            </p>
             <button
               onClick={() => setReceipt(null)}
-              className="w-full py-3 text-xs uppercase font-medium"
-              style={{ fontFamily: "var(--font-body)", letterSpacing: "0.15em", backgroundColor: "oklch(0.34 0.05 45)", color: "oklch(0.94 0.015 80)" }}
+              className="w-full py-3 text-sm font-medium bg-neutral-900 text-white rounded-lg"
             >
-              New Order
+              NEW ORDER
             </button>
           </div>
         </div>
@@ -579,37 +682,75 @@ export default function StaffPOS() {
 
       {/* Custom Price Modal */}
       {customPriceInput && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "oklch(0.34 0.05 45 / 0.6)" }}>
-          <div className="p-6 w-full max-w-xs space-y-4" style={{ backgroundColor: "oklch(0.94 0.015 80)" }}>
-            <h3 className="text-sm font-medium" style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45)" }}>
-              {customPriceInput.name}
-            </h3>
-            <p className="text-[10px] uppercase" style={{ fontFamily: "var(--font-body)", letterSpacing: "0.1em", color: "oklch(0.34 0.05 45 / 0.5)" }}>
-              Enter price
-            </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="p-6 w-full max-w-xs bg-white rounded-lg space-y-4">
+            <h3 className="text-sm font-medium text-neutral-800">{customPriceInput.name}</h3>
+            <p className="text-xs text-neutral-400">Enter price</p>
             <input
               type="number"
               step="0.01"
               value={customPrice}
               onChange={(e) => setCustomPrice(e.target.value)}
               placeholder="$0.00"
-              className="w-full p-3 text-lg text-center"
-              style={{ fontFamily: "var(--font-body)", border: "1px solid oklch(0.84 0.025 72 / 0.5)", color: "oklch(0.34 0.05 45)" }}
+              className="w-full p-3 text-lg text-center border border-neutral-200 rounded focus:outline-none focus:border-neutral-400"
               autoFocus
               onKeyDown={(e) => e.key === "Enter" && confirmCustomPrice()}
             />
             <div className="flex gap-2">
               <button onClick={confirmCustomPrice} disabled={!customPrice}
-                className="flex-1 py-2 text-xs uppercase disabled:opacity-40"
-                style={{ fontFamily: "var(--font-body)", letterSpacing: "0.15em", backgroundColor: "oklch(0.34 0.05 45)", color: "oklch(0.94 0.015 80)" }}>
-                Add
+                className="flex-1 py-2 text-xs font-medium bg-neutral-900 text-white rounded disabled:opacity-40">
+                ADD
               </button>
               <button onClick={() => setCustomPriceInput(null)}
-                className="flex-1 py-2 text-xs uppercase"
-                style={{ fontFamily: "var(--font-body)", letterSpacing: "0.15em", color: "oklch(0.34 0.05 45 / 0.5)", border: "1px solid oklch(0.84 0.025 72 / 0.5)" }}>
-                Cancel
+                className="flex-1 py-2 text-xs text-neutral-500 border border-neutral-200 rounded">
+                CANCEL
               </button>
             </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Staff Transactions Component ─────────────────────────────────────
+function StaffTransactions({ branchId }: { branchId: number }) {
+  const { data: summary } = trpc.pos.salesSummary.useQuery(
+    { branchId, startDate: new Date(new Date().setHours(0,0,0,0)).toISOString(), endDate: new Date().toISOString() },
+    { enabled: !!branchId }
+  );
+
+  return (
+    <div className="flex-1 overflow-y-auto p-6">
+      <h2 className="text-sm font-medium text-neutral-700 mb-4">Today's Transactions</h2>
+      {summary ? (
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="bg-white p-4 rounded-lg border border-neutral-200">
+            <p className="text-xs text-neutral-400 uppercase tracking-wider">Total Sales</p>
+            <p className="text-2xl font-bold text-neutral-800 mt-1">${(summary as any).totalSales?.toFixed(2) || "0.00"}</p>
+          </div>
+          <div className="bg-white p-4 rounded-lg border border-neutral-200">
+            <p className="text-xs text-neutral-400 uppercase tracking-wider">Orders</p>
+            <p className="text-2xl font-bold text-neutral-800 mt-1">{(summary as any).orderCount || 0}</p>
+          </div>
+          <div className="bg-white p-4 rounded-lg border border-neutral-200">
+            <p className="text-xs text-neutral-400 uppercase tracking-wider">Avg Order</p>
+            <p className="text-2xl font-bold text-neutral-800 mt-1">${(summary as any).avgOrder?.toFixed(2) || "0.00"}</p>
+          </div>
+        </div>
+      ) : (
+        <p className="text-sm text-neutral-400">Loading transactions...</p>
+      )}
+      {(summary as any)?.items && (summary as any).items.length > 0 && (
+        <div className="bg-white rounded-lg border border-neutral-200 p-4">
+          <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-3">Top Items Today</h3>
+          <div className="space-y-2">
+            {(summary as any).items.slice(0, 10).map((item: any, i: number) => (
+              <div key={i} className="flex justify-between text-xs text-neutral-700">
+                <span>{item.itemName}</span>
+                <span className="font-medium">{item.totalQuantity}× — ${item.totalRevenue}</span>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -638,12 +779,12 @@ function StaffOnlineOrders({ branchId }: { branchId: number }) {
   });
 
   const statusColors: Record<string, string> = {
-    pending: "oklch(0.6 0.1 60)",
-    paid: "oklch(0.5 0.15 250)",
-    preparing: "oklch(0.55 0.15 80)",
-    ready: "oklch(0.45 0.15 145)",
-    shipped: "oklch(0.5 0.1 200)",
-    completed: "oklch(0.5 0.05 45)",
+    pending: "text-amber-600 border-amber-300 bg-amber-50",
+    paid: "text-blue-600 border-blue-300 bg-blue-50",
+    preparing: "text-orange-600 border-orange-300 bg-orange-50",
+    ready: "text-green-600 border-green-300 bg-green-50",
+    shipped: "text-purple-600 border-purple-300 bg-purple-50",
+    completed: "text-neutral-600 border-neutral-300 bg-neutral-50",
   };
 
   const nextStatus: Record<string, string> = {
@@ -657,18 +798,13 @@ function StaffOnlineOrders({ branchId }: { branchId: number }) {
     <div className="flex-1 overflow-y-auto p-4 space-y-3">
       {/* Status Filter */}
       <div className="flex gap-1 flex-wrap">
-        {["all", "pending", "paid", "preparing", "ready", "shipped"].map((s) => (
+        {["all", "paid", "preparing", "ready", "shipped"].map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
-            className="px-3 py-1 text-[10px] uppercase"
-            style={{
-              fontFamily: "var(--font-body)",
-              letterSpacing: "0.1em",
-              backgroundColor: statusFilter === s ? "oklch(0.34 0.05 45)" : "transparent",
-              color: statusFilter === s ? "oklch(0.94 0.015 80)" : "oklch(0.34 0.05 45 / 0.6)",
-              border: statusFilter === s ? "none" : "1px solid oklch(0.84 0.025 72 / 0.5)",
-            }}
+            className={`px-3 py-1.5 text-xs rounded capitalize transition-colors ${
+              statusFilter === s ? "bg-neutral-900 text-white" : "text-neutral-500 border border-neutral-200 hover:bg-neutral-100"
+            }`}
           >
             {s}
           </button>
@@ -677,65 +813,50 @@ function StaffOnlineOrders({ branchId }: { branchId: number }) {
 
       {/* Orders List */}
       {onlineOrders.length === 0 ? (
-        <div className="text-center py-12" style={{ color: "oklch(0.34 0.05 45 / 0.3)" }}>
-          <p className="text-sm" style={{ fontFamily: "var(--font-body)" }}>No orders found</p>
+        <div className="text-center py-12 text-neutral-300">
+          <p className="text-sm">No orders found</p>
         </div>
       ) : (
         onlineOrders.map((order: any) => (
-          <div
-            key={order.id}
-            className="p-4 space-y-2"
-            style={{ backgroundColor: "oklch(0.94 0.015 80)", border: "1px solid oklch(0.84 0.025 72 / 0.5)" }}
-          >
+          <div key={order.id} className="bg-white rounded-lg border border-neutral-200 p-4 space-y-2">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium" style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45)" }}>
-                  {order.orderNumber}
-                </p>
-                <p className="text-[10px]" style={{ color: "oklch(0.34 0.05 45 / 0.5)" }}>
+                <p className="text-sm font-medium text-neutral-800">{order.orderNumber}</p>
+                <p className="text-xs text-neutral-400">
                   {order.customerName} • {order.fulfillmentType === "shipping" ? "📦 Shipping" : "🎂 Pickup"}
                   {order.pickupDate && ` • ${order.pickupDate} ${order.pickupTime || ""}`}
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <span
-                  className="text-[10px] uppercase px-2 py-0.5"
-                  style={{ fontFamily: "var(--font-body)", letterSpacing: "0.1em", color: statusColors[order.status] || "oklch(0.34 0.05 45)", border: `1px solid ${statusColors[order.status] || "oklch(0.34 0.05 45)"}` }}
-                >
+                <span className={`text-[10px] uppercase px-2 py-0.5 rounded border ${statusColors[order.status] || ""}`}>
                   {order.status}
                 </span>
-                <span className="text-sm font-medium" style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45)" }}>
-                  ${order.total}
-                </span>
+                <span className="text-sm font-medium text-neutral-800">${order.total}</span>
               </div>
             </div>
 
-            {/* Expand/Collapse */}
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
-                className="text-[10px] uppercase"
-                style={{ fontFamily: "var(--font-body)", letterSpacing: "0.1em", color: "oklch(0.34 0.05 45 / 0.5)" }}
+                className="text-xs text-neutral-400 hover:text-neutral-700"
               >
-                {expandedOrder === order.id ? "▲ Hide Items" : "▼ Show Items"}
+                {expandedOrder === order.id ? "▲ Hide" : "▼ Details"}
               </button>
               {nextStatus[order.status] && (
                 <button
                   onClick={() => updateStatusMutation.mutate({ orderId: order.id, status: nextStatus[order.status] as any })}
                   disabled={updateStatusMutation.isPending}
-                  className="text-[10px] uppercase px-3 py-1 disabled:opacity-40"
-                  style={{ fontFamily: "var(--font-body)", letterSpacing: "0.1em", backgroundColor: "oklch(0.34 0.05 45)", color: "oklch(0.94 0.015 80)" }}
+                  className="text-xs px-3 py-1 bg-neutral-900 text-white rounded disabled:opacity-40"
                 >
                   → {nextStatus[order.status]}
                 </button>
               )}
             </div>
 
-            {/* Order Items */}
             {expandedOrder === order.id && orderItemsData.length > 0 && (
-              <div className="pl-3 space-y-1" style={{ borderLeft: "2px solid oklch(0.84 0.025 72 / 0.5)" }}>
+              <div className="pl-3 space-y-1 border-l-2 border-neutral-200">
                 {orderItemsData.map((item: any) => (
-                  <div key={item.id} className="flex justify-between text-xs" style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45)" }}>
+                  <div key={item.id} className="flex justify-between text-xs text-neutral-600">
                     <span>{item.productName} ×{item.quantity}</span>
                     <span>${item.totalPrice}</span>
                   </div>
@@ -743,11 +864,8 @@ function StaffOnlineOrders({ branchId }: { branchId: number }) {
               </div>
             )}
 
-            {/* Shipping Address */}
             {order.fulfillmentType === "shipping" && order.shippingAddress && (
-              <p className="text-[10px] pl-3" style={{ color: "oklch(0.34 0.05 45 / 0.5)" }}>
-                📨 {order.shippingAddress}
-              </p>
+              <p className="text-[10px] text-neutral-400 pl-3">📨 {order.shippingAddress}</p>
             )}
           </div>
         ))
