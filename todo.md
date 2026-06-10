@@ -359,3 +359,9 @@
 - [x] Customer: recharge existing e-Card (add funds via Stripe, $20-$200)
 - [x] Policy: balance is non-refundable (yellow warning banner)
 - [x] Policy: recharge is allowed (top-up button on balance page)
+
+## Branch Info Update
+- [x] Remove phone and email fields from branches UI
+- [x] CBD branch: address "408 Queen Street, Melbourne", hours 2PM-11PM
+- [x] Hawthorn branch: address "616 Glenferrie Rd, Hawthorn", show "Open Soon"
+- [x] Windsor branch: address "57 Chapel St, Windsor", show "Open Soon"

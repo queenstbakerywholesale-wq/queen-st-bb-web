@@ -1,6 +1,6 @@
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
-import { Plus, Pencil, MapPin, Clock, Trash2 } from "lucide-react";
+import { Plus, Pencil, MapPin, Clock } from "lucide-react";
 import { toast } from "sonner";
 
 const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
@@ -79,7 +79,7 @@ export default function AdminBranches() {
   };
 
   const setHours = (day: string, field: "open" | "close" | "closed", value: string | boolean) => {
-    const existing = form.openingHours[day] ?? { open: "09:00", close: "17:00" };
+    const existing = form.openingHours[day] ?? { open: "14:00", close: "23:00" };
     setForm({
       ...form,
       openingHours: {
@@ -123,14 +123,14 @@ export default function AdminBranches() {
                 <label style={labelStyle} className="block mb-1">Address</label>
                 <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none" style={inputStyle} required />
               </div>
-              <div>
-                <label style={labelStyle} className="block mb-1">Phone</label>
-                <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none" style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle} className="block mb-1">Email</label>
-                <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none" style={inputStyle} />
-              </div>
+            </div>
+
+            {/* Active Status */}
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-sm" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>
+                <input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} />
+                Active (uncheck for "Open Soon")
+              </label>
             </div>
 
             {/* Booking Settings */}
@@ -156,27 +156,29 @@ export default function AdminBranches() {
             </div>
 
             {/* Opening Hours */}
-            <div>
-              <label style={labelStyle} className="block mb-2">Opening Hours</label>
-              <div className="space-y-2">
-                {DAYS.map((day) => (
-                  <div key={day} className="flex items-center gap-3">
-                    <span className="w-24 text-xs capitalize" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>{day}</span>
-                    <label className="flex items-center gap-1 text-xs" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>
-                      <input type="checkbox" checked={form.openingHours[day]?.closed ?? false} onChange={(e) => setHours(day, "closed", e.target.checked)} />
-                      Closed
-                    </label>
-                    {!form.openingHours[day]?.closed && (
-                      <>
-                        <input type="time" value={form.openingHours[day]?.open ?? "09:00"} onChange={(e) => setHours(day, "open", e.target.value)} className="px-2 py-1 text-xs border rounded focus:outline-none" style={inputStyle} />
-                        <span className="text-xs" style={{ color: "#5A3A2E50" }}>to</span>
-                        <input type="time" value={form.openingHours[day]?.close ?? "17:00"} onChange={(e) => setHours(day, "close", e.target.value)} className="px-2 py-1 text-xs border rounded focus:outline-none" style={inputStyle} />
-                      </>
-                    )}
-                  </div>
-                ))}
+            {form.isActive && (
+              <div>
+                <label style={labelStyle} className="block mb-2">Opening Hours</label>
+                <div className="space-y-2">
+                  {DAYS.map((day) => (
+                    <div key={day} className="flex items-center gap-3">
+                      <span className="w-24 text-xs capitalize" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>{day}</span>
+                      <label className="flex items-center gap-1 text-xs" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>
+                        <input type="checkbox" checked={form.openingHours[day]?.closed ?? false} onChange={(e) => setHours(day, "closed", e.target.checked)} />
+                        Closed
+                      </label>
+                      {!form.openingHours[day]?.closed && (
+                        <>
+                          <input type="time" value={form.openingHours[day]?.open ?? "14:00"} onChange={(e) => setHours(day, "open", e.target.value)} className="px-2 py-1 text-xs border rounded focus:outline-none" style={inputStyle} />
+                          <span className="text-xs" style={{ color: "#5A3A2E50" }}>to</span>
+                          <input type="time" value={form.openingHours[day]?.close ?? "23:00"} onChange={(e) => setHours(day, "close", e.target.value)} className="px-2 py-1 text-xs border rounded focus:outline-none" style={inputStyle} />
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="flex gap-3 pt-2">
               <button type="submit" className="px-5 py-2 text-[11px] uppercase tracking-[0.04em] rounded-md" style={{ backgroundColor: "#5A3A2E", color: "#F5F0EB", fontFamily: "var(--font-body)" }}>
@@ -209,20 +211,34 @@ export default function AdminBranches() {
                 </div>
                 <span className={`text-[9px] uppercase tracking-[0.04em] px-2 py-0.5 rounded-full`} style={{
                   fontFamily: "var(--font-body)",
-                  backgroundColor: branch.isActive ? "#E8F5E9" : "#FFEBEE",
-                  color: branch.isActive ? "#2E7D32" : "#C62828",
+                  backgroundColor: branch.isActive ? "#E8F5E9" : "#FFF3E0",
+                  color: branch.isActive ? "#2E7D32" : "#E65100",
                 }}>
-                  {branch.isActive ? "Active" : "Inactive"}
+                  {branch.isActive ? "Active" : "Open Soon"}
                 </span>
               </div>
 
-              <div className="space-y-1 mb-4">
-                {branch.phone && <p className="text-xs" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>{branch.phone}</p>}
-                {branch.email && <p className="text-xs" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E80" }}>{branch.email}</p>}
-              </div>
+              {branch.isActive && branch.openingHours ? (
+                <div className="flex items-center gap-2 text-xs mb-3" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E60" }}>
+                  <Clock className="w-3 h-3" />
+                  <span>
+                    {(() => {
+                      const hours = branch.openingHours as Record<string, { open: string; close: string; closed?: boolean }>;
+                      const monday = hours?.monday;
+                      if (monday && !monday.closed) {
+                        return `${monday.open} – ${monday.close}`;
+                      }
+                      return "Hours vary";
+                    })()}
+                  </span>
+                </div>
+              ) : !branch.isActive ? (
+                <p className="text-xs mb-3 italic" style={{ fontFamily: "var(--font-body)", color: "#E65100" }}>
+                  Coming soon — stay tuned!
+                </p>
+              ) : null}
 
-              <div className="flex items-center gap-2 text-xs mb-3" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E60" }}>
-                <Clock className="w-3 h-3" />
+              <div className="flex items-center gap-2 text-xs mb-3" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E40" }}>
                 <span>{branch.pickupSlotDuration}min slots | Max {branch.maxBookingsPerSlot}/slot | {branch.minPrepNoticeHours}h notice</span>
               </div>
 
