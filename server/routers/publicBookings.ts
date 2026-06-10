@@ -17,7 +17,6 @@ export const publicBookingsRouter = router({
         id: branches.id,
         name: branches.name,
         address: branches.address,
-        phone: branches.phone,
         openingHours: branches.openingHours,
         pickupSlotDuration: branches.pickupSlotDuration,
         maxBookingsPerSlot: branches.maxBookingsPerSlot,

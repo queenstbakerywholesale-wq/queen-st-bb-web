@@ -238,9 +238,11 @@ export default function AdminBranches() {
                 </p>
               ) : null}
 
-              <div className="flex items-center gap-2 text-xs mb-3" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E40" }}>
-                <span>{branch.pickupSlotDuration}min slots | Max {branch.maxBookingsPerSlot}/slot | {branch.minPrepNoticeHours}h notice</span>
-              </div>
+              {branch.isActive && branch.openingHours && (
+                <div className="flex items-center gap-2 text-xs mb-3" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E40" }}>
+                  <span>{branch.pickupSlotDuration}min slots | Max {branch.maxBookingsPerSlot}/slot | {branch.minPrepNoticeHours}h notice</span>
+                </div>
+              )}
 
               <button onClick={() => handleEdit(branch)} className="flex items-center gap-1 text-[11px] uppercase tracking-[0.04em] hover:opacity-70 transition-opacity" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E" }}>
                 <Pencil className="w-3 h-3" /> Edit
