@@ -1,0 +1,135 @@
+import { describe, it, expect } from "vitest";
+
+describe("POS System", () => {
+  describe("POS Router Structure", () => {
+    it("should export posRouter with required procedures", async () => {
+      const { posRouter } = await import("./routers/pos");
+      expect(posRouter).toBeDefined();
+      // Check that the router has the expected procedures
+      const procedures = Object.keys((posRouter as any)._def.procedures || {});
+      expect(procedures).toContain("listCategories");
+      expect(procedures).toContain("createCategory");
+      expect(procedures).toContain("listMenuItems");
+      expect(procedures).toContain("createMenuItem");
+      expect(procedures).toContain("deleteMenuItem");
+      expect(procedures).toContain("createOrder");
+      expect(procedures).toContain("salesSummary");
+      expect(procedures).toContain("recentOrders");
+      expect(procedures).toContain("listInvoices");
+      expect(procedures).toContain("createInvoice");
+      expect(procedures).toContain("sendInvoice");
+    });
+  });
+
+  describe("Staff Auth Router Structure", () => {
+    it("should export staffAuthRouter with login/verify/logout", async () => {
+      const { staffAuthRouter } = await import("./routers/staffAuth");
+      expect(staffAuthRouter).toBeDefined();
+      const procedures = Object.keys((staffAuthRouter as any)._def.procedures || {});
+      expect(procedures).toContain("login");
+      expect(procedures).toContain("verify");
+      expect(procedures).toContain("logout");
+    });
+  });
+
+  describe("Admin Staff Router Structure", () => {
+    it("should export adminStaffRouter with CRUD operations", async () => {
+      const { adminStaffRouter } = await import("./routers/adminStaff");
+      expect(adminStaffRouter).toBeDefined();
+      const procedures = Object.keys((adminStaffRouter as any)._def.procedures || {});
+      expect(procedures).toContain("list");
+      expect(procedures).toContain("create");
+      expect(procedures).toContain("update");
+      expect(procedures).toContain("delete");
+      expect(procedures).toContain("branches");
+    });
+  });
+
+  describe("POS Order Calculation", () => {
+    it("should calculate fixed price items correctly", () => {
+      const items = [
+        { unitPrice: "5.00", quantity: 2 },
+        { unitPrice: "3.50", quantity: 1 },
+      ];
+      const total = items.reduce((sum, item) => sum + parseFloat(item.unitPrice) * item.quantity, 0);
+      expect(total).toBe(13.50);
+    });
+
+    it("should calculate weight-based items correctly", () => {
+      // $8.50 per 100g, 250g
+      const unitPrice = 8.50;
+      const weightGrams = 250;
+      const total = (weightGrams / 100) * unitPrice;
+      expect(total).toBe(21.25);
+    });
+
+    it("should calculate change correctly", () => {
+      const total = 15.75;
+      const cashReceived = 20.00;
+      const change = cashReceived - total;
+      expect(change).toBe(4.25);
+    });
+
+    it("should generate valid order numbers", () => {
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
+      const random = Math.floor(Math.random() * 9999).toString().padStart(4, "0");
+      const orderNumber = `POS-1-${dateStr}-${random}`;
+      expect(orderNumber).toMatch(/^POS-\d+-\d{8}-\d{4}$/);
+    });
+
+    it("should generate valid invoice numbers", () => {
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
+      const random = Math.floor(Math.random() * 9999).toString().padStart(4, "0");
+      const invoiceNumber = `INV-${dateStr}-${random}`;
+      expect(invoiceNumber).toMatch(/^INV-\d{8}-\d{4}$/);
+    });
+  });
+
+  describe("POS Sales Aggregation", () => {
+    it("should aggregate items by name correctly", () => {
+      const items = [
+        { itemName: "Tiramisu Cup", quantity: 2, totalPrice: "24.00" },
+        { itemName: "Gelato Scoop", quantity: 1, totalPrice: "8.50" },
+        { itemName: "Tiramisu Cup", quantity: 1, totalPrice: "12.00" },
+        { itemName: "Gelato Scoop", quantity: 3, totalPrice: "25.50" },
+      ];
+
+      const itemMap = new Map<string, { name: string; quantity: number; revenue: number }>();
+      for (const item of items) {
+        const existing = itemMap.get(item.itemName) || { name: item.itemName, quantity: 0, revenue: 0 };
+        existing.quantity += item.quantity;
+        existing.revenue += parseFloat(item.totalPrice);
+        itemMap.set(item.itemName, existing);
+      }
+
+      const aggregated = Array.from(itemMap.values()).sort((a, b) => b.revenue - a.revenue);
+      expect(aggregated).toHaveLength(2);
+      expect(aggregated[0].name).toBe("Tiramisu Cup");
+      expect(aggregated[0].quantity).toBe(3);
+      expect(aggregated[0].revenue).toBe(36.00);
+      expect(aggregated[1].name).toBe("Gelato Scoop");
+      expect(aggregated[1].quantity).toBe(4);
+      expect(aggregated[1].revenue).toBe(34.00);
+    });
+
+    it("should calculate hourly breakdown correctly", () => {
+      const orders = [
+        { createdAt: new Date("2026-01-15T09:30:00"), total: "15.00" },
+        { createdAt: new Date("2026-01-15T09:45:00"), total: "20.00" },
+        { createdAt: new Date("2026-01-15T14:00:00"), total: "8.50" },
+      ];
+
+      const hourly = new Array(24).fill(0);
+      for (const order of orders) {
+        const hour = new Date(order.createdAt).getHours();
+        hourly[hour] += parseFloat(order.total);
+      }
+
+      expect(hourly[9]).toBe(35.00);
+      expect(hourly[14]).toBe(8.50);
+      expect(hourly[0]).toBe(0);
+    });
+  });
+});

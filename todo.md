@@ -250,3 +250,71 @@
 - [x] Fix Stripe "Not a valid URL" error (product image URLs must be absolute for Stripe)
 - [x] Verify Stripe checkout flow end-to-end — checkout session created successfully
 - [x] Document testing instructions for the user
+
+## Admin Image Upload UX Improvement
+- [x] Redesign admin page images to show visual page layout with labeled slots
+- [x] Each slot shows preview of current image + page section name (e.g. "Home Hero", "About Section 1")
+- [x] Clear upload/replace button per slot with live preview
+- [x] Show where each image appears on the public site (accordion layout with wireframe preview)
+
+## Staff Authentication System
+- [x] Database: staff_members table (id, username, passwordHash, displayName, branchId, role, isActive, lastLoginAt)
+- [x] Staff roles: staff (POS + view online orders), manager (staff + some admin features)
+- [x] Staff login page at /pos (integrated with POS)
+- [x] Staff session management with JWT
+- [x] Admin UI: manage staff accounts (create, reset password, deactivate, assign branch)
+- [x] Per-branch staff assignment (Hawthorn, Windsor, CBD)
+
+## POS System - Backend
+- [x] Database: pos_orders table (id, orderNumber, branchId, staffId, items JSON, subtotal, tax, total, paymentMethod, status, createdAt)
+- [x] Database: pos_menu_items table (id, branchId, name, category, priceType [fixed/weight], unitPrice, unit [g/kg/each], imageUrl, isActive, sortOrder)
+- [x] Database: pos_categories table (id, branchId, name, sortOrder, isActive)
+- [x] Server: POS order creation endpoint (staff-authenticated)
+- [x] Server: POS menu item CRUD (admin-only, per-branch)
+- [x] Server: POS category CRUD (admin-only, per-branch)
+- [x] Weight-based pricing: input grams → calculate price from per-gram unit price
+- [x] Fixed-price items: click to add, quantity adjustment
+- [x] Custom amount entry: manual price input for unlisted items
+- [x] Cash payment processing (mark as paid immediately)
+- [x] Card payment placeholder (for future bank integration)
+
+## POS System - Frontend
+- [x] POS screen at /pos (staff-authenticated, tablet/PC optimized)
+- [x] Left panel: menu items grid by category (large touch-friendly buttons)
+- [x] Right panel: current order with running total
+- [x] Weight input modal: gram entry → auto-calculate price
+- [x] Custom amount button: manual price entry
+- [x] Quantity +/- for fixed-price items (click to add, x to remove)
+- [x] Payment buttons: CASH (immediate complete), CARD (placeholder)
+- [x] Receipt/order summary after completion (toast with order number + total)
+- [x] Branch-specific menu (only show items for current branch)
+- [x] Full-screen mode for tablet use (h-screen layout)
+
+## Invoice System
+- [x] Database: invoices table (id, invoiceNumber, customerName, customerEmail, customerPhone, items, subtotal, tax, total, status, dueDate, sentVia, branchId)
+- [x] Server: create invoice with line items and auto-calculated totals
+- [x] Server: send invoice via email (Resend) with branded HTML template
+- [x] Server: send invoice via SMS (placeholder for future)
+- [x] Invoice template: branded HTML email with Queen St BB styling
+- [x] Admin UI: invoice list, create with line items, send via email
+- [x] Admin UI: mark invoice as paid
+- [ ] PDF generation for invoice download
+
+## Sales Dashboard
+- [x] Server: sales analytics endpoints (per-item, per-hour, per-day, per-branch)
+- [x] Admin UI: sales overview page with date range picker
+- [x] Chart: hourly sales bar chart (peak hours analysis)
+- [x] Chart: top-selling items (quantity and revenue)
+- [x] Summary cards: total revenue, order count, average order value
+- [x] Branch filter for multi-location comparison
+- [x] Chart: daily revenue trend over time
+- [ ] Chart: revenue by branch comparison
+- [ ] Table: detailed transaction list with filters
+- [ ] Export to CSV option
+
+## Staff Online Order View
+- [x] Staff dashboard: view pending online orders for their branch (Online Orders tab in POS)
+- [x] Staff can see goods orders needing packing/shipping (shipping filter)
+- [x] Staff can see cake pickup orders for their branch (pickup filter)
+- [x] Staff can update order status (paid → preparing → ready → shipped → completed)
+- [x] Staff cannot access admin settings, sales, or staff management (separate auth)

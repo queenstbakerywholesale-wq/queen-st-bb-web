@@ -31,6 +31,11 @@ import AdminEnquiries from "./pages/admin/AdminEnquiries";
 import AdminPageImages from "./pages/admin/AdminPageImages";
 import AdminGiftCards from "./pages/admin/AdminGiftCards";
 import AdminBrandStickers from "./pages/admin/AdminBrandStickers";
+import AdminStaff from "./pages/admin/AdminStaff";
+import AdminPosMenu from "./pages/admin/AdminPosMenu";
+import AdminSales from "./pages/admin/AdminSales";
+import AdminInvoices from "./pages/admin/AdminInvoices";
+import StaffPOS from "./pages/staff/StaffPOS";
 
 const ADMIN_BASE = "/admin-angela91";
 
@@ -112,6 +117,29 @@ function Router() {
           <AdminBrandStickers />
         </AdminLayout>
       </Route>
+      <Route path={`${ADMIN_BASE}/staff`}>
+        <AdminLayout>
+          <AdminStaff />
+        </AdminLayout>
+      </Route>
+      <Route path={`${ADMIN_BASE}/pos-menu`}>
+        <AdminLayout>
+          <AdminPosMenu />
+        </AdminLayout>
+      </Route>
+      <Route path={`${ADMIN_BASE}/sales`}>
+        <AdminLayout>
+          <AdminSales />
+        </AdminLayout>
+      </Route>
+      <Route path={`${ADMIN_BASE}/invoices`}>
+        <AdminLayout>
+          <AdminInvoices />
+        </AdminLayout>
+      </Route>
+
+      {/* Staff POS */}
+      <Route path="/pos" component={StaffPOS} />
 
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

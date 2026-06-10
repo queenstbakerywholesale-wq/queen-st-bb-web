@@ -20,6 +20,10 @@ import {
   ChevronRight,
   Menu,
   X,
+  UserCog,
+  Monitor,
+  FileText,
+  BarChart3,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -51,6 +55,10 @@ const menuItems = [
   { icon: Cake, label: "Bookings", path: "/bookings" },
   { icon: Users, label: "Customers", path: "/customers" },
   { icon: Store, label: "Branches", path: "/branches" },
+  { icon: Monitor, label: "POS Menu", path: "/pos-menu" },
+  { icon: UserCog, label: "Staff", path: "/staff" },
+  { icon: BarChart3, label: "Sales", path: "/sales" },
+  { icon: FileText, label: "Invoices", path: "/invoices" },
   { icon: MessageSquare, label: "Enquiries", path: "/enquiries" },
   { icon: ImageIcon, label: "Page Images", path: "/page-images" },
   { icon: Gift, label: "Gift Cards", path: "/gift-cards" },

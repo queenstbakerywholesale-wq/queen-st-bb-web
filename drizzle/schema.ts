@@ -371,3 +371,128 @@ export const brandStickers = mysqlTable("brand_stickers", {
 });
 export type BrandSticker = typeof brandStickers.$inferSelect;
 export type InsertBrandSticker = typeof brandStickers.$inferInsert;
+
+// ─── Staff Members ──────────────────────────────────────────────
+export const staffMembers = mysqlTable("staff_members", {
+  id: int("id").autoincrement().primaryKey(),
+  username: varchar("username", { length: 100 }).notNull().unique(),
+  passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
+  displayName: varchar("displayName", { length: 200 }).notNull(),
+  branchId: int("branchId").notNull(),
+  role: mysqlEnum("staffRole", ["staff", "manager"]).default("staff").notNull(),
+  pin: varchar("pin", { length: 10 }), // Quick PIN for POS login
+  isActive: boolean("isActive").default(true).notNull(),
+  lastLoginAt: timestamp("lastLoginAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StaffMember = typeof staffMembers.$inferSelect;
+export type InsertStaffMember = typeof staffMembers.$inferInsert;
+
+// ─── POS Categories (per-branch) ───────────────────────────────
+export const posCategories = mysqlTable("pos_categories", {
+  id: int("id").autoincrement().primaryKey(),
+  branchId: int("branchId").notNull(),
+  name: varchar("name", { length: 200 }).notNull(),
+  color: varchar("color", { length: 20 }), // For UI button color
+  sortOrder: int("sortOrder").default(0).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PosCategory = typeof posCategories.$inferSelect;
+export type InsertPosCategory = typeof posCategories.$inferInsert;
+
+// ─── POS Menu Items (per-branch) ───────────────────────────────
+export const posMenuItems = mysqlTable("pos_menu_items", {
+  id: int("id").autoincrement().primaryKey(),
+  branchId: int("branchId").notNull(),
+  categoryId: int("categoryId").notNull(),
+  name: varchar("name", { length: 300 }).notNull(),
+  priceType: mysqlEnum("priceType", ["fixed", "weight", "custom"]).default("fixed").notNull(),
+  unitPrice: decimal("unitPrice", { precision: 10, scale: 2 }).notNull(), // For fixed: item price, for weight: price per 100g
+  unit: varchar("unit", { length: 20 }).default("each"), // "each", "g", "kg", "100g"
+  imageUrl: text("imageUrl"),
+  color: varchar("color", { length: 20 }), // Button color
+  sortOrder: int("sortOrder").default(0).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PosMenuItem = typeof posMenuItems.$inferSelect;
+export type InsertPosMenuItem = typeof posMenuItems.$inferInsert;
+
+// ─── POS Orders ─────────────────────────────────────────────────
+export const posOrders = mysqlTable("pos_orders", {
+  id: int("id").autoincrement().primaryKey(),
+  orderNumber: varchar("orderNumber", { length: 50 }).notNull().unique(),
+  branchId: int("branchId").notNull(),
+  staffId: int("staffId").notNull(),
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  tax: decimal("tax", { precision: 10, scale: 2 }).default("0").notNull(),
+  total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+  paymentMethod: mysqlEnum("posPaymentMethod", ["cash", "card", "gift_card", "mixed"]).default("cash").notNull(),
+  paymentStatus: mysqlEnum("posPaymentStatus", ["paid", "pending", "refunded"]).default("paid").notNull(),
+  cashReceived: decimal("cashReceived", { precision: 10, scale: 2 }),
+  changeGiven: decimal("changeGiven", { precision: 10, scale: 2 }),
+  customerName: varchar("customerName", { length: 200 }),
+  customerPhone: varchar("customerPhone", { length: 50 }),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PosOrder = typeof posOrders.$inferSelect;
+export type InsertPosOrder = typeof posOrders.$inferInsert;
+
+// ─── POS Order Items ────────────────────────────────────────────
+export const posOrderItems = mysqlTable("pos_order_items", {
+  id: int("id").autoincrement().primaryKey(),
+  posOrderId: int("posOrderId").notNull(),
+  menuItemId: int("menuItemId"),
+  itemName: varchar("itemName", { length: 300 }).notNull(),
+  quantity: int("quantity").default(1).notNull(),
+  weightGrams: int("weightGrams"), // For weight-based items
+  unitPrice: decimal("unitPrice", { precision: 10, scale: 2 }).notNull(),
+  totalPrice: decimal("totalPrice", { precision: 10, scale: 2 }).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PosOrderItem = typeof posOrderItems.$inferSelect;
+export type InsertPosOrderItem = typeof posOrderItems.$inferInsert;
+
+// ─── Invoices ───────────────────────────────────────────────────
+export const invoices = mysqlTable("invoices", {
+  id: int("id").autoincrement().primaryKey(),
+  invoiceNumber: varchar("invoiceNumber", { length: 50 }).notNull().unique(),
+  branchId: int("branchId"),
+  orderId: int("orderId"), // Link to online order
+  posOrderId: int("posOrderId"), // Link to POS order
+  customerName: varchar("customerName", { length: 200 }).notNull(),
+  customerEmail: varchar("customerEmail", { length: 320 }),
+  customerPhone: varchar("customerPhone", { length: 50 }),
+  items: json("items").$type<{
+    name: string;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+    weightGrams?: number;
+  }[]>().notNull(),
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  tax: decimal("tax", { precision: 10, scale: 2 }).default("0").notNull(),
+  total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+  status: mysqlEnum("invoiceStatus", ["draft", "sent", "paid", "overdue", "cancelled"]).default("draft").notNull(),
+  dueDate: varchar("dueDate", { length: 20 }),
+  paidAt: timestamp("paidAt"),
+  sentAt: timestamp("sentAt"),
+  sentVia: mysqlEnum("sentVia", ["email", "sms"]),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Invoice = typeof invoices.$inferSelect;
+export type InsertInvoice = typeof invoices.$inferInsert;
