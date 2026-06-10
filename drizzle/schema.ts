@@ -338,6 +338,7 @@ export const giftCards = mysqlTable("gift_cards", {
   stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
   squareGiftCardId: varchar("squareGiftCardId", { length: 255 }),
   squareGan: varchar("squareGan", { length: 50 }),
+  customDesignUrl: text("customDesignUrl"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   activatedAt: timestamp("activatedAt"),
   expiresAt: timestamp("expiresAt"),
@@ -349,7 +350,7 @@ export type InsertGiftCard = typeof giftCards.$inferInsert;
 export const giftCardTransactions = mysqlTable("gift_card_transactions", {
   id: int("id").autoincrement().primaryKey(),
   giftCardId: int("giftCardId").notNull(),
-  type: mysqlEnum("transactionType", ["activation", "redemption", "refund", "void", "adjustment"]).notNull(),
+  type: mysqlEnum("transactionType", ["activation", "redemption", "refund", "void", "adjustment", "recharge"]).notNull(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   balanceAfter: decimal("balanceAfter", { precision: 10, scale: 2 }).notNull(),
   note: text("note"),
@@ -358,6 +359,19 @@ export const giftCardTransactions = mysqlTable("gift_card_transactions", {
 });
 export type GiftCardTransaction = typeof giftCardTransactions.$inferSelect;
 export type InsertGiftCardTransaction = typeof giftCardTransactions.$inferInsert;
+
+// ─── E-Card Designs (admin-uploaded background templates) ───────
+export const ecardDesigns = mysqlTable("ecard_designs", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(),
+  imageUrl: text("imageUrl").notNull(),
+  imageKey: varchar("imageKey", { length: 500 }).notNull(),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type EcardDesign = typeof ecardDesigns.$inferSelect;
+export type InsertEcardDesign = typeof ecardDesigns.$inferInsert;
 
 // ─── Brand Stickers (for Gift Card Editor) ──────────────────────
 export const brandStickers = mysqlTable("brand_stickers", {

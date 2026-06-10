@@ -64,6 +64,8 @@ async function handleWebhook(req: Request, res: Response) {
         // Check if this is a gift card purchase
         if (session.metadata?.type === "gift_card") {
           await handleGiftCardCheckoutCompleted(session);
+        } else if (session.metadata?.type === "gift_card_recharge") {
+          await handleGiftCardRecharge(session);
         } else {
           await handleCheckoutCompleted(session);
         }
@@ -225,6 +227,103 @@ async function handleGiftCardCheckoutCompleted(session: Stripe.Checkout.Session)
     await notifyOwner({
       title: `Gift Card Activation Failed: ${giftCardCode}`,
       content: `Payment was received but gift card activation failed.\nGift Card ID: ${giftCardId}\nCode: ${giftCardCode}\nPayment Intent: ${paymentIntentId}\n\nPlease activate manually.`,
+    }).catch(() => {});
+  }
+}
+
+async function handleGiftCardRecharge(session: Stripe.Checkout.Session) {
+  const giftCardId = session.metadata?.gift_card_id;
+  const giftCardCode = session.metadata?.gift_card_code;
+  const rechargeAmount = session.metadata?.recharge_amount;
+
+  if (!giftCardId || !rechargeAmount) {
+    console.warn("[Stripe Webhook] Recharge checkout missing metadata");
+    return;
+  }
+
+  const db = await getDb();
+  if (!db) return;
+
+  try {
+    const [card] = await db
+      .select()
+      .from(giftCards)
+      .where(eq(giftCards.id, Number(giftCardId)));
+
+    if (!card) {
+      console.warn(`[Stripe Webhook] Recharge: card ${giftCardCode} not found`);
+      return;
+    }
+
+    const amount = parseFloat(rechargeAmount);
+    const currentBalance = parseFloat(card.currentBalance);
+    const newBalance = currentBalance + amount;
+
+    await db
+      .update(giftCards)
+      .set({
+        currentBalance: newBalance.toFixed(2),
+        status: "active" as any,
+      })
+      .where(eq(giftCards.id, card.id));
+
+    await db.insert(giftCardTransactions).values({
+      giftCardId: card.id,
+      type: "recharge",
+      amount: amount.toFixed(2),
+      balanceAfter: newBalance.toFixed(2),
+      note: `Recharged $${amount.toFixed(2)} via Stripe`,
+      performedBy: "Customer",
+    });
+
+    console.log(`[Stripe Webhook] Gift card ${giftCardCode} recharged +$${amount} → $${newBalance.toFixed(2)}`);
+
+    // Notify admin
+    await notifyOwner({
+      title: `E-Card Recharged: ${giftCardCode}`,
+      content: `Card ${giftCardCode} was recharged with $${amount.toFixed(2)}.\nNew balance: $${newBalance.toFixed(2)}`,
+    }).catch(() => {});
+
+    // Send confirmation email to purchaser
+    if (card.purchaserEmail) {
+      const { sendEmail } = await import("./emailService");
+      await sendEmail({
+        to: card.purchaserEmail,
+        subject: `Your Queen St BB E-Card has been recharged — $${amount.toFixed(2)}`,
+        html: `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#F5F0E8;font-family:'Inter',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0E8;padding:40px 20px;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border-radius:12px;overflow:hidden;">
+<tr><td style="background:#3A2A1E;padding:24px 40px;text-align:center;">
+  <h1 style="font-family:'Playfair Display',Georgia,serif;font-size:24px;color:#FFFFFF;margin:0;">Queen St BB</h1>
+</td></tr>
+<tr><td style="padding:32px 40px;">
+  <h2 style="font-size:20px;color:#3A2A1E;margin:0 0 16px;">E-Card Recharged</h2>
+  <p style="font-size:14px;color:#5A4A3E;line-height:1.6;">Your e-card <strong>${card.code}</strong> has been successfully recharged.</p>
+  <div style="background:#FAF7F2;border-radius:8px;padding:20px;text-align:center;margin:20px 0;">
+    <p style="font-size:12px;color:#8B7355;margin:0 0 4px;">Amount Added</p>
+    <p style="font-size:28px;color:#3A2A1E;margin:0 0 12px;font-weight:600;">+$${amount.toFixed(2)} AUD</p>
+    <p style="font-size:12px;color:#8B7355;margin:0 0 4px;">New Balance</p>
+    <p style="font-size:24px;color:#3A2A1E;margin:0;font-weight:600;">$${newBalance.toFixed(2)} AUD</p>
+  </div>
+  <p style="font-size:12px;color:#8B7355;">This balance is non-refundable. Use it at any Queen St BB location or online.</p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`,
+      }).catch(() => {});
+    }
+  } catch (err) {
+    console.error(`[Stripe Webhook] Recharge failed for ${giftCardCode}:`, err);
+    await notifyOwner({
+      title: `E-Card Recharge Failed: ${giftCardCode}`,
+      content: `Payment received but recharge failed.\nCard: ${giftCardCode}\nAmount: $${rechargeAmount}`,
     }).catch(() => {});
   }
 }

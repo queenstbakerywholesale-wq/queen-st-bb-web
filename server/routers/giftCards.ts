@@ -4,7 +4,7 @@ import { eq, sql, like, or, desc, count } from "drizzle-orm";
 import { publicProcedure, router } from "../_core/trpc";
 import { ENV } from "../_core/env";
 import { getDb } from "../db";
-import { giftCards, giftCardTransactions } from "../../drizzle/schema";
+import { giftCards, giftCardTransactions, ecardDesigns } from "../../drizzle/schema";
 import { nanoid } from "nanoid";
 import { notifyOwner } from "../_core/notification";
 import { sendEmail } from "../emailService";
@@ -389,6 +389,135 @@ export const giftCardRouter = router({
         newBalance: newBalance.toFixed(2),
         cardCode: card.code,
       };
+    }),
+
+  /** Recharge an existing gift card (top-up) */
+  rechargeCard: publicProcedure
+    .input(
+      z.object({
+        code: z.string().min(1),
+        amount: z.number().refine((v) => [20, 30, 50, 70, 100, 150, 200].includes(v), "Invalid recharge amount"),
+        origin: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const stripe = getStripe();
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const [card] = await db
+        .select()
+        .from(giftCards)
+        .where(eq(giftCards.code, input.code.trim().toUpperCase()));
+
+      if (!card) throw new Error("Gift card not found");
+      if (card.status !== "active" && card.status !== "depleted") {
+        throw new Error("This card cannot be recharged");
+      }
+
+      // Create Stripe checkout for recharge
+      const session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        line_items: [
+          {
+            price_data: {
+              currency: "aud",
+              product_data: {
+                name: `E-Card Recharge — $${input.amount}`,
+                description: `Top-up for card ${card.code}`,
+              },
+              unit_amount: input.amount * 100,
+            },
+            quantity: 1,
+          },
+        ],
+        metadata: {
+          type: "gift_card_recharge",
+          gift_card_id: card.id.toString(),
+          gift_card_code: card.code,
+          recharge_amount: input.amount.toString(),
+        },
+        success_url: `${input.origin}/gift-cards/balance?code=${card.code}&recharged=true`,
+        cancel_url: `${input.origin}/gift-cards/balance?code=${card.code}&cancelled=true`,
+      });
+
+      return { checkoutUrl: session.url };
+    }),
+
+  // ─── E-Card Design Endpoints ──────────────────────────────────
+
+  /** Public: list active e-card designs */
+  listDesigns: publicProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return [];
+    return db
+      .select()
+      .from(ecardDesigns)
+      .where(eq(ecardDesigns.isActive, true))
+      .orderBy(ecardDesigns.sortOrder);
+  }),
+
+  /** Admin: list all e-card designs */
+  adminListDesigns: publicProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return [];
+    return db.select().from(ecardDesigns).orderBy(ecardDesigns.sortOrder);
+  }),
+
+  /** Admin: upload a new e-card design */
+  adminUploadDesign: publicProcedure
+    .input(
+      z.object({
+        name: z.string().min(1).max(200),
+        imageData: z.string(), // base64
+        mimeType: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { storagePut } = await import("../../server/storage");
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const ext = input.mimeType.includes("png") ? "png" : input.mimeType.includes("webp") ? "webp" : "jpg";
+      const fileKey = `ecard-designs/${nanoid(12)}.${ext}`;
+      const buffer = Buffer.from(input.imageData, "base64");
+      const { url } = await storagePut(fileKey, buffer, input.mimeType);
+
+      const [maxOrder] = await db
+        .select({ max: sql<number>`COALESCE(MAX(sortOrder), 0)` })
+        .from(ecardDesigns);
+
+      const result = await db.insert(ecardDesigns).values({
+        name: input.name,
+        imageUrl: url,
+        imageKey: fileKey,
+        sortOrder: (maxOrder?.max || 0) + 1,
+      });
+
+      return { id: Number(result[0].insertId), url };
+    }),
+
+  /** Admin: delete an e-card design */
+  adminDeleteDesign: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      await db.delete(ecardDesigns).where(eq(ecardDesigns.id, input.id));
+      return { success: true };
+    }),
+
+  /** Admin: toggle design active status */
+  adminToggleDesign: publicProcedure
+    .input(z.object({ id: z.number(), isActive: z.boolean() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      await db
+        .update(ecardDesigns)
+        .set({ isActive: input.isActive })
+        .where(eq(ecardDesigns.id, input.id));
+      return { success: true };
     }),
 
   /** Admin: void/cancel a gift card */

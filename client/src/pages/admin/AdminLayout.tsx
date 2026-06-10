@@ -24,6 +24,7 @@ import {
   Monitor,
   FileText,
   BarChart3,
+  Palette,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -63,6 +64,7 @@ const menuItems = [
   { icon: ImageIcon, label: "Page Images", path: "/page-images" },
   { icon: Gift, label: "Gift Cards", path: "/gift-cards" },
   { icon: Sticker, label: "Brand Stickers", path: "/brand-stickers" },
+  { icon: Palette, label: "E-Card Designs", path: "/ecard-designs" },
 ];
 
 export default function AdminLayout({

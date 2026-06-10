@@ -31,6 +31,7 @@ import AdminEnquiries from "./pages/admin/AdminEnquiries";
 import AdminPageImages from "./pages/admin/AdminPageImages";
 import AdminGiftCards from "./pages/admin/AdminGiftCards";
 import AdminBrandStickers from "./pages/admin/AdminBrandStickers";
+import AdminEcardDesigns from "./pages/admin/AdminEcardDesigns";
 import AdminStaff from "./pages/admin/AdminStaff";
 import AdminPosMenu from "./pages/admin/AdminPosMenu";
 import AdminSales from "./pages/admin/AdminSales";
@@ -115,6 +116,11 @@ function Router() {
       <Route path={`${ADMIN_BASE}/brand-stickers`}>
         <AdminLayout>
           <AdminBrandStickers />
+        </AdminLayout>
+      </Route>
+      <Route path={`${ADMIN_BASE}/ecard-designs`}>
+        <AdminLayout>
+          <AdminEcardDesigns />
         </AdminLayout>
       </Route>
       <Route path={`${ADMIN_BASE}/staff`}>

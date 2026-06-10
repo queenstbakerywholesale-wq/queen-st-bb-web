@@ -346,3 +346,16 @@
 - [x] Custom Amount input: ability to type a custom price amount directly (for weight-based items like tiramisu per gram)
 - [x] Weight-based pricing UX: enter weight in grams → auto-calculate price based on per-gram rate
 - [x] POS Keypad mode: type custom dollar amount and add to order
+
+## E-Card System Enhancement
+- [x] Admin: upload/manage 6 e-Card background designs (new E-Card Designs page)
+- [x] Admin: upload/manage character PNG stickers for decoration (Brand Stickers page)
+- [x] Customer: pick e-Card design from admin-uploaded designs + preset gradients
+- [x] Customer: decorate e-Card with character stickers (drag & drop canvas editor)
+- [x] Customer: purchase e-Card with Stripe (amount selection $30-$200)
+- [x] Customer: send e-Card to friend (recipient name + email auto-send)
+- [x] Customer: check e-Card balance by code (with URL param auto-fill)
+- [x] Customer: view transaction history for e-Card (including recharge type)
+- [x] Customer: recharge existing e-Card (add funds via Stripe, $20-$200)
+- [x] Policy: balance is non-refundable (yellow warning banner)
+- [x] Policy: recharge is allowed (top-up button on balance page)

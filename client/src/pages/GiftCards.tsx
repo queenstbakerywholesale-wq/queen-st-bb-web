@@ -8,7 +8,7 @@ import { trpc } from "@/lib/trpc";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
-import { Gift, Check, Search, Paintbrush } from "lucide-react";
+import { Gift, Check, Search, Paintbrush, RefreshCw } from "lucide-react";
 import GiftCardEditor from "@/components/GiftCardEditor";
 
 const AMOUNTS = [30, 50, 70, 100, 150, 200];
@@ -195,12 +195,16 @@ export default function GiftCards() {
   const [step, setStep] = useState<"select" | "customise" | "details" | "processing">("select");
   const [selectedAmount, setSelectedAmount] = useState<number>(50);
   const [selectedImage, setSelectedImage] = useState<string>("classic");
+  const [selectedDesignUrl, setSelectedDesignUrl] = useState<string | null>(null);
   const [purchaserName, setPurchaserName] = useState("");
   const [purchaserEmail, setPurchaserEmail] = useState("");
   const [recipientName, setRecipientName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [personalMessage, setPersonalMessage] = useState("");
   const [customDesignUrl, setCustomDesignUrl] = useState<string | null>(null);
+
+  // Load admin-uploaded e-card designs
+  const { data: adminDesigns = [] } = trpc.giftCards.listDesigns.useQuery();
 
   // Balance check
   const [checkCode, setCheckCode] = useState("");
@@ -303,7 +307,8 @@ export default function GiftCards() {
                 ← Back to selection
               </button>
               <GiftCardEditor
-                backgroundGradient={CARD_IMAGES[selectedImage]?.gradient}
+                backgroundGradient={!selectedDesignUrl ? CARD_IMAGES[selectedImage]?.gradient : undefined}
+                backgroundImage={selectedDesignUrl || undefined}
                 amount={selectedAmount}
                 recipientName={recipientName}
                 personalMessage={personalMessage}
@@ -322,7 +327,7 @@ export default function GiftCards() {
                   amount={selectedAmount}
                   recipientName={recipientName}
                   message={personalMessage}
-                  customImageUrl={customDesignUrl}
+                  customImageUrl={customDesignUrl || selectedDesignUrl}
                 />
                 <p
                   className="text-center mt-4 text-xs"
@@ -413,18 +418,56 @@ export default function GiftCards() {
                         Choose Design
                       </h3>
                       <div className="grid grid-cols-3 gap-3">
-                        {Object.entries(CARD_IMAGES).map(([id, style]) => (
+                        {/* Admin-uploaded e-card designs (shown first) */}
+                        {adminDesigns.map((design: any) => (
                           <button
-                            key={id}
-                            onClick={() => { setSelectedImage(id); setCustomDesignUrl(null); }}
+                            key={`admin-${design.id}`}
+                            onClick={() => {
+                              setSelectedImage(`admin-${design.id}`);
+                              setSelectedDesignUrl(design.imageUrl);
+                              setCustomDesignUrl(null);
+                            }}
                             className="relative aspect-[1.6/1] rounded-lg overflow-hidden border-2 transition-all duration-300"
                             style={{
                               borderColor:
-                                selectedImage === id && !customDesignUrl ? "#3A2A1E" : "#E8DDD0",
+                                selectedImage === `admin-${design.id}` && !customDesignUrl ? "#3A2A1E" : "#E8DDD0",
+                            }}
+                          >
+                            <img
+                              src={design.imageUrl}
+                              alt={design.name}
+                              className="absolute inset-0 w-full h-full object-cover"
+                            />
+                            {selectedImage === `admin-${design.id}` && !customDesignUrl && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                                <Check className="w-5 h-5 text-white" />
+                              </div>
+                            )}
+                            <span
+                              className="absolute bottom-1.5 left-2 text-[9px] uppercase bg-black/40 text-white px-1.5 py-0.5 rounded"
+                              style={{
+                                fontFamily: "var(--font-body)",
+                                fontWeight: 500,
+                                letterSpacing: "0.04em",
+                              }}
+                            >
+                              {design.name}
+                            </span>
+                          </button>
+                        ))}
+                        {/* Preset gradient designs */}
+                        {Object.entries(CARD_IMAGES).map(([id, style]) => (
+                          <button
+                            key={id}
+                            onClick={() => { setSelectedImage(id); setSelectedDesignUrl(null); setCustomDesignUrl(null); }}
+                            className="relative aspect-[1.6/1] rounded-lg overflow-hidden border-2 transition-all duration-300"
+                            style={{
+                              borderColor:
+                                selectedImage === id && !customDesignUrl && !selectedDesignUrl ? "#3A2A1E" : "#E8DDD0",
                               background: style.gradient,
                             }}
                           >
-                            {selectedImage === id && !customDesignUrl && (
+                            {selectedImage === id && !customDesignUrl && !selectedDesignUrl && (
                               <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                                 <Check className="w-5 h-5 text-white" />
                               </div>
@@ -781,6 +824,22 @@ export default function GiftCards() {
                   Gift card not found. Please check the code and try again.
                 </p>
               )}
+
+              {showBalanceCheck && balanceQuery.data && (
+                <div className="mt-4 flex flex-col items-center gap-2">
+                  <a
+                    href={`/gift-cards/balance?code=${checkCode}`}
+                    className="text-xs underline"
+                    style={{ color: "#5A3A2E" }}
+                  >
+                    View full history & recharge →
+                  </a>
+                </div>
+              )}
+
+              <p className="mt-8 text-[11px] text-center" style={{ color: "#8B7355" }}>
+                E-Card balances are non-refundable. Recharge is available at any time.
+              </p>
             </div>
           </div>
         </div>

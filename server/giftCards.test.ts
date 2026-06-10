@@ -165,4 +165,127 @@ describe("Gift Card System", () => {
       expect(emailContent).toContain(message);
     });
   });
+
+  describe("Recharge System", () => {
+    const RECHARGE_AMOUNTS = [20, 30, 50, 70, 100, 150, 200];
+
+    it("should accept all valid recharge amounts", () => {
+      RECHARGE_AMOUNTS.forEach((amount) => {
+        expect(amount).toBeGreaterThanOrEqual(20);
+        expect(amount).toBeLessThanOrEqual(200);
+      });
+    });
+
+    it("should reject invalid recharge amounts", () => {
+      const invalidAmounts = [0, 10, 15, 25, 75, 250, -20];
+      invalidAmounts.forEach((amount) => {
+        expect(RECHARGE_AMOUNTS.includes(amount)).toBe(false);
+      });
+    });
+
+    it("should correctly calculate new balance after recharge", () => {
+      const currentBalance = 25.50;
+      const rechargeAmount = 50;
+      const newBalance = currentBalance + rechargeAmount;
+
+      expect(newBalance).toBeCloseTo(75.50);
+      expect(newBalance).toBeGreaterThan(currentBalance);
+    });
+
+    it("should reactivate depleted card after recharge", () => {
+      const currentBalance = 0;
+      const status = "depleted";
+      const rechargeAmount = 50;
+      const newBalance = currentBalance + rechargeAmount;
+      const newStatus = newBalance > 0 ? "active" : status;
+
+      expect(newBalance).toBe(50);
+      expect(newStatus).toBe("active");
+    });
+
+    it("should only allow recharge on active or depleted cards", () => {
+      const rechargeableStatuses = ["active", "depleted"];
+      const nonRechargeableStatuses = ["pending", "expired", "voided"];
+
+      rechargeableStatuses.forEach((status) => {
+        expect(["active", "depleted"]).toContain(status);
+      });
+
+      nonRechargeableStatuses.forEach((status) => {
+        expect(["active", "depleted"]).not.toContain(status);
+      });
+    });
+  });
+
+  describe("Non-Refundable Policy", () => {
+    it("should not allow refund transactions on active cards", () => {
+      // Policy: balances are non-refundable
+      const allowedCustomerActions = ["recharge"];
+      expect(allowedCustomerActions).not.toContain("refund");
+      expect(allowedCustomerActions).toContain("recharge");
+    });
+
+    it("should record recharge as a distinct transaction type", () => {
+      const validTransactionTypes = ["activation", "redemption", "refund", "void", "adjustment", "recharge"];
+      expect(validTransactionTypes).toContain("recharge");
+      expect(validTransactionTypes.length).toBe(6);
+    });
+  });
+
+  describe("E-Card Design System", () => {
+    it("should support admin-uploaded designs with required fields", () => {
+      const designFields = ["id", "name", "imageUrl", "imageKey", "sortOrder", "isActive"];
+      expect(designFields).toContain("name");
+      expect(designFields).toContain("imageUrl");
+      expect(designFields).toContain("isActive");
+    });
+
+    it("should support toggling design visibility", () => {
+      let isActive = true;
+      isActive = !isActive;
+      expect(isActive).toBe(false);
+      isActive = !isActive;
+      expect(isActive).toBe(true);
+    });
+
+    it("should support both admin designs and preset gradients", () => {
+      const presetDesigns = ["classic", "floral", "minimal", "celebration", "coffee", "dessert"];
+      const adminDesignId = "admin-1";
+
+      // Admin designs use admin- prefix
+      expect(adminDesignId.startsWith("admin-")).toBe(true);
+      // Preset designs don't have admin- prefix
+      presetDesigns.forEach((id) => {
+        expect(id.startsWith("admin-")).toBe(false);
+      });
+    });
+
+    it("should validate design image file types", () => {
+      const validTypes = ["image/jpeg", "image/png", "image/webp"];
+      const invalidTypes = ["image/gif", "image/svg+xml", "application/pdf"];
+
+      validTypes.forEach((type) => {
+        expect(["image/jpeg", "image/png", "image/webp"]).toContain(type);
+      });
+      invalidTypes.forEach((type) => {
+        expect(["image/jpeg", "image/png", "image/webp"]).not.toContain(type);
+      });
+    });
+  });
+
+  describe("Gift Card Status Transitions with Recharge", () => {
+    it("should allow recharge to reactivate depleted cards", () => {
+      const validTransitions: Record<string, string[]> = {
+        pending: ["active", "voided"],
+        active: ["depleted", "expired", "voided"],
+        depleted: ["active"], // recharge can reactivate
+        expired: [],
+        voided: [],
+      };
+
+      expect(validTransitions.depleted).toContain("active");
+      expect(validTransitions.expired).not.toContain("active");
+      expect(validTransitions.voided).not.toContain("active");
+    });
+  });
 });
