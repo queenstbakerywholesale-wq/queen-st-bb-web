@@ -298,7 +298,7 @@
 - [x] Invoice template: branded HTML email with Queen St BB styling
 - [x] Admin UI: invoice list, create with line items, send via email
 - [x] Admin UI: mark invoice as paid
-- [ ] PDF generation for invoice download
+- [x] PDF generation for invoice download (PDFKit, stored in S3, downloadable from admin)
 
 ## Sales Dashboard
 - [x] Server: sales analytics endpoints (per-item, per-hour, per-day, per-branch)
@@ -308,9 +308,9 @@
 - [x] Summary cards: total revenue, order count, average order value
 - [x] Branch filter for multi-location comparison
 - [x] Chart: daily revenue trend over time
-- [ ] Chart: revenue by branch comparison
-- [ ] Table: detailed transaction list with filters
-- [ ] Export to CSV option
+- [x] Chart: revenue by branch comparison
+- [x] Table: detailed transaction list with filters (paginated, 20 per page)
+- [x] Export to CSV option
 
 ## Staff Online Order View
 - [x] Staff dashboard: view pending online orders for their branch (Online Orders tab in POS)

@@ -311,6 +311,41 @@ export const posRouter = router({
       return { success: true };
     }),
 
+  downloadInvoicePdf: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const [invoice] = await db.select().from(invoices).where(eq(invoices.id, input.id)).limit(1);
+      if (!invoice) throw new Error("Invoice not found");
+
+      // Get branch name if available
+      let branchName: string | undefined;
+      if (invoice.branchId) {
+        const [branch] = await db.select().from(branches).where(eq(branches.id, invoice.branchId)).limit(1);
+        if (branch) branchName = branch.name;
+      }
+
+      const { generateInvoicePdf } = await import("../invoicePdf");
+      const { url } = await generateInvoicePdf({
+        invoiceNumber: invoice.invoiceNumber,
+        customerName: invoice.customerName,
+        customerEmail: invoice.customerEmail,
+        customerPhone: invoice.customerPhone,
+        items: invoice.items as any[],
+        subtotal: invoice.subtotal,
+        tax: invoice.tax,
+        total: invoice.total,
+        dueDate: invoice.dueDate,
+        notes: invoice.notes,
+        createdAt: invoice.createdAt,
+        branchName,
+      });
+
+      return { url };
+    }),
+
   sendInvoice: publicProcedure
     .input(z.object({ id: z.number(), via: z.enum(["email", "sms"]) }))
     .mutation(async ({ input }) => {

@@ -22,6 +22,10 @@ export default function AdminInvoices() {
     onSuccess: () => { toast.success("Invoice marked as paid"); refetch(); },
     onError: (e: any) => toast.error(e.message),
   });
+  const pdfMutation = trpc.pos.downloadInvoicePdf.useMutation({
+    onSuccess: (data) => { window.open(data.url, "_blank"); toast.success("PDF generated"); },
+    onError: (e: any) => toast.error(e.message),
+  });
 
   const inputStyle: React.CSSProperties = {
     fontFamily: "var(--font-body)",
@@ -116,6 +120,14 @@ export default function AdminInvoices() {
                     Mark Paid
                   </button>
                 )}
+                <button
+                  onClick={() => pdfMutation.mutate({ id: inv.id })}
+                  disabled={pdfMutation.isPending}
+                  className="text-[10px] uppercase px-3 py-1 hover:opacity-70"
+                  style={{ fontFamily: "var(--font-body)", letterSpacing: "0.1em", border: "1px solid oklch(0.34 0.05 45 / 0.3)", color: "oklch(0.34 0.05 45)" }}
+                >
+                  {pdfMutation.isPending ? "..." : "PDF"}
+                </button>
               </div>
             </div>
           ))

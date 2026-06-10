@@ -37,7 +37,7 @@ describe("Resend API Configuration", () => {
     // 200 = success, 401 = invalid key
     expect(response.status).not.toBe(401);
     expect(response.status).toBe(200);
-  });
+  }, 15000);
 
   it("should successfully send a test email via Resend API", async () => {
     const apiKey = process.env.RESEND_API_KEY;
@@ -65,5 +65,5 @@ describe("Resend API Configuration", () => {
     // Resend returns 200 with an id on success
     expect(response.status).toBe(200);
     expect(data.id).toBeDefined();
-  });
+  }, 15000);
 });
