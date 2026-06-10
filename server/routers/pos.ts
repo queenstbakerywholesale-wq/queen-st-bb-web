@@ -7,6 +7,7 @@ import {
   posMenuItems,
   posOrders,
   posOrderItems,
+  posItemModifiers,
   branches,
   staffMembers,
   invoices,
@@ -91,12 +92,123 @@ export const posRouter = router({
       return { success: true };
     }),
 
+  updateMenuItem: publicProcedure
+    .input(z.object({
+      id: z.number(),
+      name: z.string().optional(),
+      priceType: z.enum(["fixed", "weight", "custom"]).optional(),
+      unitPrice: z.string().optional(),
+      unit: z.string().optional(),
+      imageUrl: z.string().nullable().optional(),
+      color: z.string().nullable().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const { id, ...updates } = input;
+      const setData: any = {};
+      if (updates.name !== undefined) setData.name = updates.name;
+      if (updates.priceType !== undefined) setData.priceType = updates.priceType;
+      if (updates.unitPrice !== undefined) setData.unitPrice = updates.unitPrice;
+      if (updates.unit !== undefined) setData.unit = updates.unit;
+      if (updates.imageUrl !== undefined) setData.imageUrl = updates.imageUrl;
+      if (updates.color !== undefined) setData.color = updates.color;
+      if (Object.keys(setData).length > 0) {
+        await db.update(posMenuItems).set(setData).where(eq(posMenuItems.id, id));
+      }
+      return { success: true };
+    }),
+
   deleteMenuItem: publicProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       await db.update(posMenuItems).set({ isActive: false }).where(eq(posMenuItems.id, input.id));
+      return { success: true };
+    }),
+
+  // ─── Item Modifiers ─────────────────────────────────────────────
+  listModifiers: publicProcedure
+    .input(z.object({ menuItemId: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      return db
+        .select()
+        .from(posItemModifiers)
+        .where(eq(posItemModifiers.menuItemId, input.menuItemId))
+        .orderBy(asc(posItemModifiers.sortOrder));
+    }),
+
+  listModifiersByBranch: publicProcedure
+    .input(z.object({ branchId: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      // Get all modifiers for items in this branch
+      const items = await db
+        .select({ id: posMenuItems.id })
+        .from(posMenuItems)
+        .where(and(eq(posMenuItems.branchId, input.branchId), eq(posMenuItems.isActive, true)));
+      if (items.length === 0) return [];
+      const itemIds = items.map(i => i.id);
+      return db
+        .select()
+        .from(posItemModifiers)
+        .where(sql`${posItemModifiers.menuItemId} IN (${sql.join(itemIds.map(id => sql`${id}`), sql`, `)})`);
+    }),
+
+  createModifier: publicProcedure
+    .input(z.object({
+      menuItemId: z.number(),
+      name: z.string().min(1),
+      options: z.array(z.object({
+        label: z.string(),
+        priceAdjustment: z.number(),
+      })),
+      required: z.boolean().default(false),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      await db.insert(posItemModifiers).values({
+        menuItemId: input.menuItemId,
+        name: input.name,
+        options: input.options,
+        required: input.required,
+      });
+      return { success: true };
+    }),
+
+  updateModifier: publicProcedure
+    .input(z.object({
+      id: z.number(),
+      name: z.string().optional(),
+      options: z.array(z.object({
+        label: z.string(),
+        priceAdjustment: z.number(),
+      })).optional(),
+      required: z.boolean().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const { id, ...updates } = input;
+      const setData: any = {};
+      if (updates.name !== undefined) setData.name = updates.name;
+      if (updates.options !== undefined) setData.options = updates.options;
+      if (updates.required !== undefined) setData.required = updates.required;
+      await db.update(posItemModifiers).set(setData).where(eq(posItemModifiers.id, id));
+      return { success: true };
+    }),
+
+  deleteModifier: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      await db.delete(posItemModifiers).where(eq(posItemModifiers.id, input.id));
       return { success: true };
     }),
 

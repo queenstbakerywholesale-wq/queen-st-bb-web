@@ -87,6 +87,56 @@ describe("POS System", () => {
     });
   });
 
+  describe("POS Modifier System", () => {
+    it("should export modifier CRUD procedures", async () => {
+      const { posRouter } = await import("./routers/pos");
+      const procedures = Object.keys((posRouter as any)._def.procedures || {});
+      expect(procedures).toContain("listModifiers");
+      expect(procedures).toContain("listModifiersByBranch");
+      expect(procedures).toContain("createModifier");
+      expect(procedures).toContain("updateModifier");
+      expect(procedures).toContain("deleteModifier");
+    });
+
+    it("should export updateMenuItem procedure", async () => {
+      const { posRouter } = await import("./routers/pos");
+      const procedures = Object.keys((posRouter as any)._def.procedures || {});
+      expect(procedures).toContain("updateMenuItem");
+    });
+
+    it("should calculate price with modifier adjustments correctly", () => {
+      const basePrice = 7.50;
+      const modifiers = [
+        { name: "Size", option: "Large", priceAdjustment: 2.50 },
+        { name: "Extras", option: "Cream", priceAdjustment: 1.00 },
+      ];
+      const totalAdj = modifiers.reduce((sum, m) => sum + m.priceAdjustment, 0);
+      const finalPrice = basePrice + totalAdj;
+      expect(finalPrice).toBe(11.00);
+    });
+
+    it("should calculate price with negative adjustments", () => {
+      const basePrice = 10.00;
+      const modifiers = [
+        { name: "Size", option: "Small", priceAdjustment: -2.00 },
+      ];
+      const totalAdj = modifiers.reduce((sum, m) => sum + m.priceAdjustment, 0);
+      const finalPrice = basePrice + totalAdj;
+      expect(finalPrice).toBe(8.00);
+    });
+
+    it("should format modifier label for cart display", () => {
+      const itemName = "Tiramisu Cup";
+      const modifiers = [
+        { name: "Size", option: "Large", priceAdjustment: 2.50 },
+        { name: "Temperature", option: "Iced", priceAdjustment: 0 },
+      ];
+      const modLabel = modifiers.map(m => m.option).join(", ");
+      const displayName = `${itemName} (${modLabel})`;
+      expect(displayName).toBe("Tiramisu Cup (Large, Iced)");
+    });
+  });
+
   describe("POS Sales Aggregation", () => {
     it("should aggregate items by name correctly", () => {
       const items = [

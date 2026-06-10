@@ -15,6 +15,7 @@ interface CartItem {
   unitPrice: number;
   totalPrice: number;
   priceType: "fixed" | "weight" | "custom";
+  modifiers?: { name: string; option: string; priceAdjustment: number }[];
 }
 
 interface ReceiptData {
@@ -44,6 +45,8 @@ export default function StaffPOS() {
   const [activeTab, setActiveTab] = useState<"checkout" | "transactions" | "orders">("checkout");
   const [sidebarMode, setSidebarMode] = useState<"keypad" | "library" | "favourites">("library");
   const [keypadValue, setKeypadValue] = useState("");
+  const [modifierPopup, setModifierPopup] = useState<{ item: any; modifiers: any[] } | null>(null);
+  const [selectedModifiers, setSelectedModifiers] = useState<Record<number, { label: string; priceAdjustment: number }>>({});
 
   // Auth check
   const { data: authData, isLoading: authLoading } = trpc.staffAuth.verify.useQuery();
@@ -68,6 +71,10 @@ export default function StaffPOS() {
     { enabled: !!branchId }
   );
   const { data: menuItems = [] } = trpc.pos.listMenuItems.useQuery(
+    { branchId: branchId! },
+    { enabled: !!branchId }
+  );
+  const { data: allModifiers = [] } = trpc.pos.listModifiersByBranch.useQuery(
     { branchId: branchId! },
     { enabled: !!branchId }
   );
@@ -123,11 +130,19 @@ export default function StaffPOS() {
       setCustomPrice("");
       return;
     }
+    // Check if item has modifiers
+    const itemModifiers = allModifiers.filter((m: any) => m.menuItemId === item.id);
+    if (itemModifiers.length > 0) {
+      setModifierPopup({ item, modifiers: itemModifiers });
+      setSelectedModifiers({});
+      return;
+    }
+    // No modifiers — add directly
     setCart((prev) => {
-      const existing = prev.find((c) => c.menuItemId === item.id && c.priceType === "fixed");
+      const existing = prev.find((c) => c.menuItemId === item.id && c.priceType === "fixed" && !c.modifiers?.length);
       if (existing) {
         return prev.map((c) =>
-          c.menuItemId === item.id && c.priceType === "fixed"
+          c.menuItemId === item.id && c.priceType === "fixed" && !c.modifiers?.length
             ? { ...c, quantity: c.quantity + 1, totalPrice: (c.quantity + 1) * c.unitPrice }
             : c
         );
@@ -141,7 +156,37 @@ export default function StaffPOS() {
         priceType: "fixed" as const,
       }];
     });
-  }, []);
+  }, [allModifiers]);
+
+  const confirmModifiers = () => {
+    if (!modifierPopup) return;
+    const { item, modifiers } = modifierPopup;
+    // Check required modifiers
+    const missingRequired = modifiers.filter((m: any) => m.required && !selectedModifiers[m.id]);
+    if (missingRequired.length > 0) {
+      toast.error(`Please select: ${missingRequired.map((m: any) => m.name).join(", ")}`);
+      return;
+    }
+    const modifierList = Object.entries(selectedModifiers).map(([modId, opt]) => {
+      const mod = modifiers.find((m: any) => m.id === Number(modId));
+      return { name: mod?.name || "", option: opt.label, priceAdjustment: opt.priceAdjustment };
+    });
+    const priceAdj = modifierList.reduce((sum, m) => sum + m.priceAdjustment, 0);
+    const basePrice = parseFloat(item.unitPrice);
+    const finalPrice = basePrice + priceAdj;
+    const modLabel = modifierList.map(m => m.option).join(", ");
+    setCart((prev) => [...prev, {
+      menuItemId: item.id,
+      itemName: modLabel ? `${item.name} (${modLabel})` : item.name,
+      quantity: 1,
+      unitPrice: finalPrice,
+      totalPrice: finalPrice,
+      priceType: "fixed" as const,
+      modifiers: modifierList,
+    }]);
+    setModifierPopup(null);
+    setSelectedModifiers({});
+  };
 
   const confirmWeight = () => {
     if (!weightInput || !weightValue) return;
@@ -411,18 +456,35 @@ export default function StaffPOS() {
                   </h2>
                 </div>
                 <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
-                  {filteredItems.map((item: any) => (
-                    <button
-                      key={item.id}
-                      onClick={() => addToCart(item)}
-                      className="p-3 rounded-lg text-left bg-white border border-neutral-200 hover:border-neutral-400 hover:shadow-sm transition-all active:scale-95"
-                    >
-                      <p className="text-sm font-medium text-neutral-800 truncate">{item.name}</p>
-                      <p className="text-xs text-neutral-400 mt-1">
-                        {item.priceType === "weight" ? `$${item.unitPrice}/100g` : item.priceType === "custom" ? "Custom $" : `$${item.unitPrice}`}
-                      </p>
-                    </button>
-                  ))}
+                  {filteredItems.map((item: any) => {
+                    const hasModifiers = allModifiers.some((m: any) => m.menuItemId === item.id);
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => addToCart(item)}
+                        className="rounded-lg text-left bg-white border border-neutral-200 hover:border-neutral-400 hover:shadow-sm transition-all active:scale-95 overflow-hidden flex flex-col"
+                      >
+                        {item.imageUrl ? (
+                          <div className="w-full aspect-square bg-neutral-50">
+                            <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="w-full aspect-square bg-neutral-50 flex items-center justify-center">
+                            <span className="text-2xl font-bold text-neutral-200 uppercase">{item.name.slice(0, 2)}</span>
+                          </div>
+                        )}
+                        <div className="p-2 flex-1">
+                          <p className="text-xs font-medium text-neutral-800 truncate">{item.name}</p>
+                          <div className="flex items-center justify-between mt-0.5">
+                            <p className="text-[10px] text-neutral-400">
+                              {item.priceType === "weight" ? `$${item.unitPrice}/100g` : item.priceType === "custom" ? "Custom $" : `$${item.unitPrice}`}
+                            </p>
+                            {hasModifiers && <span className="text-[8px] px-1 py-0.5 rounded bg-blue-50 text-blue-400">OPT</span>}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
                 {filteredItems.length === 0 && (
                   <div className="text-center py-12 text-neutral-300">
@@ -703,6 +765,85 @@ export default function StaffPOS() {
               </button>
               <button onClick={() => setCustomPriceInput(null)}
                 className="flex-1 py-2 text-xs text-neutral-500 border border-neutral-200 rounded">
+                CANCEL
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modifier Selection Popup */}
+      {modifierPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="p-6 w-full max-w-sm bg-white rounded-lg space-y-4">
+            <div className="flex items-center gap-3">
+              {modifierPopup.item.imageUrl && (
+                <img src={modifierPopup.item.imageUrl} alt="" className="w-12 h-12 rounded object-cover" />
+              )}
+              <div>
+                <h3 className="text-sm font-medium text-neutral-800">{modifierPopup.item.name}</h3>
+                <p className="text-xs text-neutral-400">${parseFloat(modifierPopup.item.unitPrice).toFixed(2)}</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {modifierPopup.modifiers.map((mod: any) => (
+                <div key={mod.id}>
+                  <p className="text-xs font-medium text-neutral-700 mb-1.5">
+                    {mod.name} {mod.required && <span className="text-red-400">*</span>}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(mod.options as any[]).map((opt: any, i: number) => {
+                      const isSelected = selectedModifiers[mod.id]?.label === opt.label;
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => setSelectedModifiers((prev) => ({
+                            ...prev,
+                            [mod.id]: isSelected ? undefined! : opt,
+                          }))}
+                          className={`px-3 py-1.5 text-xs rounded-full border transition-all ${
+                            isSelected
+                              ? "bg-neutral-900 text-white border-neutral-900"
+                              : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400"
+                          }`}
+                        >
+                          {opt.label}
+                          {opt.priceAdjustment !== 0 && (
+                            <span className={isSelected ? "text-white/70 ml-1" : "text-neutral-400 ml-1"}>
+                              {opt.priceAdjustment > 0 ? `+$${opt.priceAdjustment}` : `-$${Math.abs(opt.priceAdjustment)}`}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Total preview */}
+            <div className="pt-2 border-t border-neutral-100">
+              <p className="text-xs text-neutral-500 text-right">
+                Total: ${
+                  (parseFloat(modifierPopup.item.unitPrice) +
+                    Object.values(selectedModifiers).reduce((sum, opt) => sum + (opt?.priceAdjustment || 0), 0)
+                  ).toFixed(2)
+                }
+              </p>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={confirmModifiers}
+                className="flex-1 py-2.5 text-xs font-medium bg-neutral-900 text-white rounded"
+              >
+                ADD TO ORDER
+              </button>
+              <button
+                onClick={() => { setModifierPopup(null); setSelectedModifiers({}); }}
+                className="flex-1 py-2.5 text-xs text-neutral-500 border border-neutral-200 rounded"
+              >
                 CANCEL
               </button>
             </div>

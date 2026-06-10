@@ -464,6 +464,20 @@ export const posOrderItems = mysqlTable("pos_order_items", {
 export type PosOrderItem = typeof posOrderItems.$inferSelect;
 export type InsertPosOrderItem = typeof posOrderItems.$inferInsert;
 
+// ─── POS Item Modifiers (per-item options like size, temperature, extras) ──
+export const posItemModifiers = mysqlTable("pos_item_modifiers", {
+  id: int("id").autoincrement().primaryKey(),
+  menuItemId: int("menuItemId").notNull(),
+  name: varchar("name", { length: 200 }).notNull(), // e.g. "Size", "Temperature", "Extras"
+  options: json("options").$type<{ label: string; priceAdjustment: number }[]>().notNull(), // [{label: "Small", priceAdjustment: 0}, {label: "Large", priceAdjustment: 2.5}]
+  required: boolean("required").default(false).notNull(),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PosItemModifier = typeof posItemModifiers.$inferSelect;
+export type InsertPosItemModifier = typeof posItemModifiers.$inferInsert;
+
 // ─── Invoices ───────────────────────────────────────────────────
 export const invoices = mysqlTable("invoices", {
   id: int("id").autoincrement().primaryKey(),

@@ -335,3 +335,14 @@
 - [x] Staff can update order status (paid → preparing → ready → shipped/completed) with contextual action buttons
 - [x] Visual status badges and color coding (left border accent by status, color-coded action buttons)
 - [x] Auto-refresh every 10s with green pulse indicator + last updated time + manual Refresh button
+
+## POS Enhancement - Square-style Features
+- [x] Per-item images: each POS menu item can have an image (displayed on tile grid)
+- [x] Modifiers/Options per item: e.g. size (S/M/L), extras (cream, sauce), temperature (hot/iced)
+- [x] Admin POS Menu: image upload per item
+- [x] Admin POS Menu: create/edit modifiers and options per item with price adjustments
+- [x] POS Frontend: show item images on tiles
+- [x] POS Frontend: modifier selection popup when tapping an item with modifiers
+- [x] Custom Amount input: ability to type a custom price amount directly (for weight-based items like tiramisu per gram)
+- [x] Weight-based pricing UX: enter weight in grams → auto-calculate price based on per-gram rate
+- [x] POS Keypad mode: type custom dollar amount and add to order
