@@ -327,3 +327,11 @@
 - [x] Keypad mode for manual amount entry
 - [x] Surcharge buttons (10% weekend, 15% holiday) as special items
 - [x] Create staff accounts for Hawthorn (sarah_h), Windsor (windsor_staff), CBD (cbd_staff) — all password: staff123
+
+## POS Orders Tab - Online Order Integration
+- [x] POS Orders tab shows online orders (goods shipping + cake pickup) from website
+- [x] Filter by order type (all / shipping / pickup) with counts
+- [x] Show order details: customer name, items, total, order date, current status, shipping address, contact
+- [x] Staff can update order status (paid → preparing → ready → shipped/completed) with contextual action buttons
+- [x] Visual status badges and color coding (left border accent by status, color-coded action buttons)
+- [x] Auto-refresh every 10s with green pulse indicator + last updated time + manual Refresh button

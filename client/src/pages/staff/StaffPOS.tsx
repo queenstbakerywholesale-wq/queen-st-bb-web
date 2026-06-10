@@ -761,11 +761,13 @@ function StaffTransactions({ branchId }: { branchId: number }) {
 // ─── Staff Online Orders Component ─────────────────────────────────────
 function StaffOnlineOrders({ branchId }: { branchId: number }) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [expandedOrder, setExpandedOrder] = useState<number | null>(null);
+  const [lastRefresh, setLastRefresh] = useState(new Date());
 
-  const { data: onlineOrders = [], refetch } = trpc.pos.staffOnlineOrders.useQuery(
+  const { data: onlineOrders = [], refetch, isFetching } = trpc.pos.staffOnlineOrders.useQuery(
     { branchId, statusFilter: statusFilter as any },
-    { refetchInterval: 15000 }
+    { refetchInterval: 10000, refetchIntervalInBackground: true }
   );
 
   const { data: orderItemsData = [] } = trpc.pos.staffOrderItems.useQuery(
@@ -774,17 +776,31 @@ function StaffOnlineOrders({ branchId }: { branchId: number }) {
   );
 
   const updateStatusMutation = trpc.pos.staffUpdateOrderStatus.useMutation({
-    onSuccess: () => { toast.success("Status updated"); refetch(); },
+    onSuccess: () => { toast.success("Order status updated"); refetch(); },
     onError: (e: any) => toast.error(e.message),
   });
 
+  // Update last refresh time
+  useEffect(() => {
+    if (!isFetching) setLastRefresh(new Date());
+  }, [isFetching]);
+
   const statusColors: Record<string, string> = {
-    pending: "text-amber-600 border-amber-300 bg-amber-50",
-    paid: "text-blue-600 border-blue-300 bg-blue-50",
-    preparing: "text-orange-600 border-orange-300 bg-orange-50",
-    ready: "text-green-600 border-green-300 bg-green-50",
-    shipped: "text-purple-600 border-purple-300 bg-purple-50",
-    completed: "text-neutral-600 border-neutral-300 bg-neutral-50",
+    pending: "text-amber-700 border-amber-300 bg-amber-50",
+    paid: "text-blue-700 border-blue-300 bg-blue-50",
+    preparing: "text-orange-700 border-orange-300 bg-orange-50",
+    ready: "text-green-700 border-green-300 bg-green-50",
+    shipped: "text-purple-700 border-purple-300 bg-purple-50",
+    completed: "text-neutral-600 border-neutral-300 bg-neutral-100",
+  };
+
+  const statusLabels: Record<string, string> = {
+    pending: "Pending",
+    paid: "Paid",
+    preparing: "Preparing",
+    ready: "Ready",
+    shipped: "Shipped",
+    completed: "Done",
   };
 
   const nextStatus: Record<string, string> = {
@@ -794,81 +810,210 @@ function StaffOnlineOrders({ branchId }: { branchId: number }) {
     shipped: "completed",
   };
 
+  const nextStatusLabel: Record<string, string> = {
+    paid: "Start Preparing",
+    preparing: "Mark Ready",
+    ready: "Mark Shipped",
+    shipped: "Complete",
+  };
+
+  // Filter by type
+  const filteredOrders = onlineOrders.filter((order: any) => {
+    if (typeFilter === "shipping") return order.fulfillmentType === "shipping";
+    if (typeFilter === "pickup") return order.fulfillmentType === "pickup";
+    return true;
+  });
+
+  const shippingCount = onlineOrders.filter((o: any) => o.fulfillmentType === "shipping").length;
+  const pickupCount = onlineOrders.filter((o: any) => o.fulfillmentType === "pickup").length;
+
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-3">
+    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-medium text-neutral-800">Online Orders</h2>
+        <div className="flex items-center gap-2">
+          {isFetching && (
+            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" title="Refreshing..." />
+          )}
+          <span className="text-[10px] text-neutral-400">
+            Updated {lastRefresh.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
+          <button
+            onClick={() => refetch()}
+            className="text-xs text-neutral-400 hover:text-neutral-700 px-2 py-1 border border-neutral-200 rounded"
+          >
+            ↻ Refresh
+          </button>
+        </div>
+      </div>
+
+      {/* Type Filter */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setTypeFilter("all")}
+          className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
+            typeFilter === "all" ? "bg-neutral-900 text-white" : "text-neutral-500 border border-neutral-200 hover:bg-neutral-100"
+          }`}
+        >
+          All ({onlineOrders.length})
+        </button>
+        <button
+          onClick={() => setTypeFilter("shipping")}
+          className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
+            typeFilter === "shipping" ? "bg-neutral-900 text-white" : "text-neutral-500 border border-neutral-200 hover:bg-neutral-100"
+          }`}
+        >
+          📦 Shipping ({shippingCount})
+        </button>
+        <button
+          onClick={() => setTypeFilter("pickup")}
+          className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
+            typeFilter === "pickup" ? "bg-neutral-900 text-white" : "text-neutral-500 border border-neutral-200 hover:bg-neutral-100"
+          }`}
+        >
+          🎂 Pickup ({pickupCount})
+        </button>
+      </div>
+
       {/* Status Filter */}
       <div className="flex gap-1 flex-wrap">
         {["all", "paid", "preparing", "ready", "shipped"].map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
-            className={`px-3 py-1.5 text-xs rounded capitalize transition-colors ${
-              statusFilter === s ? "bg-neutral-900 text-white" : "text-neutral-500 border border-neutral-200 hover:bg-neutral-100"
+            className={`px-3 py-1.5 text-xs rounded transition-colors capitalize ${
+              statusFilter === s ? "bg-neutral-700 text-white" : "text-neutral-500 border border-neutral-200 hover:bg-neutral-100"
             }`}
           >
-            {s}
+            {s === "all" ? "All Status" : statusLabels[s] || s}
           </button>
         ))}
       </div>
 
       {/* Orders List */}
-      {onlineOrders.length === 0 ? (
-        <div className="text-center py-12 text-neutral-300">
-          <p className="text-sm">No orders found</p>
+      {filteredOrders.length === 0 ? (
+        <div className="text-center py-16">
+          <p className="text-4xl mb-2">📋</p>
+          <p className="text-sm text-neutral-400">No orders found</p>
+          <p className="text-xs text-neutral-300 mt-1">Orders from the website will appear here automatically</p>
         </div>
       ) : (
-        onlineOrders.map((order: any) => (
-          <div key={order.id} className="bg-white rounded-lg border border-neutral-200 p-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-neutral-800">{order.orderNumber}</p>
-                <p className="text-xs text-neutral-400">
-                  {order.customerName} • {order.fulfillmentType === "shipping" ? "📦 Shipping" : "🎂 Pickup"}
-                  {order.pickupDate && ` • ${order.pickupDate} ${order.pickupTime || ""}`}
-                </p>
+        <div className="space-y-3">
+          {filteredOrders.map((order: any) => (
+            <div key={order.id} className={`bg-white rounded-lg border p-4 space-y-3 transition-shadow hover:shadow-sm ${
+              order.status === "paid" ? "border-blue-200 border-l-4 border-l-blue-500" :
+              order.status === "preparing" ? "border-orange-200 border-l-4 border-l-orange-500" :
+              order.status === "ready" ? "border-green-200 border-l-4 border-l-green-500" :
+              "border-neutral-200"
+            }`}>
+              {/* Order Header */}
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-neutral-800">{order.orderNumber}</p>
+                    <span className={`text-[10px] uppercase px-2 py-0.5 rounded-full border font-medium ${
+                      statusColors[order.status] || "text-neutral-500 border-neutral-200"
+                    }`}>
+                      {statusLabels[order.status] || order.status}
+                    </span>
+                  </div>
+                  <p className="text-xs text-neutral-500">
+                    {order.customerName}
+                    {order.customerPhone && ` • ${order.customerPhone}`}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs px-2 py-0.5 rounded ${
+                      order.fulfillmentType === "shipping"
+                        ? "bg-indigo-50 text-indigo-700"
+                        : "bg-emerald-50 text-emerald-700"
+                    }`}>
+                      {order.fulfillmentType === "shipping" ? "📦 Shipping" : "🎂 Pickup"}
+                    </span>
+                    {order.pickupDate && (
+                      <span className="text-xs text-neutral-500">
+                        📅 {order.pickupDate} {order.pickupTime && `@ ${order.pickupTime}`}
+                      </span>
+                    )}
+                    <span className="text-[10px] text-neutral-400">
+                      {new Date(order.createdAt).toLocaleDateString()} {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-base font-bold text-neutral-800">${order.total}</p>
+                  {order.shippingFee && Number(order.shippingFee) > 0 && (
+                    <p className="text-[10px] text-neutral-400">incl. ${order.shippingFee} shipping</p>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className={`text-[10px] uppercase px-2 py-0.5 rounded border ${statusColors[order.status] || ""}`}>
-                  {order.status}
-                </span>
-                <span className="text-sm font-medium text-neutral-800">${order.total}</span>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
-                className="text-xs text-neutral-400 hover:text-neutral-700"
-              >
-                {expandedOrder === order.id ? "▲ Hide" : "▼ Details"}
-              </button>
-              {nextStatus[order.status] && (
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 pt-1">
                 <button
-                  onClick={() => updateStatusMutation.mutate({ orderId: order.id, status: nextStatus[order.status] as any })}
-                  disabled={updateStatusMutation.isPending}
-                  className="text-xs px-3 py-1 bg-neutral-900 text-white rounded disabled:opacity-40"
+                  onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
+                  className="text-xs text-neutral-500 hover:text-neutral-700 px-2 py-1 border border-neutral-200 rounded hover:bg-neutral-50"
                 >
-                  → {nextStatus[order.status]}
+                  {expandedOrder === order.id ? "▲ Hide Items" : "▼ View Items"}
                 </button>
+                {nextStatus[order.status] && (
+                  <button
+                    onClick={() => updateStatusMutation.mutate({ orderId: order.id, status: nextStatus[order.status] as any })}
+                    disabled={updateStatusMutation.isPending}
+                    className={`text-xs px-3 py-1.5 rounded font-medium transition-colors disabled:opacity-40 ${
+                      order.status === "paid" ? "bg-orange-500 hover:bg-orange-600 text-white" :
+                      order.status === "preparing" ? "bg-green-500 hover:bg-green-600 text-white" :
+                      order.status === "ready" ? "bg-purple-500 hover:bg-purple-600 text-white" :
+                      "bg-neutral-800 hover:bg-neutral-900 text-white"
+                    }`}
+                  >
+                    → {nextStatusLabel[order.status]}
+                  </button>
+                )}
+                {order.status === "completed" && (
+                  <span className="text-xs text-green-600 font-medium">✓ Completed</span>
+                )}
+              </div>
+
+              {/* Expanded Order Items */}
+              {expandedOrder === order.id && (
+                <div className="pt-2 border-t border-neutral-100">
+                  {orderItemsData.length > 0 ? (
+                    <div className="space-y-1.5">
+                      {orderItemsData.map((item: any) => (
+                        <div key={item.id} className="flex justify-between text-xs">
+                          <span className="text-neutral-700">
+                            <span className="font-medium">{item.quantity}×</span> {item.productName}
+                          </span>
+                          <span className="text-neutral-600 font-medium">${item.totalPrice}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-neutral-400">Loading items...</p>
+                  )}
+                  {/* Shipping Address */}
+                  {order.fulfillmentType === "shipping" && order.shippingAddress && (
+                    <div className="mt-2 pt-2 border-t border-neutral-100">
+                      <p className="text-[10px] uppercase text-neutral-400 font-medium mb-0.5">Shipping Address</p>
+                      <p className="text-xs text-neutral-600">{order.shippingAddress}</p>
+                    </div>
+                  )}
+                  {/* Customer Contact */}
+                  {order.customerEmail && (
+                    <div className="mt-2 pt-2 border-t border-neutral-100">
+                      <p className="text-[10px] uppercase text-neutral-400 font-medium mb-0.5">Contact</p>
+                      <p className="text-xs text-neutral-600">
+                        {order.customerEmail}
+                        {order.customerPhone && ` • ${order.customerPhone}`}
+                      </p>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
-
-            {expandedOrder === order.id && orderItemsData.length > 0 && (
-              <div className="pl-3 space-y-1 border-l-2 border-neutral-200">
-                {orderItemsData.map((item: any) => (
-                  <div key={item.id} className="flex justify-between text-xs text-neutral-600">
-                    <span>{item.productName} ×{item.quantity}</span>
-                    <span>${item.totalPrice}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {order.fulfillmentType === "shipping" && order.shippingAddress && (
-              <p className="text-[10px] text-neutral-400 pl-3">📨 {order.shippingAddress}</p>
-            )}
-          </div>
-        ))
+          ))}
+        </div>
       )}
     </div>
   );
