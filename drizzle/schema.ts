@@ -531,3 +531,36 @@ export const invoices = mysqlTable("invoices", {
 
 export type Invoice = typeof invoices.$inferSelect;
 export type InsertInvoice = typeof invoices.$inferInsert;
+
+// ─── Staff Shifts ─────────────────────────────────────────────────
+export const staffShifts = mysqlTable("staff_shifts", {
+  id: int("id").autoincrement().primaryKey(),
+  branchId: int("branchId").notNull(),
+  staffId: int("staffId").notNull(),
+  date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD
+  startTime: varchar("startTime", { length: 5 }).notNull(), // HH:MM
+  endTime: varchar("endTime", { length: 5 }).notNull(), // HH:MM
+  status: mysqlEnum("shiftStatus", ["scheduled", "confirmed", "completed", "cancelled", "no_show"]).default("scheduled").notNull(),
+  notes: text("notes"),
+  createdBy: int("createdBy"), // manager/admin who created
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StaffShift = typeof staffShifts.$inferSelect;
+export type InsertStaffShift = typeof staffShifts.$inferInsert;
+
+// ─── Shift Swap Requests ──────────────────────────────────────────
+export const shiftSwapRequests = mysqlTable("shift_swap_requests", {
+  id: int("id").autoincrement().primaryKey(),
+  shiftId: int("shiftId").notNull(),
+  requesterId: int("requesterId").notNull(), // staff who wants to swap
+  targetStaffId: int("targetStaffId"), // staff they want to swap with (null = open request)
+  status: mysqlEnum("swapStatus", ["pending", "accepted", "rejected", "cancelled"]).default("pending").notNull(),
+  reason: text("reason"),
+  respondedAt: timestamp("respondedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ShiftSwapRequest = typeof shiftSwapRequests.$inferSelect;
+export type InsertShiftSwapRequest = typeof shiftSwapRequests.$inferInsert;

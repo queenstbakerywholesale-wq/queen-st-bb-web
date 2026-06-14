@@ -22,6 +22,7 @@ import { customerMyPageRouter } from "./routers/customerMyPage";
 import { staffAuthRouter } from "./routers/staffAuth";
 import { adminStaffRouter } from "./routers/adminStaff";
 import { posRouter } from "./routers/pos";
+import { shiftsRouter } from "./routers/shifts";
 
 export const appRouter = router({
   system: systemRouter,
@@ -58,6 +59,7 @@ export const appRouter = router({
   myPage: customerMyPageRouter,
   staffAuth: staffAuthRouter,
   pos: posRouter,
+  shifts: shiftsRouter,
 });
 
 export type AppRouter = typeof appRouter;

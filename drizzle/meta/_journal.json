@@ -78,6 +78,13 @@
       "when": 1781429786480,
       "tag": "0010_futuristic_pandemic",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1781430792365,
+      "tag": "0011_aspiring_the_stranger",
+      "breakpoints": true
     }
   ]
 }

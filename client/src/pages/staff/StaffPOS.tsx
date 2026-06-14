@@ -3,13 +3,16 @@
  * Layout: Left sidebar (Keypad/Library/Favourites) | Center tile grid | Right order panel
  * Bottom tabs: Checkout, Transactions, Orders
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { getAutoSurchargeType, SURCHARGE_EXEMPT_CATEGORIES } from "@shared/holidays";
+import StaffShifts from "./StaffShifts";
 
 interface CartItem {
   menuItemId?: number;
   itemName: string;
+  categoryName?: string;
   quantity: number;
   weightGrams?: number;
   unitPrice: number;
@@ -42,13 +45,13 @@ export default function StaffPOS() {
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<"checkout" | "transactions" | "orders">("checkout");
+  const [activeTab, setActiveTab] = useState<"checkout" | "transactions" | "orders" | "shifts">("checkout");
   const [sidebarMode, setSidebarMode] = useState<"keypad" | "library" | "favourites">("library");
   const [keypadValue, setKeypadValue] = useState("");
   const [modifierPopup, setModifierPopup] = useState<{ item: any; modifiers: any[] } | null>(null);
   const [selectedModifiers, setSelectedModifiers] = useState<Record<number, { label: string; priceAdjustment: number }>>({});
   const [fulfillmentType, setFulfillmentType] = useState<"for_here" | "to_go" | "delivery" | "pickup">("for_here");
-  const [surchargeType, setSurchargeType] = useState<"none" | "weekend" | "holiday">("none");
+  const [surchargeType, setSurchargeType] = useState<"none" | "weekend" | "holiday">(getAutoSurchargeType());
   const [discountType, setDiscountType] = useState<"none" | "staff" | "influencer">("none");
 
   // Auth check
@@ -98,7 +101,7 @@ export default function StaffPOS() {
       setShowPayment(false);
       setCashReceived("");
       setFulfillmentType("for_here");
-      setSurchargeType("none");
+      setSurchargeType(getAutoSurchargeType());
       setDiscountType("none");
     },
     onError: (e) => toast.error(e.message),
@@ -126,11 +129,26 @@ export default function StaffPOS() {
   const discountPercent = discountType === "staff" ? 30 : discountType === "influencer" ? 100 : 0;
   const discountAmount = cartSubtotal * (discountPercent / 100);
   const afterDiscount = cartSubtotal - discountAmount;
+
+  // Surcharge: exclude goods/merchandise categories
   const surchargePercent = surchargeType === "weekend" ? 10 : surchargeType === "holiday" ? 15 : 0;
-  const surchargeAmount = afterDiscount * (surchargePercent / 100);
+  const surchargeable = cart.filter(item => !SURCHARGE_EXEMPT_CATEGORIES.includes(item.categoryName || ""));
+  const exemptItems = cart.filter(item => SURCHARGE_EXEMPT_CATEGORIES.includes(item.categoryName || ""));
+  const surchargeableSubtotal = surchargeable.reduce((sum, item) => sum + item.totalPrice, 0);
+  const exemptSubtotal = exemptItems.reduce((sum, item) => sum + item.totalPrice, 0);
+  // Apply discount proportionally, then surcharge only on non-exempt portion
+  const discountRatio = cartSubtotal > 0 ? afterDiscount / cartSubtotal : 1;
+  const surchargeableAfterDiscount = surchargeableSubtotal * discountRatio;
+  const surchargeAmount = surchargeableAfterDiscount * (surchargePercent / 100);
   const cartTotal = afterDiscount + surchargeAmount;
   const gstAmount = cartTotal / 11;
   const change = cashReceived ? parseFloat(cashReceived) - cartTotal : 0;
+
+  // Helper to get category name for an item
+  const getCategoryName = useCallback((item: any) => {
+    const cat = categories.find((c: any) => c.id === item.categoryId);
+    return cat?.name || "";
+  }, [categories]);
 
   const addToCart = useCallback((item: any) => {
     if (item.priceType === "weight") {
@@ -151,6 +169,7 @@ export default function StaffPOS() {
       return;
     }
     // No modifiers — add directly
+    const catName = getCategoryName(item);
     setCart((prev) => {
       const existing = prev.find((c) => c.menuItemId === item.id && c.priceType === "fixed" && !c.modifiers?.length);
       if (existing) {
@@ -163,13 +182,14 @@ export default function StaffPOS() {
       return [...prev, {
         menuItemId: item.id,
         itemName: item.name,
+        categoryName: catName,
         quantity: 1,
         unitPrice: parseFloat(item.unitPrice),
         totalPrice: parseFloat(item.unitPrice),
         priceType: "fixed" as const,
       }];
     });
-  }, [allModifiers]);
+  }, [allModifiers, getCategoryName]);
 
   const confirmModifiers = () => {
     if (!modifierPopup) return;
@@ -188,9 +208,11 @@ export default function StaffPOS() {
     const basePrice = parseFloat(item.unitPrice);
     const finalPrice = basePrice + priceAdj;
     const modLabel = modifierList.map(m => m.option).join(", ");
+    const catName = getCategoryName(item);
     setCart((prev) => [...prev, {
       menuItemId: item.id,
       itemName: modLabel ? `${item.name} (${modLabel})` : item.name,
+      categoryName: catName,
       quantity: 1,
       unitPrice: finalPrice,
       totalPrice: finalPrice,
@@ -576,7 +598,7 @@ export default function StaffPOS() {
 
             {/* Surcharge Selector */}
             <div className="px-3 py-2 border-t border-neutral-100">
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 flex-wrap">
                 <span className="text-[10px] text-neutral-400 mr-1">Surcharge:</span>
                 {(["none", "weekend", "holiday"] as const).map((st) => (
                   <button
@@ -588,9 +610,12 @@ export default function StaffPOS() {
                         : "text-neutral-400 hover:bg-neutral-100"
                     }`}
                   >
-                    {st === "none" ? "None" : st === "weekend" ? "+10%" : "+15%"}
+                    {st === "none" ? "None" : st === "weekend" ? "주말 +10%" : "공휴일 +15%"}
                   </button>
                 ))}
+                {getAutoSurchargeType() !== "none" && (
+                  <span className="text-[9px] text-amber-500 ml-1">• Auto</span>
+                )}
               </div>
             </div>
 
@@ -628,8 +653,13 @@ export default function StaffPOS() {
               )}
               {surchargeAmount > 0 && (
                 <div className="flex justify-between text-[10px] text-amber-600">
-                  <span>{surchargeType === "weekend" ? "Weekend" : "Holiday"} Surcharge ({surchargePercent}%)</span>
+                  <span>{surchargeType === "weekend" ? "주말 Weekend" : "공휴일 Holiday"} Surcharge ({surchargePercent}%){exemptItems.length > 0 ? " *" : ""}</span>
                   <span>+${surchargeAmount.toFixed(2)}</span>
+                </div>
+              )}
+              {surchargeAmount > 0 && exemptItems.length > 0 && (
+                <div className="text-[9px] text-neutral-400 italic">
+                  * Goods excluded from surcharge
                 </div>
               )}
               <div className="flex justify-between text-[10px] text-neutral-400">
@@ -703,9 +733,11 @@ export default function StaffPOS() {
         </div>
       ) : activeTab === "orders" ? (
         <StaffOnlineOrders branchId={branchId} />
-      ) : (
+      ) : activeTab === "transactions" && staffData?.role === "manager" ? (
         <StaffTransactions branchId={branchId} />
-      )}
+      ) : activeTab === "shifts" ? (
+        <StaffShifts branchId={branchId} staffId={staffData?.id || 0} role={staffData?.role || "staff"} />
+      ) : null}
 
       {/* Bottom Tab Bar (Square-style) */}
       <div className="flex items-center justify-between px-4 py-2 bg-white border-t border-neutral-200">
@@ -719,6 +751,7 @@ export default function StaffPOS() {
             </svg>
             Checkout
           </button>
+          {staffData?.role === "manager" && (
           <button
             onClick={() => setActiveTab("transactions")}
             className={`flex items-center gap-1.5 py-1 text-xs ${activeTab === "transactions" ? "text-neutral-900 font-medium" : "text-neutral-400"}`}
@@ -728,6 +761,7 @@ export default function StaffPOS() {
             </svg>
             Transactions
           </button>
+          )}
           <button
             onClick={() => setActiveTab("orders")}
             className={`flex items-center gap-1.5 py-1 text-xs ${activeTab === "orders" ? "text-neutral-900 font-medium" : "text-neutral-400"}`}
@@ -736,6 +770,15 @@ export default function StaffPOS() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
             Orders
+          </button>
+          <button
+            onClick={() => setActiveTab("shifts")}
+            className={`flex items-center gap-1.5 py-1 text-xs ${activeTab === "shifts" ? "text-neutral-900 font-medium" : "text-neutral-400"}`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Shifts
           </button>
         </div>
         <div className="flex items-center gap-3">

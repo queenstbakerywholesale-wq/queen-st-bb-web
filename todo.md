@@ -406,3 +406,36 @@
 - [x] Add Influencer 100% discount button to POS order panel
 - [x] Store discount type and amount in pos_orders table
 - [x] Calculate discount before GST and surcharge
+
+## Automatic Weekend Surcharge
+- [x] Auto-detect Saturday/Sunday and apply 10% surcharge automatically
+- [x] Exclude merchandise/goods items from surcharge calculation
+- [x] Display "Weekend Surcharge 10%" label clearly in order panel
+- [x] Pre-select weekend surcharge button on Sat/Sun
+
+## Auto Holiday Surcharge + Goods Exemption
+- [x] Add VIC public holiday list for 2026 and auto-detect holiday
+- [x] Auto-apply 15% surcharge on public holidays
+- [x] Exclude BB Goods and Etc categories from surcharge calculation
+- [x] Display "Weekend Surcharge 10%" or "Holiday Surcharge 15%" label clearly
+
+## Staff Role Restrictions
+- [x] Hide Transactions/Sales tab from Staff role in POS
+- [x] Staff can only: enter orders, process payments, change order status
+- [x] Manager and Admin can still see sales data
+
+## Manager Role
+- [x] Add "manager" role to staff_members table (already exists in schema)
+- [x] Manager can: manage orders, view sales, partial staff management
+- [x] Manager cannot: change settings, manage menu (admin panel only)
+
+## Shift Management System
+- [x] Create shifts table (branch, staff, date, start_time, end_time, status)
+- [x] Shift schedule calendar view per branch
+- [x] Staff can view own shifts
+- [x] Staff can request shift swap
+- [x] Manager/Admin can assign and approve shifts
+- [x] Shift tab in Staff POS interface
+
+## EFTPOS (ANZ) Card Payment
+- [ ] Card payment button shows amount and "EFTPOS Payment Complete" confirmation
