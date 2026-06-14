@@ -8,6 +8,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { getAutoSurchargeType, SURCHARGE_EXEMPT_CATEGORIES } from "@shared/holidays";
 import StaffShifts from "./StaffShifts";
+import StaffAttendance from "./StaffAttendance";
 
 interface CartItem {
   menuItemId?: number;
@@ -45,7 +46,7 @@ export default function StaffPOS() {
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<"checkout" | "transactions" | "orders" | "shifts">("checkout");
+  const [activeTab, setActiveTab] = useState<"checkout" | "transactions" | "orders" | "shifts" | "attendance">("checkout");
   const [sidebarMode, setSidebarMode] = useState<"keypad" | "library" | "favourites">("library");
   const [keypadValue, setKeypadValue] = useState("");
   const [modifierPopup, setModifierPopup] = useState<{ item: any; modifiers: any[] } | null>(null);
@@ -737,6 +738,8 @@ export default function StaffPOS() {
         <StaffTransactions branchId={branchId} />
       ) : activeTab === "shifts" ? (
         <StaffShifts branchId={branchId} staffId={staffData?.id || 0} role={staffData?.role || "staff"} />
+      ) : activeTab === "attendance" ? (
+        <StaffAttendance branchId={branchId} staffId={staffData?.id || 0} displayName={staffData?.displayName || ""} role={staffData?.role || "staff"} />
       ) : null}
 
       {/* Bottom Tab Bar (Square-style) */}
@@ -779,6 +782,15 @@ export default function StaffPOS() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             Shifts
+          </button>
+          <button
+            onClick={() => setActiveTab("attendance")}
+            className={`flex items-center gap-1.5 py-1 text-xs ${activeTab === "attendance" ? "text-neutral-900 font-medium" : "text-neutral-400"}`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Attendance
           </button>
         </div>
         <div className="flex items-center gap-3">

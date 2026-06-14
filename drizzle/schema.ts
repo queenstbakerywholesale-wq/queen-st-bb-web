@@ -564,3 +564,22 @@ export const shiftSwapRequests = mysqlTable("shift_swap_requests", {
 
 export type ShiftSwapRequest = typeof shiftSwapRequests.$inferSelect;
 export type InsertShiftSwapRequest = typeof shiftSwapRequests.$inferInsert;
+
+// ─── Staff Attendance (Clock In/Out) ──────────────────────────────
+export const staffAttendance = mysqlTable("staff_attendance", {
+  id: int("id").autoincrement().primaryKey(),
+  staffId: int("staffId").notNull(),
+  branchId: int("branchId").notNull(),
+  date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD
+  clockInTime: timestamp("clockInTime"), // actual clock-in timestamp
+  clockOutTime: timestamp("clockOutTime"), // actual clock-out timestamp
+  clockInPhotoUrl: text("clockInPhotoUrl"), // S3 URL of clock-in photo
+  clockOutPhotoUrl: text("clockOutPhotoUrl"), // S3 URL of clock-out photo
+  totalMinutes: int("totalMinutes"), // calculated total work minutes
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StaffAttendance = typeof staffAttendance.$inferSelect;
+export type InsertStaffAttendance = typeof staffAttendance.$inferInsert;

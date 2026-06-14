@@ -439,3 +439,10 @@
 
 ## EFTPOS (ANZ) Card Payment
 - [ ] Card payment button shows amount and "EFTPOS Payment Complete" confirmation
+
+## Staff Attendance (Clock In/Out) System
+- [x] Create staff_attendance table (staffId, branchId, date, clockInTime, clockOutTime, clockInPhoto, clockOutPhoto)
+- [x] Backend API: clock in with photo upload
+- [x] Backend API: clock out with photo upload
+- [x] Clock In/Out UI in Staff POS with camera capture
+- [x] Admin Excel export with calculated total hours per staff

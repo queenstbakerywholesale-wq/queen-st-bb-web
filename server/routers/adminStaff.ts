@@ -1,8 +1,9 @@
 import { z } from "zod";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, gte, lte } from "drizzle-orm";
 import { publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { staffMembers, branches } from "../../drizzle/schema";
+import { staffMembers, branches, staffAttendance } from "../../drizzle/schema";
+import { storagePut } from "../storage";
 import bcrypt from "bcryptjs";
 
 export const adminStaffRouter = router({
@@ -130,4 +131,90 @@ export const adminStaffRouter = router({
       .from(branches)
       .where(eq(branches.isActive, true));
   }),
+
+  // ─── Attendance Records ─────────────────────────────────────────
+  attendanceList: publicProcedure
+    .input(z.object({
+      branchId: z.number(),
+      startDate: z.string(),
+      endDate: z.string(),
+    }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+
+      const records = await db
+        .select()
+        .from(staffAttendance)
+        .where(
+          and(
+            eq(staffAttendance.branchId, input.branchId),
+            gte(staffAttendance.date, input.startDate),
+            lte(staffAttendance.date, input.endDate)
+          )
+        )
+        .orderBy(desc(staffAttendance.date));
+
+      const staffList = await db
+        .select({ id: staffMembers.id, displayName: staffMembers.displayName })
+        .from(staffMembers)
+        .where(eq(staffMembers.branchId, input.branchId));
+
+      const staffMap = Object.fromEntries(staffList.map(s => [s.id, s.displayName]));
+
+      return records.map(r => ({
+        ...r,
+        staffName: staffMap[r.staffId] || "Unknown",
+      }));
+    }),
+
+  // ─── Export Attendance to Excel (CSV) ───────────────────────────
+  attendanceExport: publicProcedure
+    .input(z.object({
+      branchId: z.number(),
+      startDate: z.string(),
+      endDate: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const records = await db
+        .select()
+        .from(staffAttendance)
+        .where(
+          and(
+            eq(staffAttendance.branchId, input.branchId),
+            gte(staffAttendance.date, input.startDate),
+            lte(staffAttendance.date, input.endDate)
+          )
+        )
+        .orderBy(staffAttendance.date);
+
+      const staffList = await db
+        .select({ id: staffMembers.id, displayName: staffMembers.displayName })
+        .from(staffMembers)
+        .where(eq(staffMembers.branchId, input.branchId));
+
+      const staffMap = Object.fromEntries(staffList.map(s => [s.id, s.displayName]));
+
+      // Build CSV with BOM for Excel
+      const headers = ["Date", "Staff Name", "Clock In", "Clock Out", "Total Hours", "Total Minutes"];
+      const rows = records.map(r => {
+        const clockIn = r.clockInTime ? new Date(r.clockInTime).toLocaleTimeString("en-AU", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Australia/Melbourne" }) : "";
+        const clockOut = r.clockOutTime ? new Date(r.clockOutTime).toLocaleTimeString("en-AU", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Australia/Melbourne" }) : "";
+        const totalHours = r.totalMinutes ? (r.totalMinutes / 60).toFixed(2) : "";
+        return [r.date, staffMap[r.staffId] || "Unknown", clockIn, clockOut, totalHours, r.totalMinutes?.toString() || ""];
+      });
+
+      const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+      const filename = `attendance_${input.branchId}_${input.startDate}_to_${input.endDate}.csv`;
+      const { url } = await storagePut(
+        `exports/${filename}`,
+        Buffer.from("\uFEFF" + csvContent, "utf-8"),
+        "text/csv"
+      );
+
+      return { url, filename };
+    }),
 });
