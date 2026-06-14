@@ -378,10 +378,10 @@
 - [x] Rebuild POS categories from June 2026 menu PDF: Black Coffee, White Coffee, Italian Coffee, Tea, Matcha, Non Coffee, Queen Milk, Ade (Sparkling), BB Gelato, Classic Wine, Spritz & Beer, Beverage, BB Snack, BB Goods, Etc
 - [x] Recreate items within each category with correct pricing from menu PDF (97 items total)
 - [x] Recreate modifier groups: Size (S/M/L), Milk (Full Cream/Skim/Oat/Almond/Soy), Sugar (0-3), Syrup (Vanilla/Hazelnut/Caramel), Decaf, Temperature (Hot/Iced), Style (Hot/Ice/Gelato), Add Gelato Top
-- [ ] Add fulfilment methods to POS: For Here, To Go, Delivery, Pick Up
-- [ ] Add GST 10% tax handling
-- [ ] Add weekend surcharge (10%) and holiday surcharge (15%) options
-- [ ] Correct mug product images to match real proportions (wider than tall, 9.5cm W × 8.5cm H)
+- [x] Add fulfilment methods to POS: For Here, To Go, Delivery, Pick Up
+- [x] Add GST 10% tax handling
+- [x] Add weekend surcharge (10%) and holiday surcharge (15%) options
+- [x] Correct mug product images to match real proportions (wider than tall, 9.5cm W × 8.5cm H)
 
 ## POS Menu Data Import (June 2026 PDF)
 - [x] Extract all menu items, categories, prices, and modifiers from June 2026 menu PDF

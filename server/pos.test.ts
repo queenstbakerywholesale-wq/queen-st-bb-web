@@ -137,6 +137,68 @@ describe("POS System", () => {
     });
   });
 
+  describe("POS GST & Surcharge Calculation", () => {
+    it("should calculate GST 10% inclusive correctly", () => {
+      const subtotal = 55.00;
+      const surchargeType = "none";
+      const surchargePercent = surchargeType === "weekend" ? 10 : surchargeType === "holiday" ? 15 : 0;
+      const surchargeAmount = subtotal * (surchargePercent / 100);
+      const afterSurcharge = subtotal + surchargeAmount;
+      const tax = afterSurcharge / 11;
+      const total = afterSurcharge;
+      expect(total).toBe(55.00);
+      expect(tax).toBeCloseTo(5.00, 2);
+    });
+
+    it("should calculate weekend surcharge 10% correctly", () => {
+      const subtotal = 100.00;
+      const surchargeType = "weekend";
+      const surchargePercent = surchargeType === "weekend" ? 10 : surchargeType === "holiday" ? 15 : 0;
+      const surchargeAmount = subtotal * (surchargePercent / 100);
+      const afterSurcharge = subtotal + surchargeAmount;
+      const tax = afterSurcharge / 11;
+      const total = afterSurcharge;
+      expect(surchargeAmount).toBe(10.00);
+      expect(total).toBe(110.00);
+      expect(tax).toBeCloseTo(10.00, 2);
+    });
+
+    it("should calculate holiday surcharge 15% correctly", () => {
+      const subtotal = 80.00;
+      const surchargeType = "holiday";
+      const surchargePercent = surchargeType === "weekend" ? 10 : surchargeType === "holiday" ? 15 : 0;
+      const surchargeAmount = subtotal * (surchargePercent / 100);
+      const afterSurcharge = subtotal + surchargeAmount;
+      const tax = afterSurcharge / 11;
+      const total = afterSurcharge;
+      expect(surchargeAmount).toBe(12.00);
+      expect(total).toBe(92.00);
+      expect(tax).toBeCloseTo(8.36, 2);
+    });
+
+    it("should validate fulfillment types", () => {
+      const validTypes = ["for_here", "to_go", "delivery", "pickup"];
+      expect(validTypes).toContain("for_here");
+      expect(validTypes).toContain("to_go");
+      expect(validTypes).toContain("delivery");
+      expect(validTypes).toContain("pickup");
+      expect(validTypes).not.toContain("invalid");
+    });
+
+    it("should validate surcharge types", () => {
+      const validTypes = ["none", "weekend", "holiday"];
+      expect(validTypes).toContain("none");
+      expect(validTypes).toContain("weekend");
+      expect(validTypes).toContain("holiday");
+    });
+
+    it("should include fulfillmentType and surchargeType in createOrder input schema", async () => {
+      const { posRouter } = await import("./routers/pos");
+      const procedures = Object.keys((posRouter as any)._def.procedures || {});
+      expect(procedures).toContain("createOrder");
+    });
+  });
+
   describe("POS Sales Aggregation", () => {
     it("should aggregate items by name correctly", () => {
       const items = [

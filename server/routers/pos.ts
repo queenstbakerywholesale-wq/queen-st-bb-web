@@ -227,6 +227,8 @@ export const posRouter = router({
         notes: z.string().optional(),
       })),
       paymentMethod: z.enum(["cash", "card", "gift_card", "mixed"]),
+      fulfillmentType: z.enum(["for_here", "to_go", "delivery", "pickup"]).default("for_here"),
+      surchargeType: z.enum(["none", "weekend", "holiday"]).default("none"),
       cashReceived: z.string().optional(),
       changeGiven: z.string().optional(),
       customerName: z.string().optional(),
@@ -243,19 +245,31 @@ export const posRouter = router({
       const random = Math.floor(Math.random() * 9999).toString().padStart(4, "0");
       const orderNumber = `POS-${input.branchId}-${dateStr}-${random}`;
 
-      // Calculate totals
+      // Calculate totals with GST and surcharge
       const subtotal = input.items.reduce((sum, item) => sum + parseFloat(item.totalPrice), 0);
-      const total = subtotal; // No tax for now
+
+      // Apply surcharge (10% weekend, 15% holiday)
+      const surchargePercent = input.surchargeType === "weekend" ? 10 : input.surchargeType === "holiday" ? 15 : 0;
+      const surchargeAmount = subtotal * (surchargePercent / 100);
+      const afterSurcharge = subtotal + surchargeAmount;
+
+      // GST 10% (inclusive — Australian standard: total is GST-inclusive, tax = total / 11)
+      const tax = afterSurcharge / 11;
+      const total = afterSurcharge;
 
       const [result] = await db.insert(posOrders).values({
         orderNumber,
         branchId: input.branchId,
         staffId: input.staffId,
         subtotal: subtotal.toFixed(2),
-        tax: "0",
+        tax: tax.toFixed(2),
         total: total.toFixed(2),
         paymentMethod: input.paymentMethod,
         paymentStatus: "paid",
+        fulfillmentType: input.fulfillmentType,
+        surchargeType: input.surchargeType,
+        surchargePercent: surchargePercent.toFixed(2),
+        surchargeAmount: surchargeAmount.toFixed(2),
         cashReceived: input.cashReceived || null,
         changeGiven: input.changeGiven || null,
         customerName: input.customerName || null,
@@ -280,7 +294,7 @@ export const posRouter = router({
         );
       }
 
-      return { success: true, orderNumber, orderId, total: total.toFixed(2) };
+      return { success: true, orderNumber, orderId, total: total.toFixed(2), tax: tax.toFixed(2), surchargeAmount: surchargeAmount.toFixed(2) };
     }),
 
   // ─── Sales Data ───────────────────────────────────────────────

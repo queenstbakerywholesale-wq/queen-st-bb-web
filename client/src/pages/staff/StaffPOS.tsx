@@ -47,6 +47,8 @@ export default function StaffPOS() {
   const [keypadValue, setKeypadValue] = useState("");
   const [modifierPopup, setModifierPopup] = useState<{ item: any; modifiers: any[] } | null>(null);
   const [selectedModifiers, setSelectedModifiers] = useState<Record<number, { label: string; priceAdjustment: number }>>({});
+  const [fulfillmentType, setFulfillmentType] = useState<"for_here" | "to_go" | "delivery" | "pickup">("for_here");
+  const [surchargeType, setSurchargeType] = useState<"none" | "weekend" | "holiday">("none");
 
   // Auth check
   const { data: authData, isLoading: authLoading } = trpc.staffAuth.verify.useQuery();
@@ -94,6 +96,8 @@ export default function StaffPOS() {
       setCart([]);
       setShowPayment(false);
       setCashReceived("");
+      setFulfillmentType("for_here");
+      setSurchargeType("none");
     },
     onError: (e) => toast.error(e.message),
   });
@@ -116,7 +120,11 @@ export default function StaffPOS() {
     });
   };
 
-  const cartTotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
+  const cartSubtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
+  const surchargePercent = surchargeType === "weekend" ? 10 : surchargeType === "holiday" ? 15 : 0;
+  const surchargeAmount = cartSubtotal * (surchargePercent / 100);
+  const cartTotal = cartSubtotal + surchargeAmount;
+  const gstAmount = cartTotal / 11;
   const change = cashReceived ? parseFloat(cashReceived) - cartTotal : 0;
 
   const addToCart = useCallback((item: any) => {
@@ -240,6 +248,8 @@ export default function StaffPOS() {
         totalPrice: item.totalPrice.toFixed(2),
       })),
       paymentMethod: method,
+      fulfillmentType,
+      surchargeType,
       cashReceived: method === "cash" ? cashReceived || cartTotal.toFixed(2) : undefined,
       changeGiven: method === "cash" && change > 0 ? change.toFixed(2) : undefined,
     });
@@ -497,10 +507,23 @@ export default function StaffPOS() {
 
           {/* Right: Order Panel */}
           <div className="w-72 lg:w-80 flex flex-col bg-white border-l border-neutral-200">
-            {/* Order Header */}
-            <div className="px-4 py-3 border-b border-neutral-100 flex items-center justify-between">
-              <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">No sale</span>
-              <span className="text-xs text-neutral-400">For Here</span>
+            {/* Order Header — Fulfillment Type Selector */}
+            <div className="px-3 py-2 border-b border-neutral-100">
+              <div className="flex gap-1">
+                {(["for_here", "to_go", "delivery", "pickup"] as const).map((ft) => (
+                  <button
+                    key={ft}
+                    onClick={() => setFulfillmentType(ft)}
+                    className={`flex-1 py-1.5 text-[10px] font-medium rounded transition-colors ${
+                      fulfillmentType === ft
+                        ? "bg-neutral-900 text-white"
+                        : "text-neutral-500 hover:bg-neutral-100"
+                    }`}
+                  >
+                    {ft === "for_here" ? "Dine In" : ft === "to_go" ? "To Go" : ft === "delivery" ? "Delivery" : "Pick Up"}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Add Customer */}
@@ -543,6 +566,44 @@ export default function StaffPOS() {
                   </div>
                 ))
               )}
+            </div>
+
+            {/* Surcharge Selector */}
+            <div className="px-3 py-2 border-t border-neutral-100">
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-neutral-400 mr-1">Surcharge:</span>
+                {(["none", "weekend", "holiday"] as const).map((st) => (
+                  <button
+                    key={st}
+                    onClick={() => setSurchargeType(st)}
+                    className={`px-2 py-1 text-[10px] rounded transition-colors ${
+                      surchargeType === st
+                        ? st === "weekend" ? "bg-amber-500 text-white" : st === "holiday" ? "bg-red-500 text-white" : "bg-neutral-200 text-neutral-700"
+                        : "text-neutral-400 hover:bg-neutral-100"
+                    }`}
+                  >
+                    {st === "none" ? "None" : st === "weekend" ? "+10%" : "+15%"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Order Totals */}
+            <div className="px-3 py-2 border-t border-neutral-100 space-y-0.5">
+              <div className="flex justify-between text-[10px] text-neutral-500">
+                <span>Subtotal</span>
+                <span>${cartSubtotal.toFixed(2)}</span>
+              </div>
+              {surchargeAmount > 0 && (
+                <div className="flex justify-between text-[10px] text-amber-600">
+                  <span>{surchargeType === "weekend" ? "Weekend" : "Holiday"} Surcharge ({surchargePercent}%)</span>
+                  <span>+${surchargeAmount.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-[10px] text-neutral-400">
+                <span>GST (incl.)</span>
+                <span>${gstAmount.toFixed(2)}</span>
+              </div>
             </div>
 
             {/* Charge Button */}

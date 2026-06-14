@@ -967,9 +967,9 @@ export default function Objects() {
                     transition={{ duration: 0.5, delay: ii * 0.08 }}
                     className="group"
                   >
-                    <div className="aspect-[4/5] mb-5 overflow-hidden relative" style={{ backgroundColor: cream }}>
+                    <div className="aspect-square mb-5 overflow-hidden relative" style={{ backgroundColor: cream }}>
                       {item.imageUrl ? (
-                        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" />
+                        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain p-4 group-hover:scale-[1.03] transition-transform duration-700" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <span className="text-[10px] uppercase" style={{ fontFamily: "var(--font-body)", fontWeight: 400, letterSpacing: "0.04em", color: "oklch(0.72 0.03 65)" }}>

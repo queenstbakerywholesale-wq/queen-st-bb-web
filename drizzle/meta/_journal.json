@@ -64,6 +64,13 @@
       "when": 1781094282187,
       "tag": "0008_empty_shotgun",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1781424692601,
+      "tag": "0009_panoramic_zaran",
+      "breakpoints": true
     }
   ]
 }
