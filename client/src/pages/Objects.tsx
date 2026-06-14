@@ -970,7 +970,7 @@ export default function Objects() {
                 <div className="flex-1 h-[1px]" style={{ backgroundColor: borderColor }} />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
                 {category.items.map((item, ii) => (
                   <motion.div
                     key={item.name}
@@ -980,9 +980,9 @@ export default function Objects() {
                     transition={{ duration: 0.5, delay: ii * 0.08 }}
                     className="group"
                   >
-                    <div className="aspect-square mb-5 overflow-hidden relative" style={{ backgroundColor: cream }}>
+                    <div className="aspect-[4/5] mb-4 overflow-hidden relative rounded-sm" style={{ backgroundColor: cream }}>
                       {item.imageUrl ? (
-                        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain p-4 group-hover:scale-[1.03] transition-transform duration-700" />
+                        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <span className="text-[10px] uppercase" style={{ fontFamily: "var(--font-body)", fontWeight: 400, letterSpacing: "0.04em", color: "oklch(0.72 0.03 65)" }}>
@@ -1006,21 +1006,16 @@ export default function Objects() {
                         Add to Bag
                       </button>
                     </div>
-                    <h3 className="text-base md:text-lg mb-1 group-hover:opacity-60 transition-opacity duration-400" style={{ fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "0.005em", color: brown }}>
+                    <h3 className="text-sm md:text-base mb-0.5 group-hover:opacity-60 transition-opacity duration-400" style={{ fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "0.005em", color: brown }}>
                       {item.name}
                     </h3>
-                    <p className="text-[11px] mb-2" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: `${brown}73` }}>
+                    <p className="text-[10px] md:text-[11px] mb-1.5 line-clamp-1" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: `${brown}73` }}>
                       {item.detail}
                     </p>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: midBrown }}>
-                        ${item.price.toFixed(0)}
+                      <span className="text-xs md:text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: midBrown }}>
+                        ${item.price.toFixed(2)}
                       </span>
-                      {!isPickupOnlyType(item.productType) && (
-                        <span className="text-[9px] uppercase" style={{ fontFamily: "var(--font-body)", fontWeight: 400, letterSpacing: "0.04em", color: `${brown}50` }}>
-                          Shipping or Pickup
-                        </span>
-                      )}
                     </div>
                   </motion.div>
                 ))}

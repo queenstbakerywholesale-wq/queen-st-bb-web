@@ -375,8 +375,8 @@
 - [x] Create categories: Mugs, Tumblers, Caps, Eco Bags, Postcards
 - [x] Register all products in DB with correct images and categories
 - [x] Update Objects page to show all merchandise by category
-- [ ] Set all mug prices to AUD $35.90
-- [ ] Unify product card design across all items
+- [x] Set all mug prices to AUD $35.90
+- [x] Unify product card design across all items (2-col mobile, 3-col desktop, object-cover, consistent spacing)
 
 ## Square POS Replication
 - [x] Rebuild POS categories from June 2026 menu PDF: Black Coffee, White Coffee, Italian Coffee, Tea, Matcha, Non Coffee, Queen Milk, Ade (Sparkling), BB Gelato, Classic Wine, Spritz & Beer, Beverage, BB Snack, BB Goods, Etc
@@ -478,4 +478,4 @@
 - [ ] Upload tiramisu/gelato images for menu section when provided
 
 ## Menu Section - Dine-in Only
-- [ ] Update menu section to indicate dine-in only (no online ordering)
+- [x] Update menu section to indicate dine-in only (Tiramisu + Gelato pages)

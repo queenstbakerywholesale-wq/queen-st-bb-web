@@ -76,7 +76,7 @@ export default function Tiramisu() {
         <div className="max-w-5xl mx-auto">
           <motion.div {...fade} className="text-center mb-12">
             <span
-              className="text-[11px] uppercase block"
+              className="text-[11px] uppercase block mb-3"
               style={{
                 fontFamily: "var(--font-body)",
                 fontWeight: 500,
@@ -85,6 +85,20 @@ export default function Tiramisu() {
               }}
             >
               The Collection
+            </span>
+            <span
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] uppercase"
+              style={{
+                fontFamily: "var(--font-body)",
+                fontWeight: 500,
+                letterSpacing: "0.06em",
+                backgroundColor: "oklch(0.34 0.05 45 / 0.08)",
+                color: "oklch(0.34 0.05 45 / 0.7)",
+                border: "1px solid oklch(0.34 0.05 45 / 0.12)",
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></svg>
+              Dine-in Only
             </span>
           </motion.div>
 
