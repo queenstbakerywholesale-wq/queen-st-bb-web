@@ -102,6 +102,8 @@ export default function Objects() {
   const [giftCardApplied, setGiftCardApplied] = useState<{ code: string; balance: number; discount: number } | null>(null);
   const [isCheckingGiftCard, setIsCheckingGiftCard] = useState(false);
   const [postcodeInput, setPostcodeInput] = useState("");
+  const [activeCategory, setActiveCategory] = useState<string>("All");
+  const [selectedProduct, setSelectedProduct] = useState<{ id: number; name: string; detail: string; description?: string; price: number; imageUrl: string; productType: string } | null>(null);
   const [shippingQuote, setShippingQuote] = useState<{
     price: number;
     serviceName: string;
@@ -166,7 +168,7 @@ export default function Objects() {
     if (liveCategories) {
       for (const c of liveCategories) categoryMap.set(c.id, c.name);
     }
-    const grouped: Record<string, { id: number; name: string; detail: string; price: number; imageUrl: string; productType: string }[]> = {};
+    const grouped: Record<string, { id: number; name: string; detail: string; description?: string; price: number; imageUrl: string; productType: string }[]> = {};
     for (const p of liveProducts) {
       // Only show merchandise items on Objects page (exclude food/cake/gelato)
       if (p.productType !== "merchandise") continue;
@@ -176,6 +178,7 @@ export default function Objects() {
         id: p.id,
         name: p.name,
         detail: p.shortDescription || "",
+        description: p.description || p.shortDescription || "",
         price: Number(p.price),
         imageUrl: p.imageUrl || "",
         productType: p.productType,
@@ -191,6 +194,18 @@ export default function Objects() {
       });
     return sorted;
   }, [liveProducts, liveCategories]);
+
+  // Available categories for filter tabs
+  const availableCategories = useMemo(() => {
+    const cats = displayData.map((d) => d.category);
+    return ["All", ...cats];
+  }, [displayData]);
+
+  // Filtered display data based on active category
+  const filteredDisplayData = useMemo(() => {
+    if (activeCategory === "All") return displayData;
+    return displayData.filter((d) => d.category === activeCategory);
+  }, [displayData, activeCategory]);
 
   const addToCart = useCallback((item: { id: number; name: string; price: number; imageUrl?: string; productType: string }) => {
     setCart((prev) => {
@@ -948,10 +963,34 @@ export default function Objects() {
         </div>
       </section>
 
+      {/* Category Filter Tabs */}
+      <section className="px-6 md:px-10 pb-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex flex-wrap gap-2 justify-center">
+            {availableCategories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className="px-4 py-2 rounded-full text-[10px] uppercase tracking-[0.12em] transition-all duration-300 cursor-pointer"
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontWeight: 500,
+                  backgroundColor: activeCategory === cat ? brown : "transparent",
+                  color: activeCategory === cat ? cream : `${brown}80`,
+                  border: `1px solid ${activeCategory === cat ? brown : borderColor}`,
+                }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Product Grid */}
       <section className="pb-20 md:pb-28 px-6 md:px-10">
         <div className="max-w-5xl mx-auto">
-          {displayData.map((category, ci) => (
+          {filteredDisplayData.map((category, ci) => (
             <motion.div
               key={category.category}
               initial={{ opacity: 0 }}
@@ -978,7 +1017,8 @@ export default function Objects() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: ii * 0.08 }}
-                    className="group"
+                    className="group cursor-pointer"
+                    onClick={() => setSelectedProduct(item)}
                   >
                     <div className="aspect-[4/5] mb-4 overflow-hidden relative rounded-sm" style={{ backgroundColor: cream }}>
                       {item.imageUrl ? (
@@ -1024,6 +1064,88 @@ export default function Objects() {
           ))}
         </div>
       </section>
+
+      {/* Product Detail Modal */}
+      <AnimatePresence>
+        {selectedProduct && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm"
+              onClick={() => setSelectedProduct(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 z-[201] md:w-[90vw] md:max-w-3xl md:max-h-[85vh] overflow-y-auto rounded-lg shadow-2xl"
+              style={{ backgroundColor: parchment }}
+            >
+              <button
+                onClick={() => setSelectedProduct(null)}
+                className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full cursor-pointer"
+                style={{ backgroundColor: `${brown}10` }}
+              >
+                <X size={16} style={{ color: brown }} />
+              </button>
+              <div className="md:flex">
+                <div className="md:w-1/2">
+                  <div className="aspect-square md:aspect-[4/5] w-full overflow-hidden rounded-t-lg md:rounded-l-lg md:rounded-tr-none">
+                    {selectedProduct.imageUrl ? (
+                      <img
+                        src={selectedProduct.imageUrl}
+                        alt={selectedProduct.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: cream }}>
+                        <span className="text-sm" style={{ color: `${brown}50` }}>No image</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="md:w-1/2 p-6 md:p-8 flex flex-col justify-between">
+                  <div>
+                    <h2
+                      className="text-xl md:text-2xl mb-2"
+                      style={{ fontFamily: "var(--font-display)", fontWeight: 500, color: brown }}
+                    >
+                      {selectedProduct.name}
+                    </h2>
+                    <p
+                      className="text-lg mb-4"
+                      style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: midBrown }}
+                    >
+                      ${selectedProduct.price.toFixed(2)}
+                    </p>
+                    <div className="h-[1px] mb-4" style={{ backgroundColor: borderColor }} />
+                    <p
+                      className="text-sm leading-relaxed"
+                      style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: `${brown}CC`, lineHeight: 1.7 }}
+                    >
+                      {selectedProduct.description || selectedProduct.detail || "A beautifully crafted piece from our Queen St BB collection."}
+                    </p>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addToCart({ id: selectedProduct.id, name: selectedProduct.name, price: selectedProduct.price, imageUrl: selectedProduct.imageUrl, productType: selectedProduct.productType });
+                      setSelectedProduct(null);
+                    }}
+                    className="mt-6 w-full py-3.5 text-[10px] font-medium uppercase tracking-[0.2em] text-center cursor-pointer rounded-sm transition-opacity hover:opacity-90"
+                    style={{ fontFamily: "var(--font-body)", backgroundColor: brown, color: cream }}
+                  >
+                    Add to Bag
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Quote */}
       <section className="py-20 md:py-28 px-6 md:px-10" style={{ backgroundColor: cream }}>

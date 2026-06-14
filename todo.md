@@ -479,3 +479,8 @@
 
 ## Menu Section - Dine-in Only
 - [x] Update menu section to indicate dine-in only (Tiramisu + Gelato pages)
+
+## Objects Page UX Improvements
+- [x] Add category filter tabs at top of merchandise section (All, Mugs, Tumblers, Caps, Eco Bags, Postcards)
+- [x] Add product detail modal with large image and full description on product click
+- [x] Fix eco bag duplicate image (Birthday Koala now uses correct lifestyle image)
