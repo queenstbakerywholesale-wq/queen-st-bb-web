@@ -1,15 +1,11 @@
-const CACHE_NAME = "queen-bb-v2";
+const CACHE_NAME = "queen-bb-v3";
 const OFFLINE_URL = "/";
 
-// Pre-cache essential pages
+// Pre-cache the offline fallback page
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll([
-        OFFLINE_URL,
-        "/menu",
-        "/my-page",
-      ]);
+      return cache.addAll([OFFLINE_URL]);
     })
   );
   self.skipWaiting();
@@ -29,33 +25,25 @@ self.addEventListener("fetch", (event) => {
   // Skip non-GET requests
   if (event.request.method !== "GET") return;
 
-  // Skip API calls and tRPC
-  if (event.request.url.includes("/api/")) return;
+  // NEVER intercept API calls, tRPC, or storage requests
+  const url = event.request.url;
+  if (url.includes("/api/") || url.includes("/manus-storage/")) return;
 
+  // Only handle navigation requests (page loads)
   if (event.request.mode === "navigate") {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // Cache successful navigations
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          return response;
-        })
-        .catch(() => caches.match(event.request).then((r) => r || caches.match(OFFLINE_URL)))
-    );
-  } else {
-    // Cache-first for static assets
-    event.respondWith(
-      caches.match(event.request).then((cached) => {
-        if (cached) return cached;
-        return fetch(event.request).then((response) => {
-          if (response.ok && event.request.url.includes("/manus-storage/")) {
+          // Only cache successful HTML responses
+          if (response.ok && response.headers.get("content-type")?.includes("text/html")) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           }
           return response;
-        });
-      })
+        })
+        .catch(() => caches.match(event.request).then((r) => r || caches.match(OFFLINE_URL)))
     );
   }
+  // Let all other requests (JS, CSS, images) go through the network normally
+  // without service worker intervention to avoid stale cache issues
 });

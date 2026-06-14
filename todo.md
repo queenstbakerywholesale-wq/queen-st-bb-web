@@ -484,3 +484,4 @@
 - [x] Add category filter tabs at top of merchandise section (All, Mugs, Tumblers, Caps, Eco Bags, Postcards)
 - [x] Add product detail modal with large image and full description on product click
 - [x] Fix eco bag duplicate image (Birthday Koala now uses correct lifestyle image)
+- [x] Fix transient tRPC HTML response error (updated SW to v3, added retry logic to QueryClient)
