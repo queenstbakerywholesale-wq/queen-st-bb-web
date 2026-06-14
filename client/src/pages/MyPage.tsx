@@ -15,6 +15,7 @@ import {
   ExternalLink,
   ArrowLeft,
   Loader2,
+  Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -81,7 +82,7 @@ function ShippingProgress({ status }: { status: string }) {
 /* ─── Main Component ─── */
 export default function MyPage() {
   const { user, loading: authLoading, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState<"orders" | "giftcards">("orders");
+  const [activeTab, setActiveTab] = useState<"orders" | "giftcards" | "loyalty">("orders");
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const [selectedGiftCardId, setSelectedGiftCardId] = useState<number | null>(null);
   const [page, setPage] = useState(1);
@@ -105,6 +106,19 @@ export default function MyPage() {
     { giftCardId: selectedGiftCardId! },
     { enabled: !!selectedGiftCardId }
   );
+
+  const loyaltyQuery = trpc.myPage.myLoyalty.useQuery(undefined, {
+    enabled: isAuthenticated && activeTab === "loyalty",
+  });
+
+  const pointsHistoryQuery = trpc.myPage.myPointsHistory.useQuery(
+    { limit: 20 },
+    { enabled: isAuthenticated && activeTab === "loyalty" }
+  );
+
+  const rewardsQuery = trpc.myPage.myRewards.useQuery(undefined, {
+    enabled: isAuthenticated && activeTab === "loyalty",
+  });
 
   // Auth loading
   if (authLoading) {
@@ -496,6 +510,17 @@ export default function MyPage() {
             <Gift className="h-4 w-4" />
             Gift Cards
           </button>
+          <button
+            onClick={() => setActiveTab("loyalty")}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-colors ${
+              activeTab === "loyalty"
+                ? "bg-white text-[#5A3A2E] shadow-sm"
+                : "text-stone-500 hover:text-stone-700"
+            }`}
+          >
+            <Star className="h-4 w-4" />
+            Points
+          </button>
         </div>
 
         {/* Orders Tab */}
@@ -666,6 +691,157 @@ export default function MyPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Loyalty Points Tab */}
+        {activeTab === "loyalty" && (
+          <div>
+            {loyaltyQuery.isLoading ? (
+              <div className="flex justify-center py-16">
+                <Loader2 className="h-6 w-6 animate-spin text-stone-400" />
+              </div>
+            ) : !loyaltyQuery.data ? (
+              <div className="text-center py-16">
+                <Star className="h-10 w-10 text-stone-300 mx-auto mb-3" />
+                <p className="text-sm text-stone-500">No loyalty points yet</p>
+                <p className="text-xs text-stone-400 mt-1">Earn points with every purchase in-store</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Points Summary Card */}
+                <div className="bg-gradient-to-br from-[#5A3A2E] to-[#8B6914] rounded-xl p-6 text-white">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-xs text-white/70 uppercase tracking-wider">Your Points</p>
+                      <p className="text-3xl font-bold">{loyaltyQuery.data.totalPoints}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase ${
+                        loyaltyQuery.data.tier === "vip" ? "bg-amber-400 text-amber-900" :
+                        loyaltyQuery.data.tier === "regular" ? "bg-blue-400 text-blue-900" :
+                        "bg-white/20 text-white"
+                      }`}>
+                        {loyaltyQuery.data.tier}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/20">
+                    <div>
+                      <p className="text-xs text-white/60">Lifetime Points</p>
+                      <p className="text-sm font-semibold">{loyaltyQuery.data.lifetimePoints}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-white/60">Earn Rate</p>
+                      <p className="text-sm font-semibold">
+                        {loyaltyQuery.data.tier === "vip" ? "2x" : loyaltyQuery.data.tier === "regular" ? "1.5x" : "1x"} per $1
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tier Progress */}
+                <div className="bg-white rounded-xl border border-stone-200 p-4">
+                  <h3 className="text-sm font-semibold text-[#5A3A2E] mb-3">Membership Tier</h3>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      loyaltyQuery.data.tier === "new" ? "bg-stone-100" : "bg-blue-100"
+                    }`}>
+                      <Star className={`h-4 w-4 ${
+                        loyaltyQuery.data.tier === "new" ? "text-stone-400" : "text-blue-600"
+                      }`} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="font-medium text-stone-700">New → Regular</span>
+                        <span className="text-stone-400">5 visits or $200/month</span>
+                      </div>
+                      <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min(100, ((loyaltyQuery.data as any).monthlyVisits || 0) / 5 * 100)}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 mt-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      loyaltyQuery.data.tier === "vip" ? "bg-amber-100" : "bg-stone-100"
+                    }`}>
+                      <Star className={`h-4 w-4 ${
+                        loyaltyQuery.data.tier === "vip" ? "text-amber-600" : "text-stone-400"
+                      }`} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="font-medium text-stone-700">Regular → VIP</span>
+                        <span className="text-stone-400">10 visits or $500/month</span>
+                      </div>
+                      <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-amber-500 rounded-full" style={{ width: `${Math.min(100, ((loyaltyQuery.data as any).monthlyVisits || 0) / 10 * 100)}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Available Rewards */}
+                {rewardsQuery.data && rewardsQuery.data.length > 0 && (
+                  <div className="bg-white rounded-xl border border-stone-200 p-4">
+                    <h3 className="text-sm font-semibold text-[#5A3A2E] mb-3">Available Rewards</h3>
+                    <div className="space-y-2">
+                      {rewardsQuery.data.map((reward: any) => (
+                        <div key={reward.id} className="flex items-center justify-between py-2 border-b border-stone-50 last:border-0">
+                          <div>
+                            <p className="text-sm font-medium text-stone-800">{reward.name}</p>
+                            <p className="text-xs text-stone-400">{reward.description}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-bold text-[#5A3A2E]">{reward.pointsCost} pts</p>
+                            {loyaltyQuery.data!.totalPoints >= reward.pointsCost ? (
+                              <span className="text-[10px] text-emerald-600 font-medium">Redeemable</span>
+                            ) : (
+                              <span className="text-[10px] text-stone-400">Need {reward.pointsCost - loyaltyQuery.data!.totalPoints} more</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Birthday Reward */}
+                {loyaltyQuery.data.tier === "vip" && loyaltyQuery.data.birthdayEligible && (
+                  <div className="bg-pink-50 rounded-xl border border-pink-200 p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-lg">🎂</span>
+                      <h3 className="text-sm font-semibold text-pink-800">Happy Birthday!</h3>
+                    </div>
+                    <p className="text-xs text-pink-600">Enjoy a free cake on us! Show this to staff at your next visit.</p>
+                  </div>
+                )}
+
+                {/* Points History */}
+                <div className="bg-white rounded-xl border border-stone-200 p-4">
+                  <h3 className="text-sm font-semibold text-[#5A3A2E] mb-3">Points History</h3>
+                  {pointsHistoryQuery.data && pointsHistoryQuery.data.length > 0 ? (
+                    <div className="space-y-2">
+                      {pointsHistoryQuery.data.map((tx: any) => (
+                        <div key={tx.id} className="flex items-center justify-between py-2 border-b border-stone-50 last:border-0">
+                          <div>
+                            <p className="text-xs font-medium text-stone-700">{tx.description}</p>
+                            <p className="text-[10px] text-stone-400">
+                              {new Date(tx.createdAt).toLocaleDateString("en-AU", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          </div>
+                          <span className={`text-sm font-bold ${tx.type === "earn" ? "text-emerald-600" : "text-red-500"}`}>
+                            {tx.type === "earn" ? "+" : "-"}{tx.points}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-stone-400 text-center py-4">No transactions yet</p>
+                  )}
+                </div>
               </div>
             )}
           </div>

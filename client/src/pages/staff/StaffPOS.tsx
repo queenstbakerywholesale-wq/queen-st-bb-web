@@ -54,6 +54,9 @@ export default function StaffPOS() {
   const [fulfillmentType, setFulfillmentType] = useState<"for_here" | "to_go" | "delivery" | "pickup">("for_here");
   const [surchargeType, setSurchargeType] = useState<"none" | "weekend" | "holiday">(getAutoSurchargeType());
   const [discountType, setDiscountType] = useState<"none" | "staff" | "influencer">("none");
+  const [selectedCustomer, setSelectedCustomer] = useState<{ id: number; name: string } | null>(null);
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [showCustomerSearch, setShowCustomerSearch] = useState(false);
 
   // Auth check
   const { data: authData, isLoading: authLoading } = trpc.staffAuth.verify.useQuery();
@@ -104,6 +107,11 @@ export default function StaffPOS() {
       setFulfillmentType("for_here");
       setSurchargeType(getAutoSurchargeType());
       setDiscountType("none");
+      setSelectedCustomer(null);
+      setCustomerSearch("");
+      if (data.pointsEarned && data.pointsEarned > 0) {
+        toast.success(`+${data.pointsEarned} points earned!`);
+      }
     },
     onError: (e) => toast.error(e.message),
   });
@@ -279,6 +287,8 @@ export default function StaffPOS() {
       fulfillmentType,
       surchargeType,
       discountType,
+      customerId: selectedCustomer?.id,
+      customerName: selectedCustomer?.name,
       cashReceived: method === "cash" ? cashReceived || cartTotal.toFixed(2) : undefined,
       changeGiven: method === "cash" && change > 0 ? change.toFixed(2) : undefined,
     });
@@ -555,15 +565,41 @@ export default function StaffPOS() {
               </div>
             </div>
 
-            {/* Add Customer */}
-            <div className="px-4 py-2 border-b border-neutral-100 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-neutral-400">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span className="text-xs">Add customer</span>
-              </div>
-              <span className="text-neutral-300">›</span>
+            {/* Customer Selection with Loyalty Points */}
+            <div className="px-4 py-2 border-b border-neutral-100">
+              {selectedCustomer ? (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+                      <span className="text-[10px] font-bold text-amber-700">{selectedCustomer.name[0]}</span>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-neutral-800">{selectedCustomer.name}</p>
+                      <CustomerPointsBadge customerId={selectedCustomer.id} />
+                    </div>
+                  </div>
+                  <button onClick={() => { setSelectedCustomer(null); setShowCustomerSearch(false); }} className="text-neutral-400 hover:text-red-400 text-xs">×</button>
+                </div>
+              ) : showCustomerSearch ? (
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Search customer name or phone..."
+                    value={customerSearch}
+                    onChange={(e) => setCustomerSearch(e.target.value)}
+                    className="w-full text-xs px-2 py-1.5 border border-neutral-200 rounded focus:outline-none focus:border-amber-400"
+                    autoFocus
+                  />
+                  <CustomerSearchResults query={customerSearch} onSelect={(c) => { setSelectedCustomer(c); setShowCustomerSearch(false); setCustomerSearch(""); }} />
+                </div>
+              ) : (
+                <button onClick={() => setShowCustomerSearch(true)} className="flex items-center gap-2 text-neutral-400 hover:text-neutral-600 w-full">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span className="text-xs">Add customer (earn points)</span>
+                </button>
+              )}
             </div>
 
             {/* Cart Items */}
@@ -1304,6 +1340,48 @@ function StaffOnlineOrders({ branchId }: { branchId: number }) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Helper: Customer Points Badge ──────────────────────────────
+function CustomerPointsBadge({ customerId }: { customerId: number }) {
+  const { data: loyalty } = trpc.loyalty.getByCustomerId.useQuery({ customerId });
+  if (!loyalty) return <span className="text-[9px] text-neutral-400">No points yet</span>;
+  const tierColors = { new: "bg-neutral-100 text-neutral-600", regular: "bg-blue-100 text-blue-700", vip: "bg-amber-100 text-amber-700" };
+  return (
+    <div className="flex items-center gap-1">
+      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${tierColors[loyalty.tier as keyof typeof tierColors] || tierColors.new}`}>
+        {loyalty.tier.toUpperCase()}
+      </span>
+      <span className="text-[9px] text-neutral-500">{loyalty.totalPoints} pts</span>
+    </div>
+  );
+}
+
+// ─── Helper: Customer Search Results ────────────────────────────
+function CustomerSearchResults({ query, onSelect }: { query: string; onSelect: (c: { id: number; name: string }) => void }) {
+  const { data: customers = [] } = trpc.adminCustomers.list.useQuery(
+    { search: query, page: 1, limit: 5 },
+    { enabled: query.length >= 1 }
+  );
+  if (query.length < 1) return null;
+  if (!customers || (Array.isArray(customers) && customers.length === 0)) {
+    return <p className="text-[10px] text-neutral-400 mt-1">No customers found</p>;
+  }
+  const list = Array.isArray(customers) ? customers : (customers as any).customers || [];
+  return (
+    <div className="mt-1 max-h-32 overflow-y-auto border border-neutral-100 rounded">
+      {list.map((c: any) => (
+        <button
+          key={c.id}
+          onClick={() => onSelect({ id: c.id, name: c.name })}
+          className="w-full text-left px-2 py-1.5 hover:bg-amber-50 border-b border-neutral-50 last:border-0"
+        >
+          <p className="text-xs font-medium text-neutral-800">{c.name}</p>
+          <p className="text-[10px] text-neutral-400">{c.phone || c.email || ""}</p>
+        </button>
+      ))}
     </div>
   );
 }

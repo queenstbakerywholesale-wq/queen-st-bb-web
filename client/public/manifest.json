@@ -1,13 +1,14 @@
 {
-  "name": "Queen St BB Admin",
-  "short_name": "QSB Admin",
-  "description": "Queen St BB — Staff Admin Panel",
-  "start_url": "/admin/orders",
+  "name": "Queen St BB",
+  "short_name": "Queen BB",
+  "description": "Queen St BB — Coffee, Gelato & Lifestyle",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#FAFAF8",
+  "background_color": "#FAF8F5",
   "theme_color": "#5A3A2E",
   "orientation": "any",
+  "categories": ["food", "lifestyle", "shopping"],
   "icons": [
     {
       "src": "/manus-storage/pwa-icon-192_ba2242fa.png",
@@ -21,5 +22,8 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "screenshots": [],
+  "related_applications": [],
+  "prefer_related_applications": false
 }

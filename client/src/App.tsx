@@ -4,6 +4,7 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import PwaInstallPrompt from "./components/PwaInstallPrompt";
 import Home from "./pages/Home";
 import Tiramisu from "./pages/Tiramisu";
 import Gelato from "./pages/Gelato";
@@ -160,6 +161,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Router />
+          <PwaInstallPrompt />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

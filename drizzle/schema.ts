@@ -583,3 +583,52 @@ export const staffAttendance = mysqlTable("staff_attendance", {
 
 export type StaffAttendance = typeof staffAttendance.$inferSelect;
 export type InsertStaffAttendance = typeof staffAttendance.$inferInsert;
+
+// ─── Customer Loyalty Points ─────────────────────────────────────
+export const customerLoyalty = mysqlTable("customer_loyalty", {
+  id: int("id").autoincrement().primaryKey(),
+  customerId: int("customerId").notNull().unique(), // references customers.id
+  totalPoints: int("totalPoints").default(0).notNull(), // current available points
+  lifetimePoints: int("lifetimePoints").default(0).notNull(), // total ever earned
+  tier: mysqlEnum("loyaltyTier", ["new", "regular", "vip"]).default("new").notNull(),
+  monthlyVisits: int("monthlyVisits").default(0).notNull(), // visits this month
+  monthlySpent: decimal("monthlySpent", { precision: 12, scale: 2 }).default("0").notNull(), // spent this month
+  birthday: varchar("birthday", { length: 5 }), // MM-DD format
+  birthdayRewardClaimed: boolean("birthdayRewardClaimed").default(false).notNull(), // claimed this year
+  lastVisitAt: timestamp("lastVisitAt"),
+  tierUpdatedAt: timestamp("tierUpdatedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CustomerLoyalty = typeof customerLoyalty.$inferSelect;
+export type InsertCustomerLoyalty = typeof customerLoyalty.$inferInsert;
+
+// ─── Points Transactions (earn/redeem history) ───────────────────
+export const pointsTransactions = mysqlTable("points_transactions", {
+  id: int("id").autoincrement().primaryKey(),
+  customerId: int("customerId").notNull(),
+  type: mysqlEnum("pointsType", ["earn", "redeem", "bonus", "birthday"]).notNull(),
+  points: int("points").notNull(), // positive for earn, negative for redeem
+  description: varchar("description", { length: 500 }),
+  orderId: int("orderId"), // linked POS order if applicable
+  balanceAfter: int("balanceAfter").notNull(), // points balance after this transaction
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PointsTransaction = typeof pointsTransactions.$inferSelect;
+export type InsertPointsTransaction = typeof pointsTransactions.$inferInsert;
+
+// ─── Loyalty Rewards (available rewards to redeem) ───────────────
+export const loyaltyRewards = mysqlTable("loyalty_rewards", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(),
+  description: text("description"),
+  pointsCost: int("pointsCost").notNull(),
+  requiredTier: mysqlEnum("requiredTier", ["new", "regular", "vip"]).default("new").notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type LoyaltyReward = typeof loyaltyRewards.$inferSelect;
+export type InsertLoyaltyReward = typeof loyaltyRewards.$inferInsert;

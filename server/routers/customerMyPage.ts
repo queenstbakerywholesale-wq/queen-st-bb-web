@@ -9,6 +9,10 @@ import {
   giftCards,
   giftCardTransactions,
   branches,
+  customers,
+  customerLoyalty,
+  pointsTransactions,
+  loyaltyRewards,
 } from "../../drizzle/schema";
 
 export const customerMyPageRouter = router({
@@ -140,5 +144,116 @@ export const customerMyPageRouter = router({
         .orderBy(desc(giftCardTransactions.createdAt));
 
       return transactions;
+    }),
+
+  // ─── Loyalty Points ─────────────────────────────────────────────
+  myLoyalty: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) return null;
+
+    const userEmail = ctx.user?.email;
+    if (!userEmail) return null;
+
+    // Find customer by email
+    const [customer] = await db
+      .select()
+      .from(customers)
+      .where(eq(customers.email, userEmail))
+      .limit(1);
+
+    if (!customer) return null;
+
+    const [loyalty] = await db
+      .select()
+      .from(customerLoyalty)
+      .where(eq(customerLoyalty.customerId, customer.id))
+      .limit(1);
+
+    if (!loyalty) return { customerId: customer.id, totalPoints: 0, lifetimePoints: 0, tier: "new", birthday: null, birthdayEligible: false };
+
+    // Check birthday eligibility
+    let birthdayEligible = false;
+    if (loyalty.birthday && !loyalty.birthdayRewardClaimed) {
+      const today = new Date();
+      const [mm, dd] = loyalty.birthday.split("-").map(Number);
+      const birthdayThisYear = new Date(today.getFullYear(), mm - 1, dd);
+      const diffDays = Math.floor((birthdayThisYear.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      birthdayEligible = diffDays >= -1 && diffDays <= 7;
+    }
+
+    return { ...loyalty, customerId: customer.id, birthdayEligible };
+  }),
+
+  myPointsHistory: protectedProcedure
+    .input(z.object({ limit: z.number().default(20) }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) return [];
+
+      const userEmail = ctx.user?.email;
+      if (!userEmail) return [];
+
+      const [customer] = await db
+        .select()
+        .from(customers)
+        .where(eq(customers.email, userEmail))
+        .limit(1);
+
+      if (!customer) return [];
+
+      return db
+        .select()
+        .from(pointsTransactions)
+        .where(eq(pointsTransactions.customerId, customer.id))
+        .orderBy(desc(pointsTransactions.createdAt))
+        .limit(input.limit);
+    }),
+
+  myRewards: protectedProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return [];
+
+    return db
+      .select()
+      .from(loyaltyRewards)
+      .where(eq(loyaltyRewards.isActive, true));
+  }),
+
+  setBirthday: protectedProcedure
+    .input(z.object({ birthday: z.string().regex(/^\d{2}-\d{2}$/, "Format: MM-DD") }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const userEmail = ctx.user?.email;
+      if (!userEmail) throw new Error("Not authenticated");
+
+      const [customer] = await db
+        .select()
+        .from(customers)
+        .where(eq(customers.email, userEmail))
+        .limit(1);
+
+      if (!customer) throw new Error("Customer not found");
+
+      const [loyalty] = await db
+        .select()
+        .from(customerLoyalty)
+        .where(eq(customerLoyalty.customerId, customer.id))
+        .limit(1);
+
+      if (!loyalty) {
+        await db.insert(customerLoyalty).values({
+          customerId: customer.id,
+          birthday: input.birthday,
+        });
+      } else {
+        await db
+          .update(customerLoyalty)
+          .set({ birthday: input.birthday })
+          .where(eq(customerLoyalty.id, loyalty.id));
+      }
+
+      return { success: true };
     }),
 });

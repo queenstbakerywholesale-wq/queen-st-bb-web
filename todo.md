@@ -446,3 +446,20 @@
 - [x] Backend API: clock out with photo upload
 - [x] Clock In/Out UI in Staff POS with camera capture
 - [x] Admin Excel export with calculated total hours per staff
+
+## Customer Loyalty Points System
+- [x] Create loyalty_points table (customerId, totalPoints, lifetimePoints, tier)
+- [x] Create points_transactions table (earn/redeem history)
+- [x] Create loyalty_rewards table (available rewards with point costs)
+- [x] Auto-earn points on POS order completion ($1 = 1pt, Regular 1.5x, VIP 2x)
+- [x] Tier system: New (default), Regular (monthly 5+ visits or $200+), VIP (10+ visits or $500+)
+- [x] Reward redemption: 100pt = free regular coffee, 200pt = free large, 500pt = gelato+coffee set
+- [x] Birthday reward: VIP = free cake, Regular = free coffee (auto-coupon 7 days before birthday)
+- [x] Customer My Page: show points balance, tier, available rewards
+- [x] POS: show customer points and allow redemption at checkout
+
+## PWA App Setup
+- [x] Add web app manifest (name: Queen BB, icons, theme color)
+- [x] Add service worker for offline caching
+- [x] Add install prompt for iOS/Android home screen
+- [x] Configure for App Store/Play Store submission (TWA/Capacitor ready)

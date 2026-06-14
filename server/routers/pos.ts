@@ -232,6 +232,7 @@ export const posRouter = router({
       discountType: z.enum(["none", "staff", "influencer"]).default("none"),
       cashReceived: z.string().optional(),
       changeGiven: z.string().optional(),
+      customerId: z.number().optional(),
       customerName: z.string().optional(),
       customerPhone: z.string().optional(),
       notes: z.string().optional(),
@@ -303,7 +304,57 @@ export const posRouter = router({
         );
       }
 
-      return { success: true, orderNumber, orderId, total: total.toFixed(2), tax: tax.toFixed(2), surchargeAmount: surchargeAmount.toFixed(2), discountAmount: discountAmount.toFixed(2) };
+      // Earn loyalty points if customer is linked
+      let pointsEarned = 0;
+      if (input.customerId && input.discountType !== "influencer") {
+        try {
+          const { customerLoyalty: cl, pointsTransactions: pt } = await import("../../drizzle/schema");
+          const [loyalty] = await db.select().from(cl).where(eq(cl.customerId, input.customerId)).limit(1);
+          
+          if (!loyalty) {
+            await db.insert(cl).values({ customerId: input.customerId });
+          }
+          const [freshLoyalty] = await db.select().from(cl).where(eq(cl.customerId, input.customerId)).limit(1);
+          
+          const multipliers = { new: 1, regular: 1.5, vip: 2 };
+          const mult = multipliers[freshLoyalty.tier as keyof typeof multipliers] || 1;
+          pointsEarned = Math.floor(Math.floor(total) * mult);
+          
+          if (pointsEarned > 0) {
+            const newTotal = freshLoyalty.totalPoints + pointsEarned;
+            const newLifetime = freshLoyalty.lifetimePoints + pointsEarned;
+            const newVisits = freshLoyalty.monthlyVisits + 1;
+            const newSpent = parseFloat(String(freshLoyalty.monthlySpent)) + total;
+            
+            // Recalculate tier
+            let newTier: "new" | "regular" | "vip" = "new";
+            if (newVisits >= 10 || newSpent >= 500) newTier = "vip";
+            else if (newVisits >= 5 || newSpent >= 200) newTier = "regular";
+            
+            await db.update(cl).set({
+              totalPoints: newTotal,
+              lifetimePoints: newLifetime,
+              monthlyVisits: newVisits,
+              monthlySpent: newSpent.toFixed(2),
+              tier: newTier,
+              lastVisitAt: new Date(),
+            }).where(eq(cl.id, freshLoyalty.id));
+            
+            await db.insert(pt).values({
+              customerId: input.customerId,
+              type: "earn",
+              points: pointsEarned,
+              description: `Order ${orderNumber} ($${total.toFixed(2)})`,
+              orderId,
+              balanceAfter: newTotal,
+            });
+          }
+        } catch (e) {
+          console.error("[Loyalty] Points earning failed:", e);
+        }
+      }
+
+      return { success: true, orderNumber, orderId, total: total.toFixed(2), tax: tax.toFixed(2), surchargeAmount: surchargeAmount.toFixed(2), discountAmount: discountAmount.toFixed(2), pointsEarned };
     }),
 
   // ─── Sales Data ───────────────────────────────────────────────

@@ -75,7 +75,7 @@ export default function PwaInstallPrompt() {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium mb-0.5" style={{ color: "#F5F0EB" }}>
-          Install QSB Admin App
+          Install Queen BB App
         </p>
         {isIOS && !deferredPrompt ? (
           <p className="text-xs" style={{ color: "#D8C3A8" }}>
@@ -84,7 +84,7 @@ export default function PwaInstallPrompt() {
         ) : (
           <>
             <p className="text-xs mb-2" style={{ color: "#D8C3A8" }}>
-              Get quick access to orders and management from your home screen.
+              Get quick access to menu, points & rewards from your home screen.
             </p>
             <button
               onClick={handleInstall}
