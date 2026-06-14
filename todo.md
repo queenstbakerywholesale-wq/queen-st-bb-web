@@ -367,10 +367,14 @@
 - [x] Windsor branch: address "57 Chapel St, Windsor", show "Open Soon"
 
 ## Merchandise Mug Section Upgrade
-- [ ] Generate product cut images for 7 mugs (Italian café premium style)
-- [ ] Generate lifestyle cut images for 7 mugs (espresso bar / Italian café mood)
-- [ ] Upload all images to webdev storage
-- [ ] Update merchandise page design to Italian premium café souvenir shop aesthetic
+- [x] Generate lifestyle images for 5 mugs (Italian café premium style, correct proportions 9.5W x 8.5H)
+- [x] Generate lifestyle images for 5 tumblers (trendy/hip style, correct proportions 13H x 7.5W, no straw)
+- [x] Generate lifestyle images for 3 caps (women wearing, trendy style)
+- [x] Upload real eco bag product photos (4 designs)
+- [x] Upload all images to webdev storage
+- [x] Create categories: Mugs, Tumblers, Caps, Eco Bags, Postcards
+- [x] Register all products in DB with correct images and categories
+- [x] Update Objects page to show all merchandise by category
 - [ ] Set all mug prices to AUD $35.90
 - [ ] Unify product card design across all items
 
@@ -463,3 +467,15 @@
 - [x] Add service worker for offline caching
 - [x] Add install prompt for iOS/Android home screen
 - [x] Configure for App Store/Play Store submission (TWA/Capacitor ready)
+
+## Real Product Images Upload
+- [x] Upload all postcard images (10 front designs) to webdev storage
+- [x] Create postcard products in DB with images
+- [x] Upload mug lifestyle images (5 mugs, Italian café style)
+- [x] Upload tumbler lifestyle images (5 tumblers, trendy style)
+- [x] Upload cap lifestyle images (3 caps, women wearing)
+- [x] Upload eco bag real product photos (4 designs)
+- [ ] Upload tiramisu/gelato images for menu section when provided
+
+## Menu Section - Dine-in Only
+- [ ] Update menu section to indicate dine-in only (no online ordering)

@@ -157,6 +157,9 @@ export default function Objects() {
   }, [shippingCalcQuery.data, shippingCalcQuery.isLoading]);
 
   // Group live products by category
+  // Category display order preference
+  const categoryOrder = ["Mugs", "Tumblers", "Caps", "Eco Bags", "Postcards", "Other"];
+
   const displayData = useMemo(() => {
     if (!liveProducts || liveProducts.length === 0) return fallbackObjects;
     const categoryMap = new Map<number, string>();
@@ -165,6 +168,8 @@ export default function Objects() {
     }
     const grouped: Record<string, { id: number; name: string; detail: string; price: number; imageUrl: string; productType: string }[]> = {};
     for (const p of liveProducts) {
+      // Only show merchandise items on Objects page (exclude food/cake/gelato)
+      if (p.productType !== "merchandise") continue;
       const catName = p.categoryId ? categoryMap.get(p.categoryId) || "Other" : "Other";
       if (!grouped[catName]) grouped[catName] = [];
       grouped[catName].push({
@@ -176,7 +181,15 @@ export default function Objects() {
         productType: p.productType,
       });
     }
-    return Object.entries(grouped).map(([category, items]) => ({ category, items }));
+    // Sort categories by preferred order
+    const sorted = Object.entries(grouped)
+      .map(([category, items]) => ({ category, items }))
+      .sort((a, b) => {
+        const aIdx = categoryOrder.indexOf(a.category);
+        const bIdx = categoryOrder.indexOf(b.category);
+        return (aIdx === -1 ? 999 : aIdx) - (bIdx === -1 ? 999 : bIdx);
+      });
+    return sorted;
   }, [liveProducts, liveCategories]);
 
   const addToCart = useCallback((item: { id: number; name: string; price: number; imageUrl?: string; productType: string }) => {
