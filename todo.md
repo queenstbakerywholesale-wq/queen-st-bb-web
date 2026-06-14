@@ -400,3 +400,9 @@
 - [x] Add Gelato Top modifier (+$2.90) to Ade items
 - [x] Replicate all categories, items, and modifiers to Hawthorn (branch 1) and Windsor (branch 2)
 - [x] All 3 branches now have identical menu: 15 categories, 97 items, 71 modifiers each
+
+## POS Discount Buttons
+- [x] Add Staff Discount 30% button to POS order panel
+- [x] Add Influencer 100% discount button to POS order panel
+- [x] Store discount type and amount in pos_orders table
+- [x] Calculate discount before GST and surcharge

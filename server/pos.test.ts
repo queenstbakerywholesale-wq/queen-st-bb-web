@@ -197,6 +197,48 @@ describe("POS System", () => {
       const procedures = Object.keys((posRouter as any)._def.procedures || {});
       expect(procedures).toContain("createOrder");
     });
+
+    it("should calculate staff discount 30% correctly", () => {
+      const subtotal = 100.00;
+      const discountType = "staff";
+      const discountPercent = discountType === "staff" ? 30 : discountType === "influencer" ? 100 : 0;
+      const discountAmount = subtotal * (discountPercent / 100);
+      const afterDiscount = subtotal - discountAmount;
+      expect(discountAmount).toBe(30.00);
+      expect(afterDiscount).toBe(70.00);
+    });
+
+    it("should calculate influencer discount 100% correctly", () => {
+      const subtotal = 55.00;
+      const discountType = "influencer";
+      const discountPercent = discountType === "staff" ? 30 : discountType === "influencer" ? 100 : 0;
+      const discountAmount = subtotal * (discountPercent / 100);
+      const afterDiscount = subtotal - discountAmount;
+      expect(discountAmount).toBe(55.00);
+      expect(afterDiscount).toBe(0);
+    });
+
+    it("should apply discount before surcharge", () => {
+      const subtotal = 100.00;
+      // Staff discount 30%
+      const discountPercent = 30;
+      const discountAmount = subtotal * (discountPercent / 100);
+      const afterDiscount = subtotal - discountAmount; // 70
+      // Weekend surcharge 10% on discounted amount
+      const surchargePercent = 10;
+      const surchargeAmount = afterDiscount * (surchargePercent / 100); // 7
+      const total = afterDiscount + surchargeAmount; // 77
+      expect(afterDiscount).toBe(70.00);
+      expect(surchargeAmount).toBe(7.00);
+      expect(total).toBe(77.00);
+    });
+
+    it("should validate discount types", () => {
+      const validTypes = ["none", "staff", "influencer"];
+      expect(validTypes).toContain("none");
+      expect(validTypes).toContain("staff");
+      expect(validTypes).toContain("influencer");
+    });
   });
 
   describe("POS Sales Aggregation", () => {

@@ -229,6 +229,7 @@ export const posRouter = router({
       paymentMethod: z.enum(["cash", "card", "gift_card", "mixed"]),
       fulfillmentType: z.enum(["for_here", "to_go", "delivery", "pickup"]).default("for_here"),
       surchargeType: z.enum(["none", "weekend", "holiday"]).default("none"),
+      discountType: z.enum(["none", "staff", "influencer"]).default("none"),
       cashReceived: z.string().optional(),
       changeGiven: z.string().optional(),
       customerName: z.string().optional(),
@@ -245,13 +246,18 @@ export const posRouter = router({
       const random = Math.floor(Math.random() * 9999).toString().padStart(4, "0");
       const orderNumber = `POS-${input.branchId}-${dateStr}-${random}`;
 
-      // Calculate totals with GST and surcharge
+      // Calculate totals with discount, surcharge, and GST
       const subtotal = input.items.reduce((sum, item) => sum + parseFloat(item.totalPrice), 0);
 
-      // Apply surcharge (10% weekend, 15% holiday)
+      // Apply discount first (staff 30%, influencer 100%)
+      const discountPercent = input.discountType === "staff" ? 30 : input.discountType === "influencer" ? 100 : 0;
+      const discountAmount = subtotal * (discountPercent / 100);
+      const afterDiscount = subtotal - discountAmount;
+
+      // Apply surcharge (10% weekend, 15% holiday) on discounted amount
       const surchargePercent = input.surchargeType === "weekend" ? 10 : input.surchargeType === "holiday" ? 15 : 0;
-      const surchargeAmount = subtotal * (surchargePercent / 100);
-      const afterSurcharge = subtotal + surchargeAmount;
+      const surchargeAmount = afterDiscount * (surchargePercent / 100);
+      const afterSurcharge = afterDiscount + surchargeAmount;
 
       // GST 10% (inclusive — Australian standard: total is GST-inclusive, tax = total / 11)
       const tax = afterSurcharge / 11;
@@ -270,6 +276,9 @@ export const posRouter = router({
         surchargeType: input.surchargeType,
         surchargePercent: surchargePercent.toFixed(2),
         surchargeAmount: surchargeAmount.toFixed(2),
+        discountType: input.discountType,
+        discountPercent: discountPercent.toFixed(2),
+        discountAmount: discountAmount.toFixed(2),
         cashReceived: input.cashReceived || null,
         changeGiven: input.changeGiven || null,
         customerName: input.customerName || null,
@@ -294,7 +303,7 @@ export const posRouter = router({
         );
       }
 
-      return { success: true, orderNumber, orderId, total: total.toFixed(2), tax: tax.toFixed(2), surchargeAmount: surchargeAmount.toFixed(2) };
+      return { success: true, orderNumber, orderId, total: total.toFixed(2), tax: tax.toFixed(2), surchargeAmount: surchargeAmount.toFixed(2), discountAmount: discountAmount.toFixed(2) };
     }),
 
   // ─── Sales Data ───────────────────────────────────────────────

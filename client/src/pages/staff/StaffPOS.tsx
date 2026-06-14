@@ -49,6 +49,7 @@ export default function StaffPOS() {
   const [selectedModifiers, setSelectedModifiers] = useState<Record<number, { label: string; priceAdjustment: number }>>({});
   const [fulfillmentType, setFulfillmentType] = useState<"for_here" | "to_go" | "delivery" | "pickup">("for_here");
   const [surchargeType, setSurchargeType] = useState<"none" | "weekend" | "holiday">("none");
+  const [discountType, setDiscountType] = useState<"none" | "staff" | "influencer">("none");
 
   // Auth check
   const { data: authData, isLoading: authLoading } = trpc.staffAuth.verify.useQuery();
@@ -98,6 +99,7 @@ export default function StaffPOS() {
       setCashReceived("");
       setFulfillmentType("for_here");
       setSurchargeType("none");
+      setDiscountType("none");
     },
     onError: (e) => toast.error(e.message),
   });
@@ -121,9 +123,12 @@ export default function StaffPOS() {
   };
 
   const cartSubtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
+  const discountPercent = discountType === "staff" ? 30 : discountType === "influencer" ? 100 : 0;
+  const discountAmount = cartSubtotal * (discountPercent / 100);
+  const afterDiscount = cartSubtotal - discountAmount;
   const surchargePercent = surchargeType === "weekend" ? 10 : surchargeType === "holiday" ? 15 : 0;
-  const surchargeAmount = cartSubtotal * (surchargePercent / 100);
-  const cartTotal = cartSubtotal + surchargeAmount;
+  const surchargeAmount = afterDiscount * (surchargePercent / 100);
+  const cartTotal = afterDiscount + surchargeAmount;
   const gstAmount = cartTotal / 11;
   const change = cashReceived ? parseFloat(cashReceived) - cartTotal : 0;
 
@@ -250,6 +255,7 @@ export default function StaffPOS() {
       paymentMethod: method,
       fulfillmentType,
       surchargeType,
+      discountType,
       cashReceived: method === "cash" ? cashReceived || cartTotal.toFixed(2) : undefined,
       changeGiven: method === "cash" && change > 0 ? change.toFixed(2) : undefined,
     });
@@ -588,12 +594,38 @@ export default function StaffPOS() {
               </div>
             </div>
 
+            {/* Discount Selector */}
+            <div className="px-3 py-2 border-t border-neutral-100">
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-neutral-400 mr-1">Discount:</span>
+                {(["none", "staff", "influencer"] as const).map((dt) => (
+                  <button
+                    key={dt}
+                    onClick={() => setDiscountType(dt)}
+                    className={`px-2 py-1 text-[10px] rounded transition-colors ${
+                      discountType === dt
+                        ? dt === "staff" ? "bg-blue-600 text-white" : dt === "influencer" ? "bg-purple-600 text-white" : "bg-neutral-200 text-neutral-700"
+                        : "text-neutral-400 hover:bg-neutral-100"
+                    }`}
+                  >
+                    {dt === "none" ? "None" : dt === "staff" ? "Staff -30%" : "Influencer 100%"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Order Totals */}
             <div className="px-3 py-2 border-t border-neutral-100 space-y-0.5">
               <div className="flex justify-between text-[10px] text-neutral-500">
                 <span>Subtotal</span>
                 <span>${cartSubtotal.toFixed(2)}</span>
               </div>
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-[10px] text-blue-600">
+                  <span>{discountType === "staff" ? "Staff" : "Influencer"} Discount ({discountPercent}%)</span>
+                  <span>-${discountAmount.toFixed(2)}</span>
+                </div>
+              )}
               {surchargeAmount > 0 && (
                 <div className="flex justify-between text-[10px] text-amber-600">
                   <span>{surchargeType === "weekend" ? "Weekend" : "Holiday"} Surcharge ({surchargePercent}%)</span>

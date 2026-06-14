@@ -71,6 +71,13 @@
       "when": 1781424692601,
       "tag": "0009_panoramic_zaran",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1781429786480,
+      "tag": "0010_futuristic_pandemic",
+      "breakpoints": true
     }
   ]
 }
