@@ -266,10 +266,12 @@ export default function StaffPOS() {
     setCart((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const [showEftposConfirm, setShowEftposConfirm] = useState(false);
+
   const processPayment = (method: "cash" | "card") => {
     if (cart.length === 0) return;
     if (method === "card") {
-      toast.info("Card payment coming soon — use external terminal and record as cash for now");
+      setShowEftposConfirm(true);
       return;
     }
     createOrderMutation.mutate({
@@ -753,7 +755,7 @@ export default function StaffPOS() {
                         onClick={() => processPayment("card")}
                         className="py-2 text-[10px] font-medium text-neutral-500 border border-neutral-200 rounded hover:bg-neutral-50"
                       >
-                        CARD
+                        EFTPOS / CARD
                       </button>
                       <button
                         onClick={() => { setCart([]); setShowPayment(false); setCashReceived(""); }}
@@ -950,6 +952,58 @@ export default function StaffPOS() {
               <button onClick={() => setCustomPriceInput(null)}
                 className="flex-1 py-2 text-xs text-neutral-500 border border-neutral-200 rounded">
                 CANCEL
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EFTPOS Confirmation Modal */}
+      {showEftposConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="p-8 w-full max-w-sm bg-white rounded-xl space-y-6 text-center">
+            <div className="w-16 h-16 mx-auto bg-blue-50 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-neutral-800">EFTPOS Payment</h3>
+              <p className="text-3xl font-bold text-neutral-900 mt-2">${cartTotal.toFixed(2)}</p>
+              <p className="text-xs text-neutral-400 mt-1">Process on ANZ EFTPOS terminal</p>
+            </div>
+            <div className="space-y-2">
+              <button
+                onClick={() => {
+                  setShowEftposConfirm(false);
+                  createOrderMutation.mutate({
+                    branchId: branchId!,
+                    staffId: staffData.id,
+                    items: cart.map((item) => ({
+                      menuItemId: item.menuItemId,
+                      itemName: item.itemName,
+                      quantity: item.quantity,
+                      weightGrams: item.weightGrams,
+                      unitPrice: item.unitPrice.toFixed(2),
+                      totalPrice: item.totalPrice.toFixed(2),
+                    })),
+                    paymentMethod: "card",
+                    fulfillmentType,
+                    surchargeType,
+                    discountType,
+                    customerId: selectedCustomer?.id,
+                    customerName: selectedCustomer?.name,
+                  });
+                }}
+                className="w-full py-4 text-sm font-semibold bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                EFTPOS Payment Complete
+              </button>
+              <button
+                onClick={() => setShowEftposConfirm(false)}
+                className="w-full py-3 text-sm text-neutral-500 border border-neutral-200 rounded-lg hover:bg-neutral-50"
+              >
+                Cancel
               </button>
             </div>
           </div>
