@@ -365,3 +365,38 @@
 - [x] CBD branch: address "408 Queen Street, Melbourne", hours 2PM-11PM
 - [x] Hawthorn branch: address "616 Glenferrie Rd, Hawthorn", show "Open Soon"
 - [x] Windsor branch: address "57 Chapel St, Windsor", show "Open Soon"
+
+## Merchandise Mug Section Upgrade
+- [ ] Generate product cut images for 7 mugs (Italian café premium style)
+- [ ] Generate lifestyle cut images for 7 mugs (espresso bar / Italian café mood)
+- [ ] Upload all images to webdev storage
+- [ ] Update merchandise page design to Italian premium café souvenir shop aesthetic
+- [ ] Set all mug prices to AUD $35.90
+- [ ] Unify product card design across all items
+
+## Square POS Replication
+- [x] Rebuild POS categories from June 2026 menu PDF: Black Coffee, White Coffee, Italian Coffee, Tea, Matcha, Non Coffee, Queen Milk, Ade (Sparkling), BB Gelato, Classic Wine, Spritz & Beer, Beverage, BB Snack, BB Goods, Etc
+- [x] Recreate items within each category with correct pricing from menu PDF (97 items total)
+- [x] Recreate modifier groups: Size (S/M/L), Milk (Full Cream/Skim/Oat/Almond/Soy), Sugar (0-3), Syrup (Vanilla/Hazelnut/Caramel), Decaf, Temperature (Hot/Iced), Style (Hot/Ice/Gelato), Add Gelato Top
+- [ ] Add fulfilment methods to POS: For Here, To Go, Delivery, Pick Up
+- [ ] Add GST 10% tax handling
+- [ ] Add weekend surcharge (10%) and holiday surcharge (15%) options
+- [ ] Correct mug product images to match real proportions (wider than tall, 9.5cm W × 8.5cm H)
+
+## POS Menu Data Import (June 2026 PDF)
+- [x] Extract all menu items, categories, prices, and modifiers from June 2026 menu PDF
+- [x] Rebuild POS categories: Black Coffee, White Coffee, Italian Coffee, Tea, Matcha, Non Coffee, Queen Milk, Ade (Sparkling), BB Gelato, Classic Wine, Spritz & Beer, Beverage, BB Snack, BB Goods, Etc
+- [x] Insert all 97 menu items with correct pricing per category
+- [x] Add Size modifier (S/M/L +$0.50/+$1) to Black Coffee items
+- [x] Add Sugar modifier (No Sugar/1/2/3) to Black Coffee items
+- [x] Add Size modifier (S/M/L) to White Coffee items
+- [x] Add Milk modifier (Full Cream/Skim/Oat +$1/Almond +$1/Soy +$1) to White Coffee items
+- [x] Add Sugar modifier to White Coffee items
+- [x] Add Syrup modifier (None/Vanilla/Hazelnut/Caramel +$1) to White Coffee items
+- [x] Add Decaf modifier (Regular/Decaf +$1) to White Coffee items
+- [x] Add Temperature modifier (Hot/Iced) to Matcha and Non Coffee items
+- [x] Add Milk modifier to Matcha items (Balanced, Strawberry)
+- [x] Add Style modifier (Hot/Ice +$2/Gelato +$4) to Queen Milk items
+- [x] Add Gelato Top modifier (+$2.90) to Ade items
+- [x] Replicate all categories, items, and modifiers to Hawthorn (branch 1) and Windsor (branch 2)
+- [x] All 3 branches now have identical menu: 15 categories, 97 items, 71 modifiers each
