@@ -5,6 +5,7 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import PwaInstallPrompt from "./components/PwaInstallPrompt";
+import OfflineBanner from "./components/OfflineBanner";
 import Home from "./pages/Home";
 import Tiramisu from "./pages/Tiramisu";
 import Gelato from "./pages/Gelato";
@@ -160,6 +161,7 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
+          <OfflineBanner />
           <Router />
           <PwaInstallPrompt />
         </TooltipProvider>

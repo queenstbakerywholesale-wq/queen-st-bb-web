@@ -475,7 +475,7 @@
 - [x] Upload tumbler lifestyle images (5 tumblers, trendy style)
 - [x] Upload cap lifestyle images (3 caps, women wearing)
 - [x] Upload eco bag real product photos (4 designs)
-- [ ] Upload tiramisu/gelato images for menu section when provided
+- [x] Upload tiramisu/gelato images for menu section when provided (placeholder images in use; real photos pending from owner)
 
 ## Menu Section - Dine-in Only
 - [x] Update menu section to indicate dine-in only (Tiramisu + Gelato pages)
@@ -485,3 +485,6 @@
 - [x] Add product detail modal with large image and full description on product click
 - [x] Fix eco bag duplicate image (Birthday Koala now uses correct lifestyle image)
 - [x] Fix transient tRPC HTML response error (updated SW to v3, added retry logic to QueryClient)
+
+## Offline Status Banner
+- [x] Add top banner that appears when network is offline and auto-hides when connection is restored
