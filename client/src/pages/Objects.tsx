@@ -83,7 +83,14 @@ function getAvailableDates(): { value: string; label: string }[] {
 }
 
 export default function Objects() {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    try {
+      const saved = localStorage.getItem("qsb-cart");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutStep, setCheckoutStep] = useState<"cart" | "details" | "pickup">("cart");
   const [fulfillmentType, setFulfillmentType] = useState<"shipping" | "pickup">("shipping");
@@ -131,6 +138,15 @@ export default function Objects() {
   );
 
   const availableDates = useMemo(() => getAvailableDates(), []);
+
+  // Persist cart to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem("qsb-cart", JSON.stringify(cart));
+    } catch {
+      // localStorage might be full or unavailable
+    }
+  }, [cart]);
 
   // Detect if cart has cake items
   const hasCakeItems = useMemo(
@@ -325,6 +341,8 @@ export default function Objects() {
       if (result.checkoutUrl) {
         toast.success("Redirecting to secure checkout...");
         window.open(result.checkoutUrl, "_blank");
+        // Clear cart from localStorage after successful checkout
+        localStorage.removeItem("qsb-cart");
       }
     } catch (err: any) {
       toast.error(err.message || "Failed to create checkout session");

@@ -488,3 +488,8 @@
 
 ## Offline Status Banner
 - [x] Add top banner that appears when network is offline and auto-hides when connection is restored
+
+## Offline UX Improvements
+- [x] Offline cart preservation: save cart data to localStorage when offline, auto-sync when connection restored
+- [x] Add "Retry" button to offline banner for manual connection check
+- [x] Show "다시 연결되었습니다" toast message briefly when connection is restored
