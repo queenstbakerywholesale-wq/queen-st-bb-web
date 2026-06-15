@@ -8,6 +8,7 @@ import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import Navigation from "@/components/Navigation";
+import ProgressiveImage from "@/components/ProgressiveImage";
 import { usePageImages } from "@/hooks/usePageImage";
 
 const DEFAULT_IMAGES = {
@@ -157,11 +158,11 @@ export default function Home() {
                 }}
                 transition={{ duration: 14, ease: "linear" }}
               >
-                <img
+                <ProgressiveImage
                   src={section.image}
                   alt={section.title}
-                  className="w-full h-full object-cover"
-                  style={{ filter: "saturate(0.85) contrast(0.95)" }}
+                  containerClassName="w-full h-full"
+                  className="saturate-[0.85] contrast-[0.95]"
                 />
               </motion.div>
               {/* Slightly darker overlay for strong text contrast */}

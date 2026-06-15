@@ -493,3 +493,8 @@
 - [x] Offline cart preservation: save cart data to localStorage when offline, auto-sync when connection restored
 - [x] Add "Retry" button to offline banner for manual connection check
 - [x] Show "다시 연결되었습니다" toast message briefly when connection is restored
+
+## Advanced Offline UX
+- [x] Cart sync queue: queue cart actions while offline, auto-sync with server when connection restored
+- [x] Image loading skeleton/blur placeholder for slow network conditions
+- [x] Offline read-only mode: show cached menu pages from service worker when offline

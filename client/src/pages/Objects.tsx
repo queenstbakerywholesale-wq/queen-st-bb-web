@@ -6,9 +6,11 @@
  * Features: dynamic AusPost shipping, cake pickup booking in checkout
  */
 import { useMemo, useState, useCallback, useEffect } from "react";
+import { useCartSync } from "@/hooks/useCartSync";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import PageLayout from "@/components/PageLayout";
+import ProgressiveImage from "@/components/ProgressiveImage";
 import { toast } from "sonner";
 import {
   X, ShoppingBag, Plus, Minus, Truck, Store,
@@ -148,6 +150,9 @@ export default function Objects() {
     }
   }, [cart]);
 
+  // Cart sync queue for offline resilience
+  const { queueAction } = useCartSync(cart, setCart);
+
   // Detect if cart has cake items
   const hasCakeItems = useMemo(
     () => cart.some((item) => isPickupOnlyType(item.productType)),
@@ -231,16 +236,25 @@ export default function Objects() {
       }
       return [...prev, { productId: item.id, productName: item.name, price: item.price, quantity: 1, imageUrl: item.imageUrl || undefined, productType: item.productType }];
     });
+    if (!navigator.onLine) {
+      queueAction({ type: "add", productId: item.id, productName: item.name, price: item.price, imageUrl: item.imageUrl, productType: item.productType });
+    }
     toast.success(`${item.name} added to bag`);
-  }, []);
+  }, [queueAction]);
 
   const updateQuantity = useCallback((productId: number, delta: number) => {
     setCart((prev) => prev.map((c) => c.productId === productId ? { ...c, quantity: c.quantity + delta } : c).filter((c) => c.quantity > 0));
-  }, []);
+    if (!navigator.onLine) {
+      queueAction({ type: "update", productId, quantity: delta });
+    }
+  }, [queueAction]);
 
   const removeFromCart = useCallback((productId: number) => {
     setCart((prev) => prev.filter((c) => c.productId !== productId));
-  }, []);
+    if (!navigator.onLine) {
+      queueAction({ type: "remove", productId });
+    }
+  }, [queueAction]);
 
   const cartSubtotal = useMemo(() => cart.reduce((sum, c) => sum + c.price * c.quantity, 0), [cart]);
   const shippingFee = fulfillmentType === "shipping" ? (shippingQuote?.price ?? DEFAULT_SHIPPING_FEE_AUD) : 0;
@@ -457,7 +471,7 @@ export default function Objects() {
                           <div key={item.productId} className="flex gap-4">
                             <div className="w-16 h-20 flex-shrink-0 overflow-hidden" style={{ backgroundColor: cream }}>
                               {item.imageUrl ? (
-                                <img src={item.imageUrl} alt={item.productName} className="w-full h-full object-cover" />
+                                <ProgressiveImage src={item.imageUrl} alt={item.productName} containerClassName="w-full h-full" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
                                   <ShoppingBag size={14} style={{ color: "oklch(0.72 0.03 65)" }} />
@@ -1040,7 +1054,7 @@ export default function Objects() {
                   >
                     <div className="aspect-[4/5] mb-4 overflow-hidden relative rounded-sm" style={{ backgroundColor: cream }}>
                       {item.imageUrl ? (
-                        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" />
+                        <ProgressiveImage src={item.imageUrl} alt={item.name} containerClassName="w-full h-full" className="group-hover:scale-[1.03] transition-transform duration-700" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <span className="text-[10px] uppercase" style={{ fontFamily: "var(--font-body)", fontWeight: 400, letterSpacing: "0.04em", color: "oklch(0.72 0.03 65)" }}>
@@ -1113,10 +1127,10 @@ export default function Objects() {
                 <div className="md:w-1/2">
                   <div className="aspect-square md:aspect-[4/5] w-full overflow-hidden rounded-t-lg md:rounded-l-lg md:rounded-tr-none">
                     {selectedProduct.imageUrl ? (
-                      <img
+                      <ProgressiveImage
                         src={selectedProduct.imageUrl}
                         alt={selectedProduct.name}
-                        className="w-full h-full object-cover"
+                        containerClassName="w-full h-full"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: cream }}>

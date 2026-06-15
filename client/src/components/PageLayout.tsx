@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import Navigation from "./Navigation";
 import Footer from "./Footer";
+import ProgressiveImage from "./ProgressiveImage";
 
 interface PageLayoutProps {
   heroImage: string;
@@ -47,11 +48,11 @@ export default function PageLayout({
           transition={{ duration: 1.4, ease: "easeOut" }}
           className="absolute inset-0"
         >
-          <img
+          <ProgressiveImage
             src={heroImage}
             alt={heroTitle}
-            className="w-full h-full object-cover"
-            style={{ filter: "saturate(0.85) contrast(0.95)" }}
+            containerClassName="w-full h-full"
+            className="saturate-[0.85] contrast-[0.95]"
           />
         </motion.div>
         {/* Slightly darker overlay for strong text contrast */}
