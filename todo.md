@@ -498,3 +498,8 @@
 - [x] Cart sync queue: queue cart actions while offline, auto-sync with server when connection restored
 - [x] Image loading skeleton/blur placeholder for slow network conditions
 - [x] Offline read-only mode: show cached menu pages from service worker when offline
+
+## Email Receipt & Search & Sales Chart
+- [x] Order email receipt: include detailed line items (product name, quantity, price, subtotal, shipping, total) in order confirmation email (already implemented in orderEmail.ts)
+- [x] Objects page product search: text input to filter products by name/description
+- [x] Admin dashboard sales chart: daily/weekly revenue visualization with chart

@@ -13,7 +13,7 @@ import PageLayout from "@/components/PageLayout";
 import ProgressiveImage from "@/components/ProgressiveImage";
 import { toast } from "sonner";
 import {
-  X, ShoppingBag, Plus, Minus, Truck, Store,
+  X, ShoppingBag, Plus, Minus, Truck, Store, Search,
   AlertTriangle, MapPin, Calendar, Clock, Loader2, ChevronLeft, Gift, Check,
 } from "lucide-react";
 import { usePageImage } from "@/hooks/usePageImage";
@@ -112,6 +112,7 @@ export default function Objects() {
   const [isCheckingGiftCard, setIsCheckingGiftCard] = useState(false);
   const [postcodeInput, setPostcodeInput] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<{ id: number; name: string; detail: string; description?: string; price: number; imageUrl: string; productType: string } | null>(null);
   const [shippingQuote, setShippingQuote] = useState<{
     price: number;
@@ -224,9 +225,23 @@ export default function Objects() {
 
   // Filtered display data based on active category
   const filteredDisplayData = useMemo(() => {
-    if (activeCategory === "All") return displayData;
-    return displayData.filter((d) => d.category === activeCategory);
-  }, [displayData, activeCategory]);
+    let data = displayData;
+    if (activeCategory !== "All") {
+      data = data.filter((d) => d.category === activeCategory);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      data = data.map((d) => ({
+        ...d,
+        items: d.items.filter(
+          (item) =>
+            item.name.toLowerCase().includes(q) ||
+            (item.detail && item.detail.toLowerCase().includes(q))
+        ),
+      })).filter((d) => d.items.length > 0);
+    }
+    return data;
+  }, [displayData, activeCategory, searchQuery]);
 
   const addToCart = useCallback((item: { id: number; name: string; price: number; imageUrl?: string; productType: string }) => {
     setCart((prev) => {
@@ -995,9 +1010,40 @@ export default function Objects() {
         </div>
       </section>
 
-      {/* Category Filter Tabs */}
+      {/* Search & Category Filter */}
       <section className="px-6 md:px-10 pb-8">
         <div className="max-w-5xl mx-auto">
+          {/* Search Input */}
+          <div className="flex justify-center mb-5">
+            <div className="relative w-full max-w-md">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: `${brown}60` }} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products..."
+                className="w-full pl-10 pr-10 py-2.5 rounded-full text-sm transition-all duration-300 outline-none"
+                style={{
+                  fontFamily: "var(--font-body)",
+                  backgroundColor: `${cream}40`,
+                  border: `1px solid ${borderColor}`,
+                  color: brown,
+                }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = brown; e.currentTarget.style.boxShadow = `0 0 0 2px ${brown}15`; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = borderColor; e.currentTarget.style.boxShadow = 'none'; }}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 cursor-pointer"
+                  style={{ color: `${brown}60` }}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+          {/* Category Tabs */}
           <div className="flex flex-wrap gap-2 justify-center">
             {availableCategories.map((cat) => (
               <button
@@ -1022,6 +1068,28 @@ export default function Objects() {
       {/* Product Grid */}
       <section className="pb-20 md:pb-28 px-6 md:px-10">
         <div className="max-w-5xl mx-auto">
+          {filteredDisplayData.length === 0 && searchQuery.trim() && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-16"
+            >
+              <Search className="w-10 h-10 mx-auto mb-4" style={{ color: `${brown}30` }} />
+              <p className="text-lg font-medium" style={{ color: brown, fontFamily: "var(--font-heading)" }}>
+                No results found
+              </p>
+              <p className="text-sm mt-2" style={{ color: `${brown}60`, fontFamily: "var(--font-body)" }}>
+                Try a different search term or browse by category
+              </p>
+              <button
+                onClick={() => { setSearchQuery(""); setActiveCategory("All"); }}
+                className="mt-4 px-5 py-2 rounded-full text-xs uppercase tracking-wider cursor-pointer transition-colors"
+                style={{ border: `1px solid ${brown}`, color: brown, fontFamily: "var(--font-body)" }}
+              >
+                Clear Search
+              </button>
+            </motion.div>
+          )}
           {filteredDisplayData.map((category, ci) => (
             <motion.div
               key={category.category}

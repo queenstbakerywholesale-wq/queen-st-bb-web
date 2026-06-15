@@ -1,4 +1,5 @@
 import { trpc } from "@/lib/trpc";
+import { useState } from "react";
 import {
   ShoppingCart,
   Cake,
@@ -8,6 +9,7 @@ import {
   Users,
   TrendingUp,
   MessageSquare,
+  BarChart3,
 } from "lucide-react";
 
 function StatCard({
@@ -68,6 +70,165 @@ function StatCard({
           {sub}
         </p>
       )}
+    </div>
+  );
+}
+
+function SalesChart() {
+  const [view, setView] = useState<"daily" | "weekly">("daily");
+  const { data, isLoading } = trpc.adminDashboard.salesChart.useQuery();
+
+  if (isLoading) {
+    return (
+      <div
+        className="rounded-lg border p-5"
+        style={{ backgroundColor: "#fff", borderColor: "#5A3A2E10" }}
+      >
+        <div className="h-64 animate-pulse rounded" style={{ backgroundColor: "#5A3A2E08" }} />
+      </div>
+    );
+  }
+
+  const dailyData = data?.daily ?? [];
+  const weeklyData = data?.weekly ?? [];
+  const chartItems = view === "daily"
+    ? dailyData.map((d) => ({ label: d.date, revenue: d.revenue, orderCount: d.orderCount }))
+    : weeklyData.map((d) => ({ label: d.weekStart, revenue: d.revenue, orderCount: d.orderCount }));
+  const maxRevenue = Math.max(...chartItems.map((d) => d.revenue), 1);
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr + "T00:00:00");
+    return d.toLocaleDateString("en-AU", { month: "short", day: "numeric" });
+  };
+
+  const totalRevenue = chartItems.reduce((sum, d) => sum + d.revenue, 0);
+  const totalOrders = chartItems.reduce((sum, d) => sum + d.orderCount, 0);
+
+  return (
+    <div
+      className="rounded-lg border overflow-hidden"
+      style={{ backgroundColor: "#fff", borderColor: "#5A3A2E10" }}
+    >
+      <div
+        className="px-5 py-4 border-b flex items-center justify-between"
+        style={{ borderColor: "#5A3A2E10" }}
+      >
+        <div className="flex items-center gap-2">
+          <BarChart3 className="w-4 h-4" style={{ color: "#5A3A2E" }} />
+          <h3
+            className="text-sm font-medium tracking-[0.05em]"
+            style={{
+              fontFamily: "var(--font-body, 'Jost', sans-serif)",
+              color: "#5A3A2E",
+            }}
+          >
+            Revenue Overview
+          </h3>
+        </div>
+        <div className="flex gap-1">
+          <button
+            onClick={() => setView("daily")}
+            className="px-3 py-1 rounded-full text-[10px] uppercase tracking-[0.06em] transition-all cursor-pointer"
+            style={{
+              fontFamily: "var(--font-body, 'Jost', sans-serif)",
+              backgroundColor: view === "daily" ? "#5A3A2E" : "transparent",
+              color: view === "daily" ? "#F5F0E8" : "#5A3A2E80",
+              border: `1px solid ${view === "daily" ? "#5A3A2E" : "#5A3A2E20"}`,
+            }}
+          >
+            Daily
+          </button>
+          <button
+            onClick={() => setView("weekly")}
+            className="px-3 py-1 rounded-full text-[10px] uppercase tracking-[0.06em] transition-all cursor-pointer"
+            style={{
+              fontFamily: "var(--font-body, 'Jost', sans-serif)",
+              backgroundColor: view === "weekly" ? "#5A3A2E" : "transparent",
+              color: view === "weekly" ? "#F5F0E8" : "#5A3A2E80",
+              border: `1px solid ${view === "weekly" ? "#5A3A2E" : "#5A3A2E20"}`,
+            }}
+          >
+            Weekly
+          </button>
+        </div>
+      </div>
+
+      {/* Summary Row */}
+      <div className="px-5 py-3 flex gap-6" style={{ backgroundColor: "#5A3A2E03" }}>
+        <div>
+          <span
+            className="text-[10px] uppercase tracking-[0.04em] block"
+            style={{ fontFamily: "var(--font-body)", color: "#5A3A2E60" }}
+          >
+            {view === "daily" ? "30-Day" : "4-Week"} Total
+          </span>
+          <span
+            className="text-lg font-medium"
+            style={{ fontFamily: "var(--font-display)", color: "#5A3A2E" }}
+          >
+            ${totalRevenue.toFixed(2)}
+          </span>
+        </div>
+        <div>
+          <span
+            className="text-[10px] uppercase tracking-[0.04em] block"
+            style={{ fontFamily: "var(--font-body)", color: "#5A3A2E60" }}
+          >
+            Orders
+          </span>
+          <span
+            className="text-lg font-medium"
+            style={{ fontFamily: "var(--font-display)", color: "#5A3A2E" }}
+          >
+            {totalOrders}
+          </span>
+        </div>
+      </div>
+
+      {/* Bar Chart */}
+      <div className="px-5 py-4">
+        <div className="flex items-end gap-[2px] h-48">
+          {chartItems.map((item, idx) => {
+            const height = maxRevenue > 0 ? (item.revenue / maxRevenue) * 100 : 0;
+            const label = formatDate(item.label);
+            const showLabel = view === "weekly" || idx % 5 === 0 || idx === chartItems.length - 1;
+            return (
+              <div
+                key={idx}
+                className="flex-1 flex flex-col items-center justify-end h-full group relative"
+              >
+                <div
+                  className="w-full rounded-t transition-all duration-300 min-h-[2px]"
+                  style={{
+                    height: `${Math.max(height, 1)}%`,
+                    backgroundColor: item.revenue > 0 ? "#5A3A2E" : "#5A3A2E15",
+                    opacity: item.revenue > 0 ? 0.7 : 0.3,
+                  }}
+                />
+                {/* Tooltip */}
+                <div
+                  className="absolute bottom-full mb-2 hidden group-hover:block z-10 px-2 py-1 rounded text-[10px] whitespace-nowrap"
+                  style={{
+                    backgroundColor: "#3A2A1E",
+                    color: "#F5F0E8",
+                    fontFamily: "var(--font-body)",
+                  }}
+                >
+                  ${item.revenue.toFixed(2)} · {item.orderCount} orders
+                </div>
+                {showLabel && (
+                  <span
+                    className="text-[8px] mt-1 truncate w-full text-center"
+                    style={{ color: "#5A3A2E50", fontFamily: "var(--font-body)" }}
+                  >
+                    {label}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
@@ -169,6 +330,9 @@ export default function AdminDashboard() {
           }
         />
       </div>
+
+      {/* Sales Chart */}
+      <SalesChart />
 
       {/* Low Stock Alert */}
       {data?.lowStockProducts && data.lowStockProducts.length > 0 && (

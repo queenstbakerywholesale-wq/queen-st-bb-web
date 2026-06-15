@@ -10,6 +10,63 @@ import {
 } from "../../drizzle/schema";
 
 export const adminDashboardRouter = router({
+  /** Daily/weekly revenue chart data for the past 30 days */
+  salesChart: publicProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return { daily: [], weekly: [] };
+
+    // Get daily revenue for the past 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const dailyRevenue = await db
+      .select({
+        date: sql<string>`DATE(${orders.createdAt})`.as("date"),
+        revenue: sql<string>`COALESCE(SUM(${orders.total}), 0)`.as("revenue"),
+        orderCount: count(),
+      })
+      .from(orders)
+      .where(
+        and(
+          eq(orders.paymentStatus, "paid"),
+          gte(orders.createdAt, thirtyDaysAgo)
+        )
+      )
+      .groupBy(sql`DATE(${orders.createdAt})`)
+      .orderBy(sql`DATE(${orders.createdAt}) ASC`);
+
+    // Fill in missing dates with 0 revenue
+    const daily: Array<{ date: string; revenue: number; orderCount: number }> = [];
+    const today = new Date();
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split("T")[0];
+      const found = dailyRevenue.find((r) => r.date === dateStr);
+      daily.push({
+        date: dateStr,
+        revenue: found ? parseFloat(found.revenue) : 0,
+        orderCount: found ? found.orderCount : 0,
+      });
+    }
+
+    // Aggregate into weekly data (last 4 weeks)
+    const weekly: Array<{ weekStart: string; weekEnd: string; revenue: number; orderCount: number }> = [];
+    for (let w = 0; w < 4; w++) {
+      const weekSlice = daily.slice(30 - 28 + w * 7, 30 - 28 + (w + 1) * 7);
+      if (weekSlice.length > 0) {
+        weekly.push({
+          weekStart: weekSlice[0].date,
+          weekEnd: weekSlice[weekSlice.length - 1].date,
+          revenue: weekSlice.reduce((sum, d) => sum + d.revenue, 0),
+          orderCount: weekSlice.reduce((sum, d) => sum + d.orderCount, 0),
+        });
+      }
+    }
+
+    return { daily, weekly };
+  }),
+
   stats: publicProcedure.query(async () => {
     const db = await getDb();
     if (!db) return null;
