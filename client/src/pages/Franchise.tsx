@@ -10,7 +10,7 @@ import PageLayout from "@/components/PageLayout";
 import { usePageImage } from "@/hooks/usePageImage";
 
 const DEFAULT_HERO =
-  "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-objects-ANGDtyQvzsvteisBRsKv35.png";
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/franchise-hero-cgvLLxtK9F526kU6HEgxPY.webp";
 
 const AU_STATES = [
   "New South Wales",

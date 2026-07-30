@@ -10,7 +10,7 @@ import PageLayout from "@/components/PageLayout";
 import { usePageImage } from "@/hooks/usePageImage";
 
 const DEFAULT_HERO =
-  "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-objects-ANGDtyQvzsvteisBRsKv35.png";
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/wholesale-hero-9bqZWRgH4viRL9PaS4XdpH.webp";
 
 const fade = {
   initial: { opacity: 0, y: 20 },
@@ -130,6 +130,76 @@ export default function Wholesale() {
             >
               Queen St BB offers premium tiramisu, gelato, and curated objects for hospitality venues, retailers, and corporate partners. Our products are crafted with Italian precision and editorial sensibility.
             </p>
+            <p
+              className="text-base text-center mt-6"
+              style={{
+                fontFamily: "var(--font-body)",
+                fontWeight: 400,
+                lineHeight: 1.65,
+                color: "oklch(0.34 0.05 45 / 0.6)",
+              }}
+            >
+              Whether you're a café, restaurant, boutique hotel, or specialty retailer, we provide flexible wholesale arrangements with competitive pricing and reliable delivery.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Business Model Benefits */}
+      <section
+        className="py-20 md:py-28 px-6 md:px-10"
+        style={{ backgroundColor: "oklch(0.91 0.02 75)" }}
+      >
+        <div className="max-w-3xl mx-auto">
+          <motion.div {...fade}>
+            <span
+              className="text-[11px] uppercase block mb-6 text-center"
+              style={{
+                fontFamily: "var(--font-body)",
+                fontWeight: 500,
+                letterSpacing: "0.04em",
+                color: "oklch(0.45 0.06 45 / 0.5)",
+              }}
+            >
+              Wholesale Benefits
+            </span>
+            <div className="editorial-rule mx-auto mb-12" />
+
+            <div className="grid md:grid-cols-2 gap-8">
+              {[
+                { title: "Premium Quality", desc: "Authentic Italian recipes crafted with finest ingredients" },
+                { title: "Flexible Ordering", desc: "Customizable order quantities and delivery schedules" },
+                { title: "Competitive Pricing", desc: "Volume-based discounts for qualified partners" },
+                { title: "Marketing Support", desc: "Co-branded materials and promotional guidance" },
+              ].map((item, i) => (
+                <motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                >
+                  <h4
+                    className="font-semibold mb-2"
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      color: "oklch(0.34 0.05 45)",
+                    }}
+                  >
+                    {item.title}
+                  </h4>
+                  <p
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: "14px",
+                      color: "oklch(0.34 0.05 45 / 0.65)",
+                    }}
+                  >
+                    {item.desc}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
           </motion.div>
         </div>
       </section>
