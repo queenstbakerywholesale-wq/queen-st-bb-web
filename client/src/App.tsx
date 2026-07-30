@@ -13,6 +13,7 @@ import Gelato from "./pages/Gelato";
 import Space from "./pages/Space";
 import Objects from "./pages/Objects";
 import Wholesale from "./pages/Wholesale";
+import Franchise from "./pages/Franchise";
 import CakeBooking from "./pages/CakeBooking";
 import About from "./pages/About";
 import CustomerCare from "./pages/CustomerCare";
@@ -53,6 +54,7 @@ function Router() {
       <Route path="/space" component={Space} />
       <Route path="/objects" component={Objects} />
       <Route path="/wholesale" component={Wholesale} />
+      <Route path="/franchise" component={Franchise} />
       <Route path="/cake-booking" component={CakeBooking} />
       <Route path="/about" component={About} />
       <Route path="/customer-care" component={CustomerCare} />

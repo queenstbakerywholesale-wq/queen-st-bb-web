@@ -282,7 +282,7 @@ export type InsertNotification = typeof notifications.$inferInsert;
 // ─── Enquiries (Wholesale + Customer Care) ──────────────────────
 export const enquiries = mysqlTable("enquiries", {
   id: int("id").autoincrement().primaryKey(),
-  type: mysqlEnum("type", ["wholesale", "customer_care"]).notNull(),
+  type: mysqlEnum("type", ["wholesale", "franchise", "customer_care"]).notNull(),
   name: varchar("name", { length: 200 }).notNull(),
   email: varchar("email", { length: 320 }).notNull(),
   phone: varchar("phone", { length: 50 }),
@@ -290,6 +290,13 @@ export const enquiries = mysqlTable("enquiries", {
   interest: varchar("interest", { length: 200 }),
   subject: varchar("subject", { length: 500 }),
   message: text("message").notNull(),
+  // Wholesale-specific fields
+  storeAddress: varchar("storeAddress", { length: 500 }),
+  deliveryAddress: varchar("deliveryAddress", { length: 500 }),
+  estimatedOrderQuantity: varchar("estimatedOrderQuantity", { length: 200 }),
+  businessType: varchar("businessType", { length: 200 }),
+  // Franchise-specific fields
+  preferredLocation: varchar("preferredLocation", { length: 300 }),
   status: mysqlEnum("enquiryStatus", [
     "new",
     "in_progress",

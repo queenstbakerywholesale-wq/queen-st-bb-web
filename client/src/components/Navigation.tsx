@@ -15,6 +15,7 @@ const navLinks = [
   { label: "Space", href: "/space" },
   { label: "Objects", href: "/objects" },
   { label: "Wholesale", href: "/wholesale" },
+  { label: "Franchise", href: "/franchise" },
   { label: "Cake Booking", href: "/cake-booking" },
   { label: "Gift Cards", href: "/gift-cards" },
 ];
