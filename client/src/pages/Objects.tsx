@@ -1111,12 +1111,8 @@ export default function Objects() {
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
                 {category.items.map((item, ii) => (
-                  <motion.div
+                  <div
                     key={item.name}
-                    initial={{ opacity: 0, y: 15 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: ii * 0.08 }}
                     className="group cursor-pointer"
                     onClick={() => setSelectedProduct(item)}
                   >
@@ -1157,7 +1153,7 @@ export default function Objects() {
                         ${item.price.toFixed(2)}
                       </span>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </motion.div>
