@@ -25,10 +25,12 @@ function ProductForm({
   initial,
   onSave,
   onCancel,
+  categories = [],
 }: {
   initial?: any;
   onSave: (data: any) => void;
   onCancel: () => void;
+  categories?: any[];
 }) {
   const [form, setForm] = useState({
     name: initial?.name ?? "",
@@ -43,6 +45,7 @@ function ProductForm({
     isFeatured: initial?.isFeatured ?? false,
     productType: initial?.productType ?? "merchandise",
     imageUrl: initial?.imageUrl ?? "",
+    categoryId: initial?.categoryId ?? undefined,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -131,6 +134,22 @@ function ProductForm({
               ? "This product type is pickup only — shipping will be disabled automatically."
               : "This product type allows both shipping and store pickup."}
           </p>
+        </div>
+        <div>
+          <label style={labelStyle} className="block mb-1">Category</label>
+          <select
+            value={form.categoryId ?? ""}
+            onChange={(e) => setForm({ ...form, categoryId: e.target.value ? Number(e.target.value) : undefined })}
+            className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none"
+            style={inputStyle}
+          >
+            <option value="">-- Select Category --</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
           <label style={labelStyle} className="block mb-1">Image URL</label>
@@ -232,6 +251,7 @@ export default function AdminProducts() {
     limit: 20,
     search: search || undefined,
   });
+  const { data: categoriesData } = trpc.adminProducts.listCategories.useQuery();
 
   const createMutation = trpc.adminProducts.create.useMutation({
     onSuccess: () => {
@@ -319,6 +339,7 @@ export default function AdminProducts() {
             initial={editingProduct}
             onSave={handleSave}
             onCancel={() => { setShowForm(false); setEditingProduct(null); }}
+            categories={categoriesData || []}
           />
         </div>
       )}
