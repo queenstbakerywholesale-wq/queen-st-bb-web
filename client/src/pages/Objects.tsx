@@ -224,25 +224,34 @@ export default function Objects() {
     return ["All", ...cats];
   }, [displayData]);
 
-  // Filtered display data based on active category
-  const filteredDisplayData = useMemo(() => {
-    let data = displayData;
-    if (activeCategory !== "All") {
-      data = data.filter((d) => d.category === activeCategory);
-    }
-    if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase();
+    // Filtered display data based on active category
+    const filteredDisplayData = useMemo(() => {
+      let data = displayData;
+      if (activeCategory !== "All") {
+        data = data.filter((d) => d.category === activeCategory);
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.trim().toLowerCase();
+        data = data.map((d) => ({
+          ...d,
+          items: d.items.filter(
+            (item) =>
+              item.name.toLowerCase().includes(q) ||
+              (item.detail && item.detail.toLowerCase().includes(q))
+          ),
+        })).filter((d) => d.items.length > 0);
+      }
+      // Sort items within each category: in-stock first, then sold out
       data = data.map((d) => ({
         ...d,
-        items: d.items.filter(
-          (item) =>
-            item.name.toLowerCase().includes(q) ||
-            (item.detail && item.detail.toLowerCase().includes(q))
-        ),
-      })).filter((d) => d.items.length > 0);
-    }
-    return data;
-  }, [displayData, activeCategory, searchQuery]);
+        items: d.items.sort((a, b) => {
+          const aInStock = a.stock > 0 ? 0 : 1;
+          const bInStock = b.stock > 0 ? 0 : 1;
+          return aInStock - bInStock;
+        }),
+      }));
+      return data;
+    }, [displayData, activeCategory, searchQuery]);
 
   const addToCart = useCallback((item: { id: number; name: string; price: number; imageUrl?: string; productType: string }) => {
     setCart((prev) => {
