@@ -37,24 +37,24 @@ const fallbackObjects = [
   {
     category: "Ceramics",
     items: [
-      { id: 901, name: "Atelier Espresso Cup", detail: "Hand-thrown stoneware, ivory glaze", price: 48, imageUrl: "", productType: "merchandise" },
-      { id: 902, name: "Dessert Plate — Terracotta", detail: "Artisan ceramic, matte finish", price: 62, imageUrl: "", productType: "merchandise" },
-      { id: 903, name: "Serving Bowl — Marble", detail: "Carrara marble, hand-polished", price: 185, imageUrl: "", productType: "merchandise" },
+      { id: 901, name: "Atelier Espresso Cup", detail: "Hand-thrown stoneware, ivory glaze", price: 48, imageUrl: "", productType: "merchandise", stock: 50 },
+      { id: 902, name: "Dessert Plate — Terracotta", detail: "Artisan ceramic, matte finish", price: 62, imageUrl: "", productType: "merchandise", stock: 50 },
+      { id: 903, name: "Serving Bowl — Marble", detail: "Carrara marble, hand-polished", price: 185, imageUrl: "", productType: "merchandise", stock: 50 },
     ],
   },
   {
     category: "Textiles",
     items: [
-      { id: 904, name: "Linen Napkin Set", detail: "Belgian linen, natural dye", price: 38, imageUrl: "", productType: "merchandise" },
-      { id: 905, name: "Apron — Atelier Edition", detail: "Washed cotton, brass hardware", price: 95, imageUrl: "", productType: "merchandise" },
+      { id: 904, name: "Linen Napkin Set", detail: "Belgian linen, natural dye", price: 38, imageUrl: "", productType: "merchandise", stock: 50 },
+      { id: 905, name: "Apron — Atelier Edition", detail: "Washed cotton, brass hardware", price: 95, imageUrl: "", productType: "merchandise", stock: 50 },
     ],
   },
   {
     category: "Confections",
     items: [
-      { id: 906, name: "Chocolate Collection", detail: "Single-origin, hand-tempered", price: 42, imageUrl: "", productType: "merchandise" },
-      { id: 907, name: "Biscotti Gift Box", detail: "Almond & pistachio, wrapped in tissue", price: 36, imageUrl: "", productType: "merchandise" },
-      { id: 908, name: "House Blend Coffee", detail: "Medium roast, caramel & hazelnut notes", price: 28, imageUrl: "", productType: "merchandise" },
+      { id: 906, name: "Chocolate Collection", detail: "Single-origin, hand-tempered", price: 42, imageUrl: "", productType: "merchandise", stock: 50 },
+      { id: 907, name: "Biscotti Gift Box", detail: "Almond & pistachio, wrapped in tissue", price: 36, imageUrl: "", productType: "merchandise", stock: 50 },
+      { id: 908, name: "House Blend Coffee", detail: "Medium roast, caramel & hazelnut notes", price: 28, imageUrl: "", productType: "merchandise", stock: 50 },
     ],
   },
 ];
@@ -190,7 +190,7 @@ export default function Objects() {
     if (liveCategories) {
       for (const c of liveCategories) categoryMap.set(c.id, c.name);
     }
-    const grouped: Record<string, { id: number; name: string; detail: string; description?: string; price: number; imageUrl: string; productType: string }[]> = {};
+    const grouped: Record<string, { id: number; name: string; detail: string; description?: string; price: number; imageUrl: string; productType: string; stock: number }[]> = {};
     for (const p of liveProducts) {
       // Only show merchandise items on Objects page (exclude food/cake/gelato)
       if (p.productType !== "merchandise") continue;
@@ -204,6 +204,7 @@ export default function Objects() {
         price: Number(p.price),
         imageUrl: p.imageUrl || "",
         productType: p.productType,
+        stock: p.stock || 0,
       });
     }
     // Sort categories by preferred order
@@ -1134,13 +1135,22 @@ export default function Objects() {
                           Pickup Only
                         </div>
                       )}
-                      <button
-                        onClick={() => addToCart({ id: item.id, name: item.name, price: item.price, imageUrl: item.imageUrl, productType: item.productType })}
-                        className="absolute bottom-0 left-0 right-0 py-3 text-[10px] font-medium uppercase tracking-[0.2em] text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
-                        style={{ fontFamily: "var(--font-body)", backgroundColor: "oklch(0.34 0.05 45 / 0.9)", color: cream }}
-                      >
-                        Add to Bag
-                      </button>
+                      {item.stock > 0 ? (
+                        <button
+                          onClick={() => addToCart({ id: item.id, name: item.name, price: item.price, imageUrl: item.imageUrl, productType: item.productType })}
+                          className="absolute bottom-0 left-0 right-0 py-3 text-[10px] font-medium uppercase tracking-[0.2em] text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                          style={{ fontFamily: "var(--font-body)", backgroundColor: "oklch(0.34 0.05 45 / 0.9)", color: cream }}
+                        >
+                          Add to Bag
+                        </button>
+                      ) : (
+                        <div
+                          className="absolute bottom-0 left-0 right-0 py-3 text-[10px] font-medium uppercase tracking-[0.2em] text-center"
+                          style={{ fontFamily: "var(--font-body)", backgroundColor: "oklch(0.34 0.05 45 / 0.6)", color: cream }}
+                        >
+                          Sold Out
+                        </div>
+                      )}
                     </div>
                     <h3 className="text-sm md:text-base mb-0.5 group-hover:opacity-60 transition-opacity duration-400" style={{ fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "0.005em", color: brown }}>
                       {item.name}
@@ -1149,9 +1159,14 @@ export default function Objects() {
                       {item.detail}
                     </p>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs md:text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: midBrown }}>
+                      <span className="text-xs md:text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: item.stock > 0 ? midBrown : "oklch(0.6 0.05 45)" }}>
                         ${item.price.toFixed(2)}
                       </span>
+                      {item.stock === 0 && (
+                        <span className="text-[9px] uppercase" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: "oklch(0.5 0.1 10)" }}>
+                          Out of Stock
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}
