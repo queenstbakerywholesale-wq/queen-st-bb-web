@@ -1114,12 +1114,12 @@ export default function Objects() {
                 {category.items.map((item, ii) => (
                   <div
                     key={item.name}
-                    className="group cursor-pointer"
-                    onClick={() => setSelectedProduct(item)}
+                    className={`group ${item.stock > 0 ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
+                    onClick={() => item.stock > 0 && setSelectedProduct(item)}
                   >
                     <div className="aspect-[4/5] mb-4 overflow-hidden relative rounded-sm" style={{ backgroundColor: cream }}>
                       {item.imageUrl ? (
-                        <ProgressiveImage src={item.imageUrl} alt={item.name} containerClassName="w-full h-full" className="group-hover:scale-[1.03] transition-transform duration-700" />
+                        <ProgressiveImage src={item.imageUrl} alt={item.name} containerClassName="w-full h-full" className={item.stock > 0 ? "group-hover:scale-[1.03] transition-transform duration-700" : ""} />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <span className="text-[10px] uppercase" style={{ fontFamily: "var(--font-body)", fontWeight: 400, letterSpacing: "0.04em", color: "oklch(0.72 0.03 65)" }}>
@@ -1152,7 +1152,7 @@ export default function Objects() {
                         </div>
                       )}
                     </div>
-                    <h3 className="text-sm md:text-base mb-0.5 group-hover:opacity-60 transition-opacity duration-400" style={{ fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "0.005em", color: brown }}>
+                    <h3 className={`text-sm md:text-base mb-0.5 transition-opacity duration-400 ${item.stock > 0 ? 'group-hover:opacity-60' : ''}`} style={{ fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "0.005em", color: item.stock > 0 ? brown : `${brown}80` }}>
                       {item.name}
                     </h3>
                     <p className="text-[10px] md:text-[11px] mb-1.5 line-clamp-1" style={{ fontFamily: "var(--font-body)", fontWeight: 400, color: `${brown}73` }}>
