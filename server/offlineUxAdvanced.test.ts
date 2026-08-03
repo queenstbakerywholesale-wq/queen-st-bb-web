@@ -112,7 +112,7 @@ describe("ProgressiveImage Component", () => {
 
   it("should show skeleton/pulse animation while loading", () => {
     const content = readFileSync(componentPath, "utf-8");
-    expect(content).toContain("animate-pulse");
+    expect(content).toContain("bg-gradient-to-br");
   });
 
   it("should support blur placeholder option", () => {

@@ -59,16 +59,16 @@ export default function Navigation({ variant = "solid" }: NavigationProps) {
   return (
     <>
       <header
-        className="fixed top-0 left-0 right-0 z-50 transition-all duration-700"
+        className="fixed top-0 left-0 right-0 z-50 transition-colors duration-300"
         style={{
           backgroundColor: menuOpen
             ? "oklch(0.30 0.04 45)"
             : showSolid
               ? "oklch(0.94 0.015 80 / 0.96)"
               : "transparent",
-          backdropFilter: showSolid && !menuOpen ? "blur(8px)" : "none",
+          backdropFilter: showSolid && !menuOpen ? "blur(4px)" : "none",
           borderBottom: showSolid && !menuOpen
-            ? "1px solid oklch(0.84 0.025 72 / 0.5)"
+            ? "1px solid oklch(0.84 0.025 72 / 0.3)"
             : "1px solid transparent",
         }}
       >
@@ -76,7 +76,7 @@ export default function Navigation({ variant = "solid" }: NavigationProps) {
           {/* Brand Wordmark — Playfair Display, weight 500 */}
           <Link href="/">
             <span
-              className="text-lg md:text-xl transition-colors duration-500"
+              className="text-lg md:text-xl transition-colors duration-200"
               style={{
                 fontFamily: "var(--font-display)",
                 fontWeight: 500,

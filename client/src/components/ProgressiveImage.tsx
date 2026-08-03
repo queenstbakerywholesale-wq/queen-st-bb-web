@@ -74,7 +74,7 @@ export default function ProgressiveImage({
               aria-hidden="true"
             />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-stone-100 to-stone-200 animate-pulse" />
+            <div className="absolute inset-0 bg-gradient-to-br from-stone-100 to-stone-200" />
           )}
         </div>
       )}
