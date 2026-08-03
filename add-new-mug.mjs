@@ -1,9 +1,5 @@
 import mysql from 'mysql2/promise';
 
-function generateSlug(name) {
-  return name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
-}
-
 async function addNewMug() {
   let conn;
   try {
@@ -21,35 +17,27 @@ async function addNewMug() {
     conn = await mysql.createConnection(config);
     console.log('✓ 数据库连接成功\n');
 
-    // 获取 Mugs 分类 ID
-    const [categories] = await conn.query('SELECT id FROM categories WHERE name = ?', ['Mugs']);
-    const mugsCategory = categories[0];
-    if (!mugsCategory) {
-      throw new Error('Mugs 分类不存在');
-    }
-
-    console.log('📦 添加新 Mug 产品...');
-    
     // 添加新 mug
-    await conn.query(`
-      INSERT INTO products (
-        name, slug, shortDescription, description, price, imageUrl, 
-        productType, categoryId, stock, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-    `, [
-      'Queen BB Koala Mug',
-      generateSlug('Queen BB Koala Mug'),
-      'Premium ceramic mug with Queen BB koala design',
-      'Celebrate Queen BB with this beautiful ceramic mug featuring our signature koala design. Perfect for your morning coffee or tea. Made from high-quality ceramic with a comfortable handle.',
-      35.90,
-      '/manus-storage/IMG_0706_76f42cf5.JPG',
-      'merchandise',
-      mugsCategory.id,
-      100
-    ]);
+    const newMug = {
+      name: 'Queen BB Koala Mug - Red X',
+      slug: 'queen-bb-koala-mug-red-x',
+      description: 'Premium ceramic mug featuring Queen BB koala with red X design. Perfect for your morning coffee or tea.',
+      shortDescription: 'Ceramic mug with Queen BB koala design',
+      categoryId: 1, // Mugs
+      price: 35.90,
+      imageUrl: '/manus-storage/IMG_0765_be991290.jpg',
+      stock: 0, // marked as sold out
+      productType: 'merchandise',
+      isActive: 1
+    };
 
-    console.log('  ✓ Queen BB Koala Mug 已添加\n');
-    console.log('✅ 新 Mug 产品已添加成功！');
+    await conn.query(
+      'INSERT INTO products (name, slug, description, shortDescription, categoryId, price, imageUrl, stock, productType, isActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [newMug.name, newMug.slug, newMug.description, newMug.shortDescription, newMug.categoryId, newMug.price, newMug.imageUrl, newMug.stock, newMug.productType, newMug.isActive]
+    );
+
+    console.log('✓ Queen BB Koala Mug - Red X 已添加并标记为 sold out\n');
+    console.log('✅ 添加完成！');
     
   } catch (error) {
     console.error('❌ 错误:', error.message);
