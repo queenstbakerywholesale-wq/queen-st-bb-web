@@ -1138,14 +1138,14 @@ export default function Objects() {
                       {item.stock > 0 ? (
                         <button
                           onClick={() => addToCart({ id: item.id, name: item.name, price: item.price, imageUrl: item.imageUrl, productType: item.productType })}
-                          className="absolute bottom-0 left-0 right-0 py-3 text-[10px] font-medium uppercase tracking-[0.2em] text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                          className="absolute bottom-0 left-0 right-0 py-3 text-[10px] font-medium uppercase tracking-[0.2em] text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer hover:opacity-100"
                           style={{ fontFamily: "var(--font-body)", backgroundColor: "oklch(0.34 0.05 45 / 0.9)", color: cream }}
                         >
                           Add to Bag
                         </button>
                       ) : (
                         <div
-                          className="absolute bottom-0 left-0 right-0 py-3 text-[10px] font-medium uppercase tracking-[0.2em] text-center"
+                          className="absolute bottom-0 left-0 right-0 py-3 text-[10px] font-medium uppercase tracking-[0.2em] text-center cursor-not-allowed"
                           style={{ fontFamily: "var(--font-body)", backgroundColor: "oklch(0.34 0.05 45 / 0.6)", color: cream }}
                         >
                           Sold Out
