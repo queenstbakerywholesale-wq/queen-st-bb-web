@@ -1146,7 +1146,7 @@ export default function Objects() {
                       ) : (
                         <div
                           className="absolute bottom-0 left-0 right-0 py-3 text-[10px] font-medium uppercase tracking-[0.2em] text-center cursor-not-allowed"
-                          style={{ fontFamily: "var(--font-body)", backgroundColor: "oklch(0.34 0.05 45 / 0.6)", color: cream }}
+                          style={{ fontFamily: "var(--font-body)", backgroundColor: "oklch(0.34 0.05 45 / 0.85)", color: cream }}
                         >
                           Sold Out
                         </div>
