@@ -503,3 +503,9 @@
 - [x] Order email receipt: include detailed line items (product name, quantity, price, subtotal, shipping, total) in order confirmation email (already implemented in orderEmail.ts)
 - [x] Objects page product search: text input to filter products by name/description
 - [x] Admin dashboard sales chart: daily/weekly revenue visualization with chart
+
+## Product Image Update
+
+- [x] Replace the Objects page image for Queen St. BB Cream & Khaki Cap with the user-provided original image
+- [x] Run regression tests and save a checkpoint after the cap image replacement
+
