@@ -576,3 +576,8 @@
 
 - [x] Upload the user's original Gold Mug photo and replace the Queen Street Melbourne Mug (Gold) product image
 - [x] Run regression tests and save a checkpoint for the Gold Mug image replacement
+
+## Add Queen St Heritage Queen Mug
+
+- [x] Upload the user's original mug image and create Queen St. Heritage Queen Mug in the Mugs category at AUD 35.90 with stock available
+- [x] Run regression tests and save a checkpoint for the new Heritage Queen Mug
