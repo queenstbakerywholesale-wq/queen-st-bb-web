@@ -536,3 +536,8 @@
 - [x] Locate the footer navigation and confirm the Wholesale and Franchise routes
 - [x] Replace the combined Wholesale & Franchise footer link with separate Wholesale and Franchise links
 - [x] Run regression tests and save a checkpoint for the footer navigation update
+
+## Customer Care Opening Hours FAQ
+
+- [x] Replace the Customer Care FAQ wording from 8:00 AM–10:00 PM to 2:00 PM–11:00 PM
+- [x] Run regression tests and save a checkpoint for the Customer Care wording update

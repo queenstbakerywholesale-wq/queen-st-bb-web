@@ -17,7 +17,7 @@ const faqs = [
   {
     question: "What are your opening hours?",
     answer:
-      "We are open daily from 8:00 AM to 10:00 PM. Private dining and event bookings may be arranged outside these hours by prior arrangement.",
+      "We are open daily from 2:00 PM to 11:00 PM. Private dining and event bookings may be arranged outside these hours by prior arrangement.",
   },
   {
     question: "Do you cater for dietary requirements?",
