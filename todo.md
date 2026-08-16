@@ -514,3 +514,8 @@
 
 - [x] Edit the user-provided cap image to a 3:4 composition while preserving the cap and removing the extra person
 - [x] Update Queen St. BB Cream & Khaki Cap with the edited image, run tests, and save a checkpoint
+
+## Restore Original Cap Image
+
+- [x] Restore Queen St. BB Cream & Khaki Cap to the user's original uploaded photo
+- [x] Run regression tests and save a checkpoint for the restored image
