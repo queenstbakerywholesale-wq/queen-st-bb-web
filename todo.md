@@ -592,3 +592,8 @@
 
 - [x] Upload the user's original sticker-sheet image and create Koala Expressions Sticker Sheet in the Stickers category at the unified AUD 8.00 price with stock available
 - [x] Run regression tests and save a checkpoint for the new sticker
+
+## Add Queen St BB Signature Sticker
+
+- [x] Convert the provided PDF to a complete uncropped product image and create Queen St. BB Signature Sticker in the Stickers category at the unified AUD 8.00 price with stock available
+- [x] Run regression tests and save a checkpoint for the new Signature Sticker
