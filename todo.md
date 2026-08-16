@@ -587,3 +587,8 @@
 - [x] Remove the Others category from the Objects page and add a Stickers category
 - [x] Convert the provided PDF to a complete uncropped product image and create a Sticker product in the Stickers category
 - [x] Run regression tests and save a checkpoint for the Stickers update
+
+## Add Koala Expressions Sticker Sheet
+
+- [x] Upload the user's original sticker-sheet image and create Koala Expressions Sticker Sheet in the Stickers category at the unified AUD 8.00 price with stock available
+- [x] Run regression tests and save a checkpoint for the new sticker
