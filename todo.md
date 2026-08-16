@@ -566,3 +566,8 @@
 
 - [x] Upload the user's original mug image and create Queen Street Melbourne Mug (Green) in the Mugs category at AUD 35.90 with stock available
 - [x] Run regression tests and save a checkpoint for the new mug
+
+## Replace Queen Street Melbourne Mug Blue Image
+
+- [x] Upload the user's original Blue Mug photo and replace the Queen Street Melbourne Mug (Blue) product image
+- [x] Run regression tests and save a checkpoint for the Blue Mug image replacement
