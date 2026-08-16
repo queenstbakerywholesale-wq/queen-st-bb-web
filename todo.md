@@ -554,8 +554,8 @@
 
 ## Replace Khaki Cap Product Image
 
-- [ ] Upload the user's original cap photo and replace the Queen St. BB Cream & Khaki Cap image
-- [ ] Run regression tests and save a checkpoint for the cap image replacement
+- [x] Upload the user's original cap photo and replace the Queen St. BB Cream & Khaki Cap image
+- [x] Run regression tests and save a checkpoint for the cap image replacement
 
 ## Replace Check Pattern Cap Product Image
 
