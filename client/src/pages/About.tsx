@@ -97,7 +97,7 @@ export default function About() {
                 color: "oklch(0.34 0.05 45 / 0.7)",
               }}
             >
-              Founded on Queen Street in Brisbane, our atelier draws from the
+              Founded on Queen Street in Melbourne, our atelier draws from the
               Italian pasticceria tradition — a place where craft, beauty, and
               community converge. We approach each creation with the mindset of
               a designer.

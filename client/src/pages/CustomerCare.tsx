@@ -32,7 +32,7 @@ const faqs = [
   {
     question: "Do you offer delivery?",
     answer:
-      "We offer delivery within the Brisbane metropolitan area for cake orders. Gelato and tiramisu are best enjoyed in our space, though we can arrange packaging for local collection.",
+      "We offer delivery within the Melbourne metropolitan area for cake orders. Gelato and tiramisu are best enjoyed in our space, though we can arrange packaging for local collection.",
   },
   {
     question: "Can I visit the atelier?",
@@ -371,7 +371,7 @@ export default function CustomerCare() {
                     color: "oklch(0.34 0.05 45)",
                   }}
                 >
-                  Queen Street, Brisbane
+                  Queen Street, Melbourne
                 </p>
               </div>
               <div>

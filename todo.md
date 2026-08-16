@@ -519,3 +519,9 @@
 
 - [x] Restore Queen St. BB Cream & Khaki Cap to the user's original uploaded photo
 - [x] Run regression tests and save a checkpoint for the restored image
+
+## Location Update: Brisbane to Melbourne
+
+- [x] Search and locate all occurrences of Brisbane in code and database
+- [x] Replace all Brisbane references with Melbourne
+- [x] Run regression tests and save checkpoint for the location update

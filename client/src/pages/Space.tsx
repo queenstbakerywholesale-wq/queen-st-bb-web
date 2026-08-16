@@ -204,7 +204,7 @@ export default function Space() {
                 color: "oklch(0.34 0.05 45)",
               }}
             >
-              Queen Street, Brisbane
+              Queen Street, Melbourne
             </p>
             <p
               className="text-sm"
