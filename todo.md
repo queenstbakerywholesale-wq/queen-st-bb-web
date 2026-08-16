@@ -509,3 +509,8 @@
 - [x] Replace the Objects page image for Queen St. BB Cream & Khaki Cap with the user-provided original image
 - [x] Run regression tests and save a checkpoint after the cap image replacement
 
+
+## Product Image Edit
+
+- [x] Edit the user-provided cap image to a 3:4 composition while preserving the cap and removing the extra person
+- [x] Update Queen St. BB Cream & Khaki Cap with the edited image, run tests, and save a checkpoint
