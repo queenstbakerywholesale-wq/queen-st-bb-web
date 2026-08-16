@@ -541,3 +541,8 @@
 
 - [x] Replace the Customer Care FAQ wording from 8:00 AM–10:00 PM to 2:00 PM–11:00 PM
 - [x] Run regression tests and save a checkpoint for the Customer Care wording update
+
+## Customer Care Footer Hours
+
+- [x] Replace the Customer Care footer hours from Daily, 8 AM — 10 PM to Daily, 2 PM — 11 PM
+- [x] Run regression tests and save a checkpoint for the footer-hours update

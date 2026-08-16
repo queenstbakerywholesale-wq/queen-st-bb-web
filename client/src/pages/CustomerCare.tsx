@@ -393,7 +393,7 @@ export default function CustomerCare() {
                     color: "oklch(0.34 0.05 45)",
                   }}
                 >
-                  Daily, 8 AM — 10 PM
+                  Daily, 2 PM — 11 PM
                 </p>
               </div>
             </div>
