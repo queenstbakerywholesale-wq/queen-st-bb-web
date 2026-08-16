@@ -561,3 +561,8 @@
 
 - [x] Upload the user's original Check Pattern Cap photo and replace the product image
 - [x] Run regression tests and save a checkpoint for the Check Pattern Cap image replacement
+
+## Add Queen Street Melbourne Mug Green
+
+- [x] Upload the user's original mug image and create Queen Street Melbourne Mug (Green) in the Mugs category at AUD 35.90 with stock available
+- [x] Run regression tests and save a checkpoint for the new mug
