@@ -581,3 +581,9 @@
 
 - [x] Upload the user's original mug image and create Queen St. Heritage Queen Mug in the Mugs category at AUD 35.90 with stock available
 - [x] Run regression tests and save a checkpoint for the new Heritage Queen Mug
+
+## Objects Stickers Category and Product
+
+- [x] Remove the Others category from the Objects page and add a Stickers category
+- [x] Convert the provided PDF to a complete uncropped product image and create a Sticker product in the Stickers category
+- [x] Run regression tests and save a checkpoint for the Stickers update

@@ -113,7 +113,7 @@ export default function Objects() {
   const [postcodeInput, setPostcodeInput] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState<{ id: number; name: string; detail: string; description?: string; price: number; imageUrl: string; productType: string } | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<{ id: number; name: string; detail: string; description?: string; price: number; imageUrl: string; productType: string; category?: string } | null>(null);
   const [shippingQuote, setShippingQuote] = useState<{
     price: number;
     serviceName: string;
@@ -182,7 +182,7 @@ export default function Objects() {
 
   // Group live products by category
   // Category display order preference
-  const categoryOrder = ["Mugs", "Tumblers", "Caps", "Eco Bags", "Postcards", "Other"];
+  const categoryOrder = ["Mugs", "Tumblers", "Caps", "Eco Bags", "Postcards", "Stickers"];
 
   const displayData = useMemo(() => {
     if (!liveProducts || liveProducts.length === 0) return fallbackObjects;
@@ -195,6 +195,8 @@ export default function Objects() {
       // Only show merchandise items on Objects page (exclude food/cake/gelato)
       if (p.productType !== "merchandise") continue;
       const catName = p.categoryId ? categoryMap.get(p.categoryId) || "Other" : "Other";
+      // Keep uncategorized merchandise out of the public Objects catalog instead of showing an Others section.
+      if (catName === "Other" || catName === "Others") continue;
       if (!grouped[catName]) grouped[catName] = [];
       grouped[catName].push({
         id: p.id,
@@ -1124,11 +1126,11 @@ export default function Objects() {
                   <div
                     key={item.name}
                     className={`group ${item.stock > 0 ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
-                    onClick={() => item.stock > 0 && setSelectedProduct(item)}
+                    onClick={() => item.stock > 0 && setSelectedProduct({ ...item, category: category.category })}
                   >
                     <div className="aspect-[4/5] mb-4 overflow-hidden relative rounded-sm" style={{ backgroundColor: cream }}>
                       {item.imageUrl ? (
-                        <ProgressiveImage src={item.imageUrl} alt={item.name} containerClassName="w-full h-full" className={item.stock > 0 ? "group-hover:scale-[1.03] transition-transform duration-700" : ""} />
+                        <ProgressiveImage src={item.imageUrl} alt={item.name} containerClassName="w-full h-full" objectFit={category.category === "Stickers" ? "contain" : "cover"} className={item.stock > 0 && category.category !== "Stickers" ? "group-hover:scale-[1.03] transition-transform duration-700" : ""} />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <span className="text-[10px] uppercase" style={{ fontFamily: "var(--font-body)", fontWeight: 400, letterSpacing: "0.04em", color: "oklch(0.72 0.03 65)" }}>
@@ -1219,6 +1221,7 @@ export default function Objects() {
                         src={selectedProduct.imageUrl}
                         alt={selectedProduct.name}
                         containerClassName="w-full h-full"
+                        objectFit={selectedProduct.category === "Stickers" ? "contain" : "cover"}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: cream }}>
