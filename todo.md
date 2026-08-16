@@ -571,3 +571,8 @@
 
 - [x] Upload the user's original Blue Mug photo and replace the Queen Street Melbourne Mug (Blue) product image
 - [x] Run regression tests and save a checkpoint for the Blue Mug image replacement
+
+## Replace Queen Street Melbourne Mug Gold Image
+
+- [x] Upload the user's original Gold Mug photo and replace the Queen Street Melbourne Mug (Gold) product image
+- [x] Run regression tests and save a checkpoint for the Gold Mug image replacement
