@@ -530,3 +530,9 @@
 
 - [x] Replace all user-visible occurrences of Open daily, 8:00 AM — 10:00 PM with Open daily, 2:00 PM — 11:00 PM
 - [x] Run regression tests and save a checkpoint for the opening-hours update
+
+## Footer Wholesale and Franchise Links
+
+- [x] Locate the footer navigation and confirm the Wholesale and Franchise routes
+- [x] Replace the combined Wholesale & Franchise footer link with separate Wholesale and Franchise links
+- [x] Run regression tests and save a checkpoint for the footer navigation update
