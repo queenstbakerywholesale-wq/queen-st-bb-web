@@ -546,3 +546,18 @@
 
 - [x] Replace the Customer Care footer hours from Daily, 8 AM — 10 PM to Daily, 2 PM — 11 PM
 - [x] Run regression tests and save a checkpoint for the footer-hours update
+
+## Production Connection Diagnosis
+
+- [x] Diagnose intermittent ERR_CONNECTION_CLOSED responses on queenstbb.com and verify the stable Manus fallback domain
+- [x] Document the domain-edge finding and confirm both domains are reachable
+
+## Replace Khaki Cap Product Image
+
+- [ ] Upload the user's original cap photo and replace the Queen St. BB Cream & Khaki Cap image
+- [ ] Run regression tests and save a checkpoint for the cap image replacement
+
+## Replace Check Pattern Cap Product Image
+
+- [x] Upload the user's original Check Pattern Cap photo and replace the product image
+- [x] Run regression tests and save a checkpoint for the Check Pattern Cap image replacement
