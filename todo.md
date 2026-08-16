@@ -525,3 +525,8 @@
 - [x] Search and locate all occurrences of Brisbane in code and database
 - [x] Replace all Brisbane references with Melbourne
 - [x] Run regression tests and save checkpoint for the location update
+
+## Opening Hours Update
+
+- [x] Replace all user-visible occurrences of Open daily, 8:00 AM — 10:00 PM with Open daily, 2:00 PM — 11:00 PM
+- [x] Run regression tests and save a checkpoint for the opening-hours update

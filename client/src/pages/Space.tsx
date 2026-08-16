@@ -215,7 +215,7 @@ export default function Space() {
                 color: "oklch(0.34 0.05 45 / 0.6)",
               }}
             >
-              Open daily, 8:00 AM — 10:00 PM
+              Open daily, 2:00 PM — 11:00 PM
             </p>
             <div className="editorial-rule mx-auto mt-8" />
           </motion.div>
