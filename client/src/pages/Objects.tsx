@@ -182,7 +182,7 @@ export default function Objects() {
 
   // Group live products by category
   // Category display order preference
-  const categoryOrder = ["Mugs", "Tumblers", "Caps", "Eco Bags", "Postcards", "Stickers"];
+  const categoryOrder = ["Mugs", "Tumblers", "Caps", "Eco Bags", "Postcards", "Stickers", "Dolls"];
 
   const displayData = useMemo(() => {
     if (!liveProducts || liveProducts.length === 0) return fallbackObjects;

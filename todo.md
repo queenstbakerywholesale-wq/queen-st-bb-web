@@ -602,3 +602,9 @@
 
 - [x] Convert queenstbbsticker.pdf to a complete uncropped product image and create Queen St. BB Vintage Edition Sticker in the Stickers category at the unified AUD 8.00 price with stock available
 - [x] Run regression tests and save a checkpoint for the Vintage Edition Sticker
+
+## Add Dolls Category and Queen BB Koala Keyring Doll
+
+- [x] Create Dolls category and upload the koala doll image as Queen BB Koala Keyring Doll at AUD 35.90 with stock available
+- [x] Update Objects.tsx category order to include Dolls
+- [x] Run regression tests and save a checkpoint for the Dolls category update

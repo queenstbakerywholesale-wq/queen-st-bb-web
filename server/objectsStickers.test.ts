@@ -10,7 +10,7 @@ const objectsPageSource = readFileSync(
 describe("Objects Stickers catalog", () => {
   it("includes Stickers in the category order and removes the public Others section", () => {
     expect(objectsPageSource).toContain(
-      'const categoryOrder = ["Mugs", "Tumblers", "Caps", "Eco Bags", "Postcards", "Stickers"];'
+      'const categoryOrder = ["Mugs", "Tumblers", "Caps", "Eco Bags", "Postcards", "Stickers", "Dolls"];'
     );
     expect(objectsPageSource).toContain(
       'if (catName === "Other" || catName === "Others") continue;'
