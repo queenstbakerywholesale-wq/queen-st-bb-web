@@ -18,27 +18,22 @@ const flavours = [
   {
     name: "Peanut Butter",
     description: "Silky roasted peanut butter with a delicate salted finish",
-    note: "House favourite",
   },
   {
     name: "Burnt Caramel",
     description: "Deep caramelised sugar with a gently smoky sweetness",
-    note: "Rich and refined",
   },
   {
     name: "Strawberry Matcha",
     description: "Ceremonial matcha layered with bright strawberry cream",
-    note: "Seasonal favourite",
   },
   {
     name: "Strawberry Lovers",
     description: "Ripe strawberries folded through a soft, creamy gelato",
-    note: "Made for summer",
   },
   {
     name: "Chocchip Honey Comb",
     description: "Dark chocolate chips with crisp honeycomb and cream",
-    note: "A little indulgence",
   },
 ];
 
@@ -130,17 +125,19 @@ export default function Gelato() {
                   (e.currentTarget.style.backgroundColor = "oklch(0.94 0.015 80)")
                 }
               >
-                <span
-                  className="text-[11px] uppercase block mb-4"
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    fontWeight: 500,
-                    letterSpacing: "0.04em",
-                    color: "oklch(0.45 0.06 45 / 0.5)",
-                  }}
-                >
-                  {flavour.note}
-                </span>
+                {flavour.note && (
+                  <span
+                    className="text-[11px] uppercase block mb-4"
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontWeight: 500,
+                      letterSpacing: "0.04em",
+                      color: "oklch(0.45 0.06 45 / 0.5)",
+                    }}
+                  >
+                    {flavour.note}
+                  </span>
+                )}
                 <h3
                   className="text-2xl md:text-3xl mb-3 transition-opacity duration-300 group-hover:opacity-70"
                   style={{

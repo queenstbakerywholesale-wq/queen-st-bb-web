@@ -620,3 +620,8 @@
 - [x] Inspect Tiramisu.tsx and Gelato.tsx to match layouts
 - [x] Replace Gelato flavors with Brown Butter (Signature), Peanut Butter, Burnt Caramel, Strawberry Matcha, Strawberry Lovers, Chocchip Honey Comb
 - [x] Run regression tests and save a checkpoint for the Gelato page update
+
+## Gelato Flavor Subtitle Cleanup
+
+- [x] Remove all Gelato flavor subtitles except the Brown Butter Signature label, keeping only flavor names and one-sentence descriptions
+- [x] Run regression tests and save a checkpoint for the Gelato subtitle cleanup
