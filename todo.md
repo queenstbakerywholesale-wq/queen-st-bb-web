@@ -625,3 +625,8 @@
 
 - [x] Remove all Gelato flavor subtitles except the Brown Butter Signature label, keeping only flavor names and one-sentence descriptions
 - [x] Run regression tests and save a checkpoint for the Gelato subtitle cleanup
+
+## Gelato and Vegan Gelato Sorbet Sections
+
+- [x] Structure Gelato.tsx into two sections: Gelato and Vegan Gelato Sorbet with specified flavors
+- [x] Run regression tests and save a checkpoint for the new Vegan Gelato Sorbet section
