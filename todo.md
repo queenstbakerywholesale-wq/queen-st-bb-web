@@ -614,3 +614,9 @@
 - [x] Set Queen BB Koala Keyring Doll stock to 0 so it is sold out and non-purchasable
 - [x] Set every product in the Stickers category to AUD 9.90
 - [x] Run regression tests and save a checkpoint for the inventory and price update
+
+## Gelato Layout and Flavors Update
+
+- [x] Inspect Tiramisu.tsx and Gelato.tsx to match layouts
+- [x] Replace Gelato flavors with Brown Butter (Signature), Peanut Butter, Burnt Caramel, Strawberry Matcha, Strawberry Lovers, Chocchip Honey Comb
+- [x] Run regression tests and save a checkpoint for the Gelato page update
