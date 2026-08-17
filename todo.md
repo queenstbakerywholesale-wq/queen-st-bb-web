@@ -608,3 +608,9 @@
 - [x] Create Dolls category and upload the koala doll image as Queen BB Koala Keyring Doll at AUD 35.90 with stock available
 - [x] Update Objects.tsx category order to include Dolls
 - [x] Run regression tests and save a checkpoint for the Dolls category update
+
+## Inventory and Sticker Price Update
+
+- [x] Set Queen BB Koala Keyring Doll stock to 0 so it is sold out and non-purchasable
+- [x] Set every product in the Stickers category to AUD 9.90
+- [x] Run regression tests and save a checkpoint for the inventory and price update
