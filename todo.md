@@ -636,3 +636,9 @@
 - [x] Remove detailed content for Salmon, The Counter, and Private Dining from the Space page
 - [x] Mark Hawthorn as suitable for study, work meetings, stays with a baby, and Wi-Fi access
 - [x] Run regression tests and save a checkpoint for the Space page update
+
+## Space Experience Removal
+
+- [x] Remove the 1, 2, and 3 numbered experience entries from the Space page
+- [x] Remove The Salon and Private Dining information completely, keeping Hawthorn only
+- [x] Run regression tests and save a checkpoint for the Space page cleanup

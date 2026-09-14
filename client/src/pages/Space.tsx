@@ -11,21 +11,6 @@ const DEFAULT_HERO =
 
 const experiences = [
   {
-    title: "The Salon",
-    description:
-      "An intimate space designed for unhurried conversation. Velvet seating, marble surfaces, and the warm glow of brass fixtures create an atmosphere that invites you to linger.",
-  },
-  {
-    title: "The Counter",
-    description:
-      "Watch our artisans at work from the marble counter — a front-row seat to the craft of dessert-making. Each creation assembled with the precision of a couture atelier.",
-  },
-  {
-    title: "Private Dining",
-    description:
-      "A secluded room for celebrations and gatherings. Custom dessert menus, curated beverages, and an atmosphere of quiet luxury for up to twelve guests.",
-  },
-  {
     title: "Hawthorn",
     description:
       "A welcoming space for focused study, relaxed work meetings, and comfortable stays with your little one, with Wi-Fi available throughout the area.",
