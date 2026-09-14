@@ -8,6 +8,7 @@ import {
   boolean,
   decimal,
   json,
+  uniqueIndex,
 } from "drizzle-orm/mysql-core";
 
 // ─── Users (OAuth) ───────────────────────────────────────────────
@@ -452,6 +453,7 @@ export const posOrders = mysqlTable("pos_orders", {
   orderNumber: varchar("orderNumber", { length: 50 }).notNull().unique(),
   branchId: int("branchId").notNull(),
   staffId: int("staffId").notNull(),
+  customerId: int("customerId"), // linked customer account for loyalty and receipt history
   subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
   tax: decimal("tax", { precision: 10, scale: 2 }).default("0").notNull(),
   total: decimal("total", { precision: 10, scale: 2 }).notNull(),
@@ -597,6 +599,8 @@ export const customerLoyalty = mysqlTable("customer_loyalty", {
   customerId: int("customerId").notNull().unique(), // references customers.id
   totalPoints: int("totalPoints").default(0).notNull(), // current available points
   lifetimePoints: int("lifetimePoints").default(0).notNull(), // total ever earned
+  totalStamps: int("totalStamps").default(0).notNull(), // current stamp balance toward rewards
+  lifetimeStamps: int("lifetimeStamps").default(0).notNull(), // total stamps ever earned
   tier: mysqlEnum("loyaltyTier", ["new", "regular", "vip"]).default("new").notNull(),
   monthlyVisits: int("monthlyVisits").default(0).notNull(), // visits this month
   monthlySpent: decimal("monthlySpent", { precision: 12, scale: 2 }).default("0").notNull(), // spent this month
@@ -619,9 +623,15 @@ export const pointsTransactions = mysqlTable("points_transactions", {
   points: int("points").notNull(), // positive for earn, negative for redeem
   description: varchar("description", { length: 500 }),
   orderId: int("orderId"), // linked POS order if applicable
+  branchId: int("branchId"), // branch where the transaction occurred
+  staffId: int("staffId"), // staff member who recorded the transaction
+  stamps: int("stamps").default(0).notNull(), // stamps earned or redeemed in this transaction
+  stampBalanceAfter: int("stampBalanceAfter").default(0).notNull(), // stamp balance after this transaction
   balanceAfter: int("balanceAfter").notNull(), // points balance after this transaction
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+}, (table) => ({
+  orderIdUnique: uniqueIndex("points_transactions_order_id_unique").on(table.orderId),
+}));
 
 export type PointsTransaction = typeof pointsTransactions.$inferSelect;
 export type InsertPointsTransaction = typeof pointsTransactions.$inferInsert;

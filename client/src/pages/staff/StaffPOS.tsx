@@ -34,6 +34,7 @@ interface ReceiptData {
 }
 
 export default function StaffPOS() {
+  const trpcUtils = trpc.useUtils();
   const [staffData, setStaffData] = useState<any>(null);
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -114,6 +115,16 @@ export default function StaffPOS() {
       }
     },
     onError: (e) => toast.error(e.message),
+  });
+
+  const manualStampMutation = trpc.pos.addLoyaltyStamp.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Stamp added for ${selectedCustomer?.name || "customer"}`);
+      if (selectedCustomer) {
+        void trpcUtils.loyalty.getByCustomerId.invalidate({ customerId: selectedCustomer.id });
+      }
+    },
+    onError: (error) => toast.error(error.message || "Unable to add stamp"),
   });
 
   const toggleFullscreen = () => {
@@ -575,9 +586,17 @@ export default function StaffPOS() {
                     <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
                       <span className="text-[10px] font-bold text-amber-700">{selectedCustomer.name[0]}</span>
                     </div>
-                    <div>
-                      <p className="text-xs font-medium text-neutral-800">{selectedCustomer.name}</p>
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-neutral-800 truncate">{selectedCustomer.name}</p>
                       <CustomerPointsBadge customerId={selectedCustomer.id} />
+                      <button
+                        type="button"
+                        onClick={() => manualStampMutation.mutate({ branchId: branchId!, staffId: staffData.id, customerId: selectedCustomer.id })}
+                        disabled={!branchId || manualStampMutation.isPending}
+                        className="mt-1 text-[9px] font-semibold uppercase tracking-wider text-amber-700 hover:text-amber-900 disabled:opacity-40"
+                      >
+                        {manualStampMutation.isPending ? "Adding…" : "+ Add visit stamp"}
+                      </button>
                     </div>
                   </div>
                   <button onClick={() => { setSelectedCustomer(null); setShowCustomerSearch(false); }} className="text-neutral-400 hover:text-red-400 text-xs">×</button>
@@ -599,7 +618,7 @@ export default function StaffPOS() {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
-                  <span className="text-xs">Add customer (earn points)</span>
+                  <span className="text-xs">Add customer (earn points + stamp)</span>
                 </button>
               )}
             </div>
@@ -1401,14 +1420,14 @@ function StaffOnlineOrders({ branchId }: { branchId: number }) {
 // ─── Helper: Customer Points Badge ──────────────────────────────
 function CustomerPointsBadge({ customerId }: { customerId: number }) {
   const { data: loyalty } = trpc.loyalty.getByCustomerId.useQuery({ customerId });
-  if (!loyalty) return <span className="text-[9px] text-neutral-400">No points yet</span>;
+  if (!loyalty) return <span className="text-[9px] text-neutral-400">No loyalty history yet</span>;
   const tierColors = { new: "bg-neutral-100 text-neutral-600", regular: "bg-blue-100 text-blue-700", vip: "bg-amber-100 text-amber-700" };
   return (
     <div className="flex items-center gap-1">
       <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${tierColors[loyalty.tier as keyof typeof tierColors] || tierColors.new}`}>
         {loyalty.tier.toUpperCase()}
       </span>
-      <span className="text-[9px] text-neutral-500">{loyalty.totalPoints} pts</span>
+      <span className="text-[9px] text-neutral-500">{loyalty.totalPoints} pts · {loyalty.totalStamps} stamps</span>
     </div>
   );
 }

@@ -642,3 +642,22 @@
 - [x] Remove the 1, 2, and 3 numbered experience entries from the Space page
 - [x] Remove The Salon and Private Dining information completely, keeping Hawthorn only
 - [x] Run regression tests and save a checkpoint for the Space page cleanup
+
+## Customer Loyalty and Branch Stamps
+
+- [x] Inspect current auth, customer profile, POS, and product/order data structures
+- [x] Implement loyalty balance, stamp ledger, branch attribution, and secure earning APIs
+- [x] Build customer loyalty page with account status, stamp progress, and history
+- [x] Build staff/POS flow for adding stamps at each branch with validation and audit details
+- [x] Add Vitest coverage, verify permissions and duplicate prevention, and save a checkpoint
+
+## Customer Loyalty & Branch Stamps
+- [x] Add branch- and staff-attributed stamp fields to loyalty transactions and customer balances
+- [x] Secure POS order creation against the authenticated staff session and enforce staff branch ownership
+- [x] Centralize eligible POS purchase earning: one stamp per paid eligible order plus tier-adjusted points
+- [x] Extend authenticated customer loyalty queries with stamp progress and branch history
+- [x] Refine /my-page loyalty tab into a dedicated premium stamp experience with account sign-in guidance
+- [x] Add clear staff POS guidance for selecting a customer and earning stamps at the current branch
+- [x] Add Vitest coverage for ownership, stamp accrual, duplicate-safe behavior, and customer-only data access
+- [x] Verify customer login -> POS purchase -> branch stamp/points -> reward redemption flow
+- [x] Provision a customer record on first authenticated customer loyalty visit when no email-linked customer exists

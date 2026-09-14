@@ -18,6 +18,7 @@ import {
   Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 /* ─── Status badge helper ─── */
 function StatusBadge({ status }: { status: string }) {
@@ -82,6 +83,7 @@ function ShippingProgress({ status }: { status: string }) {
 /* ─── Main Component ─── */
 export default function MyPage() {
   const { user, loading: authLoading, isAuthenticated } = useAuth();
+  const trpcUtils = trpc.useUtils();
   const [activeTab, setActiveTab] = useState<"orders" | "giftcards" | "loyalty">("orders");
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const [selectedGiftCardId, setSelectedGiftCardId] = useState<number | null>(null);
@@ -120,6 +122,15 @@ export default function MyPage() {
     enabled: isAuthenticated && activeTab === "loyalty",
   });
 
+  const redeemRewardMutation = trpc.loyalty.redeemReward.useMutation({
+    onSuccess: (data) => {
+      toast.success(`${data.rewardName} added to your rewards`);
+      void trpcUtils.myPage.myLoyalty.invalidate();
+      void trpcUtils.myPage.myPointsHistory.invalidate();
+    },
+    onError: (error) => toast.error(error.message || "Unable to redeem this reward"),
+  });
+
   // Auth loading
   if (authLoading) {
     return (
@@ -145,7 +156,7 @@ export default function MyPage() {
             My Page
           </h1>
           <p className="text-sm text-stone-500 mb-6">
-            Sign in to view your orders and gift cards
+            Sign in to view your orders, collect branch stamps, and redeem rewards
           </p>
           <a
             href={getLoginUrl()}
@@ -711,33 +722,62 @@ export default function MyPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Points Summary Card */}
-                <div className="bg-gradient-to-br from-[#5A3A2E] to-[#8B6914] rounded-xl p-6 text-white">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <p className="text-xs text-white/70 uppercase tracking-wider">Your Points</p>
-                      <p className="text-3xl font-bold">{loyaltyQuery.data.totalPoints}</p>
+                {/* Stamp + points summary */}
+                <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+                  <div className="rounded-xl bg-[#5A3A2E] p-6 text-white shadow-sm">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-[#E7D9C9]">Queen St. BB / Visit ledger</p>
+                        <p className="mt-2 font-serif text-3xl">{loyaltyQuery.data.totalStamps} stamps</p>
+                        <p className="mt-1 text-xs text-white/65">One stamp is added for each eligible paid visit.</p>
+                      </div>
+                      <Star className="h-5 w-5 shrink-0 text-[#E6C878]" />
                     </div>
-                    <div className="text-right">
-                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase ${
-                        loyaltyQuery.data.tier === "vip" ? "bg-amber-400 text-amber-900" :
-                        loyaltyQuery.data.tier === "regular" ? "bg-blue-400 text-blue-900" :
-                        "bg-white/20 text-white"
+                    <div className="mt-6 grid grid-cols-5 gap-2">
+                      {Array.from({ length: loyaltyQuery.data?.stampGoal ?? 10 }).map((_, index) => {
+                        const filled = index < (loyaltyQuery.data?.stampProgress ?? 0);
+                        return (
+                          <div
+                            key={index}
+                            aria-label={filled ? `Stamp ${index + 1} collected` : `Stamp ${index + 1} available`}
+                            className={`flex aspect-square items-center justify-center rounded-full border text-xs transition-colors ${
+                              filled ? "border-[#E6C878] bg-[#E6C878] text-[#5A3A2E]" : "border-white/25 text-white/35"
+                            }`}
+                          >
+                            {filled ? "✦" : index + 1}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-4 flex items-center justify-between border-t border-white/15 pt-3 text-xs">
+                      <span className="text-white/65">Next milestone</span>
+                      <span className="font-medium text-[#E6C878]">{loyaltyQuery.data.stampsUntilMilestone} more {loyaltyQuery.data.stampsUntilMilestone === 1 ? "stamp" : "stamps"}</span>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-stone-200 bg-white p-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400">Points balance</p>
+                        <p className="mt-2 text-3xl font-semibold text-[#5A3A2E]">{loyaltyQuery.data.totalPoints}</p>
+                      </div>
+                      <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                        loyaltyQuery.data.tier === "vip" ? "bg-amber-100 text-amber-800" :
+                        loyaltyQuery.data.tier === "regular" ? "bg-blue-100 text-blue-800" :
+                        "bg-stone-100 text-stone-600"
                       }`}>
                         {loyaltyQuery.data.tier}
                       </span>
                     </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/20">
-                    <div>
-                      <p className="text-xs text-white/60">Lifetime Points</p>
-                      <p className="text-sm font-semibold">{loyaltyQuery.data.lifetimePoints}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-white/60">Earn Rate</p>
-                      <p className="text-sm font-semibold">
-                        {loyaltyQuery.data.tier === "vip" ? "2x" : loyaltyQuery.data.tier === "regular" ? "1.5x" : "1x"} per $1
-                      </p>
+                    <div className="mt-7 grid grid-cols-2 gap-4 border-t border-stone-100 pt-4">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider text-stone-400">Lifetime points</p>
+                        <p className="mt-1 text-sm font-semibold text-stone-700">{loyaltyQuery.data.lifetimePoints}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider text-stone-400">Earn rate</p>
+                        <p className="mt-1 text-sm font-semibold text-stone-700">{loyaltyQuery.data.tier === "vip" ? "2x" : loyaltyQuery.data.tier === "regular" ? "1.5x" : "1x"} / $1</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -797,7 +837,14 @@ export default function MyPage() {
                           <div className="text-right">
                             <p className="text-sm font-bold text-[#5A3A2E]">{reward.pointsCost} pts</p>
                             {loyaltyQuery.data!.totalPoints >= reward.pointsCost ? (
-                              <span className="text-[10px] text-emerald-600 font-medium">Redeemable</span>
+                              <button
+                                type="button"
+                                onClick={() => redeemRewardMutation.mutate({ customerId: loyaltyQuery.data!.customerId, rewardId: reward.id })}
+                                disabled={redeemRewardMutation.isPending}
+                                className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-700 underline underline-offset-2 disabled:opacity-40"
+                              >
+                                Redeem
+                              </button>
                             ) : (
                               <span className="text-[10px] text-stone-400">Need {reward.pointsCost - loyaltyQuery.data!.totalPoints} more</span>
                             )}
@@ -819,9 +866,10 @@ export default function MyPage() {
                   </div>
                 )}
 
-                {/* Points History */}
+                {/* Loyalty History */}
                 <div className="bg-white rounded-xl border border-stone-200 p-4">
-                  <h3 className="text-sm font-semibold text-[#5A3A2E] mb-3">Points History</h3>
+                  <h3 className="text-sm font-semibold text-[#5A3A2E] mb-1">Loyalty History</h3>
+                  <p className="text-[10px] text-stone-400 mb-3">Points and stamps are recorded against the branch where your visit was completed.</p>
                   {pointsHistoryQuery.data && pointsHistoryQuery.data.length > 0 ? (
                     <div className="space-y-2">
                       {pointsHistoryQuery.data.map((tx: any) => (
@@ -830,11 +878,17 @@ export default function MyPage() {
                             <p className="text-xs font-medium text-stone-700">{tx.description}</p>
                             <p className="text-[10px] text-stone-400">
                               {new Date(tx.createdAt).toLocaleDateString("en-AU", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                              {tx.branchName ? ` · ${tx.branchName}` : ""}
                             </p>
                           </div>
-                          <span className={`text-sm font-bold ${tx.type === "earn" ? "text-emerald-600" : "text-red-500"}`}>
-                            {tx.type === "earn" ? "+" : "-"}{tx.points}
-                          </span>
+                          <div className="text-right">
+                            {tx.stamps > 0 && <p className="text-sm font-bold text-[#8B6914]">+{tx.stamps} stamp</p>}
+                            {tx.points !== 0 && (
+                              <p className={`text-[11px] font-semibold ${tx.points > 0 ? "text-emerald-600" : "text-red-500"}`}>
+                                {tx.points > 0 ? "+" : ""}{tx.points} pts
+                              </p>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>

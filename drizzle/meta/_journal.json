@@ -106,6 +106,27 @@
       "when": 1785411458019,
       "tag": "0014_heavy_black_crow",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "5",
+      "when": 1789357225675,
+      "tag": "0015_illegal_synch",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "5",
+      "when": 1789357315875,
+      "tag": "0016_outstanding_tusk",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "5",
+      "when": 1789358088049,
+      "tag": "0017_optimal_stephen_strange",
+      "breakpoints": true
     }
   ]
 }

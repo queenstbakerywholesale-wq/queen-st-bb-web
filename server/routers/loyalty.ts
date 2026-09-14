@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { eq, and, desc } from "drizzle-orm";
-import { publicProcedure, router } from "../_core/trpc";
+import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
+import { getStaffFromContext } from "./staffAuth";
 import { customerLoyalty, pointsTransactions, loyaltyRewards, customers } from "../../drizzle/schema";
 
 // Tier multipliers for point earning
@@ -47,7 +48,9 @@ export const loyaltyRouter = router({
   // ─── Get customer loyalty info ──────────────────────────────────
   getByCustomerId: publicProcedure
     .input(z.object({ customerId: z.number() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
+      const staffSession = await getStaffFromContext(ctx);
+      if (!staffSession) throw new TRPCError({ code: "UNAUTHORIZED", message: "Staff login required" });
       const db = await getDb();
       if (!db) return null;
 
@@ -72,7 +75,9 @@ export const loyaltyRouter = router({
       orderTotal: z.number(), // total in dollars
       orderId: z.number().optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      const staffSession = await getStaffFromContext(ctx);
+      if (!staffSession) throw new TRPCError({ code: "UNAUTHORIZED", message: "Staff login required" });
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
@@ -108,11 +113,16 @@ export const loyaltyRouter = router({
       const newTier = calculateTier(newMonthlyVisits, newMonthlySpent);
 
       // Update loyalty record
+      const newTotalStamps = loyalty.totalStamps + 1;
+      const newLifetimeStamps = loyalty.lifetimeStamps + 1;
+
       await db
         .update(customerLoyalty)
         .set({
           totalPoints: newTotal,
           lifetimePoints: newLifetime,
+          totalStamps: newTotalStamps,
+          lifetimeStamps: newLifetimeStamps,
           monthlyVisits: newMonthlyVisits,
           monthlySpent: newMonthlySpent.toFixed(2),
           tier: newTier,
@@ -128,6 +138,10 @@ export const loyaltyRouter = router({
         points: earnedPoints,
         description: `Earned from order $${input.orderTotal.toFixed(2)} (${multiplier}x ${loyalty.tier})`,
         orderId: input.orderId,
+        branchId: staffSession.branchId,
+        staffId: staffSession.staffId,
+        stamps: 1,
+        stampBalanceAfter: newTotalStamps,
         balanceAfter: newTotal,
       });
 
@@ -141,14 +155,18 @@ export const loyaltyRouter = router({
     }),
 
   // ─── Redeem a reward ────────────────────────────────────────────
-  redeemReward: publicProcedure
+  redeemReward: protectedProcedure
     .input(z.object({
       customerId: z.number(),
       rewardId: z.number(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const userEmail = ctx.user?.email;
+      if (!userEmail) throw new TRPCError({ code: "UNAUTHORIZED", message: "Customer login required" });
+      const [account] = await db.select({ id: customers.id }).from(customers).where(and(eq(customers.id, input.customerId), eq(customers.email, userEmail))).limit(1);
+      if (!account) throw new TRPCError({ code: "FORBIDDEN", message: "This loyalty account does not belong to the signed-in customer" });
 
       // Get reward
       const [reward] = await db
@@ -220,7 +238,9 @@ export const loyaltyRouter = router({
   // ─── Get points history ─────────────────────────────────────────
   history: publicProcedure
     .input(z.object({ customerId: z.number(), limit: z.number().default(20) }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
+      const staffSession = await getStaffFromContext(ctx);
+      if (!staffSession) throw new TRPCError({ code: "UNAUTHORIZED", message: "Staff login required" });
       const db = await getDb();
       if (!db) return [];
 
@@ -244,14 +264,18 @@ export const loyaltyRouter = router({
   }),
 
   // ─── Set customer birthday ──────────────────────────────────────
-  setBirthday: publicProcedure
+  setBirthday: protectedProcedure
     .input(z.object({
       customerId: z.number(),
       birthday: z.string().regex(/^\d{2}-\d{2}$/, "Format: MM-DD"),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const userEmail = ctx.user?.email;
+      if (!userEmail) throw new TRPCError({ code: "UNAUTHORIZED", message: "Customer login required" });
+      const [account] = await db.select({ id: customers.id }).from(customers).where(and(eq(customers.id, input.customerId), eq(customers.email, userEmail))).limit(1);
+      if (!account) throw new TRPCError({ code: "FORBIDDEN", message: "This loyalty account does not belong to the signed-in customer" });
 
       const [loyalty] = await db
         .select()

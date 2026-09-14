@@ -1,13 +1,19 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { eq, and, asc, desc, sql, gte, lte, count } from "drizzle-orm";
 import { publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
+import { getStaffFromContext } from "./staffAuth";
+import { calculateOrderPoints, calculateTier, isEligibleForStamp } from "../loyaltyLogic";
 import {
   posCategories,
   posMenuItems,
   posOrders,
   posOrderItems,
   posItemModifiers,
+  customers,
+  customerLoyalty,
+  pointsTransactions,
   branches,
   staffMembers,
   invoices,
@@ -237,15 +243,38 @@ export const posRouter = router({
       customerPhone: z.string().optional(),
       notes: z.string().optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
+
+      // The browser sends branch/staff identifiers for display, but the signed staff
+      // session is the source of truth for authorization and audit attribution.
+      const staffSession = await getStaffFromContext(ctx);
+      if (!staffSession) {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "Staff login required" });
+      }
+      if (input.branchId !== staffSession.branchId || input.staffId !== staffSession.staffId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "This staff account cannot create orders for another branch" });
+      }
+
+      let linkedCustomer: { id: number; name: string; phone: string | null } | null = null;
+      if (input.customerId) {
+        const [customer] = await db
+          .select({ id: customers.id, name: customers.name, phone: customers.phone })
+          .from(customers)
+          .where(eq(customers.id, input.customerId))
+          .limit(1);
+        if (!customer) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Customer account not found" });
+        }
+        linkedCustomer = customer;
+      }
 
       // Generate order number: POS-BRANCH-YYYYMMDD-XXXX
       const now = new Date();
       const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
       const random = Math.floor(Math.random() * 9999).toString().padStart(4, "0");
-      const orderNumber = `POS-${input.branchId}-${dateStr}-${random}`;
+      const orderNumber = `POS-${staffSession.branchId}-${dateStr}-${random}`;
 
       // Calculate totals with discount, surcharge, and GST
       const subtotal = input.items.reduce((sum, item) => sum + parseFloat(item.totalPrice), 0);
@@ -266,8 +295,9 @@ export const posRouter = router({
 
       const [result] = await db.insert(posOrders).values({
         orderNumber,
-        branchId: input.branchId,
-        staffId: input.staffId,
+        branchId: staffSession.branchId,
+        staffId: staffSession.staffId,
+        customerId: linkedCustomer?.id ?? null,
         subtotal: subtotal.toFixed(2),
         tax: tax.toFixed(2),
         total: total.toFixed(2),
@@ -282,8 +312,8 @@ export const posRouter = router({
         discountAmount: discountAmount.toFixed(2),
         cashReceived: input.cashReceived || null,
         changeGiven: input.changeGiven || null,
-        customerName: input.customerName || null,
-        customerPhone: input.customerPhone || null,
+        customerName: linkedCustomer?.name ?? input.customerName ?? null,
+        customerPhone: linkedCustomer?.phone ?? input.customerPhone ?? null,
         notes: input.notes || null,
       });
 
@@ -304,57 +334,134 @@ export const posRouter = router({
         );
       }
 
-      // Earn loyalty points if customer is linked
+      // Eligible paid POS orders earn one branch-attributed stamp plus tier-adjusted points.
       let pointsEarned = 0;
-      if (input.customerId && input.discountType !== "influencer") {
-        try {
-          const { customerLoyalty: cl, pointsTransactions: pt } = await import("../../drizzle/schema");
-          const [loyalty] = await db.select().from(cl).where(eq(cl.customerId, input.customerId)).limit(1);
-          
-          if (!loyalty) {
-            await db.insert(cl).values({ customerId: input.customerId });
-          }
-          const [freshLoyalty] = await db.select().from(cl).where(eq(cl.customerId, input.customerId)).limit(1);
-          
-          const multipliers = { new: 1, regular: 1.5, vip: 2 };
-          const mult = multipliers[freshLoyalty.tier as keyof typeof multipliers] || 1;
-          pointsEarned = Math.floor(Math.floor(total) * mult);
-          
-          if (pointsEarned > 0) {
-            const newTotal = freshLoyalty.totalPoints + pointsEarned;
-            const newLifetime = freshLoyalty.lifetimePoints + pointsEarned;
-            const newVisits = freshLoyalty.monthlyVisits + 1;
-            const newSpent = parseFloat(String(freshLoyalty.monthlySpent)) + total;
-            
-            // Recalculate tier
-            let newTier: "new" | "regular" | "vip" = "new";
-            if (newVisits >= 10 || newSpent >= 500) newTier = "vip";
-            else if (newVisits >= 5 || newSpent >= 200) newTier = "regular";
-            
-            await db.update(cl).set({
-              totalPoints: newTotal,
-              lifetimePoints: newLifetime,
-              monthlyVisits: newVisits,
-              monthlySpent: newSpent.toFixed(2),
-              tier: newTier,
-              lastVisitAt: new Date(),
-            }).where(eq(cl.id, freshLoyalty.id));
-            
-            await db.insert(pt).values({
-              customerId: input.customerId,
-              type: "earn",
-              points: pointsEarned,
-              description: `Order ${orderNumber} ($${total.toFixed(2)})`,
-              orderId,
-              balanceAfter: newTotal,
-            });
-          }
-        } catch (e) {
-          console.error("[Loyalty] Points earning failed:", e);
+      let stampsEarned = 0;
+      if (linkedCustomer && isEligibleForStamp(input.discountType)) {
+        const [loyalty] = await db
+          .select()
+          .from(customerLoyalty)
+          .where(eq(customerLoyalty.customerId, linkedCustomer.id))
+          .limit(1);
+
+        if (!loyalty) {
+          await db.insert(customerLoyalty).values({ customerId: linkedCustomer.id });
         }
+        const [freshLoyalty] = await db
+          .select()
+          .from(customerLoyalty)
+          .where(eq(customerLoyalty.customerId, linkedCustomer.id))
+          .limit(1);
+        if (!freshLoyalty) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to initialize customer loyalty" });
+        }
+
+        pointsEarned = calculateOrderPoints(total, freshLoyalty.tier);
+        stampsEarned = 1;
+        const newTotal = freshLoyalty.totalPoints + pointsEarned;
+        const newLifetime = freshLoyalty.lifetimePoints + pointsEarned;
+        const newTotalStamps = freshLoyalty.totalStamps + stampsEarned;
+        const newLifetimeStamps = freshLoyalty.lifetimeStamps + stampsEarned;
+        const newVisits = freshLoyalty.monthlyVisits + 1;
+        const newSpent = parseFloat(String(freshLoyalty.monthlySpent)) + total;
+
+        const newTier = calculateTier(newVisits, newSpent);
+
+        await db.update(customerLoyalty).set({
+          totalPoints: newTotal,
+          lifetimePoints: newLifetime,
+          totalStamps: newTotalStamps,
+          lifetimeStamps: newLifetimeStamps,
+          monthlyVisits: newVisits,
+          monthlySpent: newSpent.toFixed(2),
+          tier: newTier,
+          lastVisitAt: new Date(),
+          ...(newTier !== freshLoyalty.tier ? { tierUpdatedAt: new Date() } : {}),
+        }).where(eq(customerLoyalty.id, freshLoyalty.id));
+
+        await db.insert(pointsTransactions).values({
+          customerId: linkedCustomer.id,
+          type: "earn",
+          points: pointsEarned,
+          stamps: stampsEarned,
+          description: `Order ${orderNumber} at branch ${staffSession.branchId} ($${total.toFixed(2)})`,
+          orderId,
+          branchId: staffSession.branchId,
+          staffId: staffSession.staffId,
+          balanceAfter: newTotal,
+          stampBalanceAfter: newTotalStamps,
+        });
       }
 
-      return { success: true, orderNumber, orderId, total: total.toFixed(2), tax: tax.toFixed(2), surchargeAmount: surchargeAmount.toFixed(2), discountAmount: discountAmount.toFixed(2), pointsEarned };
+      return { success: true, orderNumber, orderId, total: total.toFixed(2), tax: tax.toFixed(2), surchargeAmount: surchargeAmount.toFixed(2), discountAmount: discountAmount.toFixed(2), pointsEarned, stampsEarned };
+    }),
+
+  // ─── Manual loyalty stamp (staff-only) ─────────────────────────
+  addLoyaltyStamp: publicProcedure
+    .input(z.object({
+      branchId: z.number(),
+      staffId: z.number(),
+      customerId: z.number(),
+      note: z.string().max(200).optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const staffSession = await getStaffFromContext(ctx);
+      if (!staffSession) {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "Staff login required" });
+      }
+      if (input.branchId !== staffSession.branchId || input.staffId !== staffSession.staffId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "This staff account cannot add stamps for another branch" });
+      }
+
+      const [customer] = await db
+        .select({ id: customers.id, name: customers.name })
+        .from(customers)
+        .where(eq(customers.id, input.customerId))
+        .limit(1);
+      if (!customer) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Customer account not found" });
+      }
+
+      const [existing] = await db
+        .select()
+        .from(customerLoyalty)
+        .where(eq(customerLoyalty.customerId, customer.id))
+        .limit(1);
+      if (!existing) {
+        await db.insert(customerLoyalty).values({ customerId: customer.id });
+      }
+      const [loyalty] = await db
+        .select()
+        .from(customerLoyalty)
+        .where(eq(customerLoyalty.customerId, customer.id))
+        .limit(1);
+      if (!loyalty) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to initialize customer loyalty" });
+      }
+
+      const newTotalStamps = loyalty.totalStamps + 1;
+      await db.update(customerLoyalty).set({
+        totalStamps: newTotalStamps,
+        lifetimeStamps: loyalty.lifetimeStamps + 1,
+        lastVisitAt: new Date(),
+      }).where(eq(customerLoyalty.id, loyalty.id));
+
+      await db.insert(pointsTransactions).values({
+        customerId: customer.id,
+        type: "bonus",
+        points: 0,
+        stamps: 1,
+        description: input.note?.trim() || `Manual visit stamp at branch ${staffSession.branchId}`,
+        branchId: staffSession.branchId,
+        staffId: staffSession.staffId,
+        balanceAfter: loyalty.totalPoints,
+        stampBalanceAfter: newTotalStamps,
+      });
+
+      return { success: true, customerId: customer.id, totalStamps: newTotalStamps };
     }),
 
   // ─── Sales Data ───────────────────────────────────────────────

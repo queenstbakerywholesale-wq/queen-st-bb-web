@@ -13,6 +13,7 @@ describe("POS System", () => {
       expect(procedures).toContain("createMenuItem");
       expect(procedures).toContain("deleteMenuItem");
       expect(procedures).toContain("createOrder");
+      expect(procedures).toContain("addLoyaltyStamp");
       expect(procedures).toContain("salesSummary");
       expect(procedures).toContain("recentOrders");
       expect(procedures).toContain("listInvoices");

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { eq, sql, and, desc } from "drizzle-orm";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
+import { getStampProgress } from "../loyaltyLogic";
 import {
   orders,
   orderItems,
@@ -14,6 +15,30 @@ import {
   pointsTransactions,
   loyaltyRewards,
 } from "../../drizzle/schema";
+
+type AuthenticatedCustomer = { email?: string | null; name?: string | null };
+
+async function getOrCreateCustomer(db: any, user: AuthenticatedCustomer) {
+  const email = user.email?.trim().toLowerCase();
+  if (!email) return null;
+
+  const [existing] = await db
+    .select()
+    .from(customers)
+    .where(eq(customers.email, email))
+    .limit(1);
+  if (existing) return existing;
+
+  const displayName = user.name?.trim() || email.split("@")[0] || "Queen St. BB Member";
+  const [created] = await db.insert(customers).values({ name: displayName, email });
+  const customerId = (created as any).insertId;
+  const [customer] = await db
+    .select()
+    .from(customers)
+    .where(eq(customers.id, customerId))
+    .limit(1);
+  return customer ?? null;
+}
 
 export const customerMyPageRouter = router({
   /** Get customer's order history (by authenticated user email) */
@@ -154,13 +179,8 @@ export const customerMyPageRouter = router({
     const userEmail = ctx.user?.email;
     if (!userEmail) return null;
 
-    // Find customer by email
-    const [customer] = await db
-      .select()
-      .from(customers)
-      .where(eq(customers.email, userEmail))
-      .limit(1);
-
+    // Find or provision the customer record from the authenticated account.
+    const customer = await getOrCreateCustomer(db, { email: userEmail, name: ctx.user?.name });
     if (!customer) return null;
 
     const [loyalty] = await db
@@ -169,7 +189,21 @@ export const customerMyPageRouter = router({
       .where(eq(customerLoyalty.customerId, customer.id))
       .limit(1);
 
-    if (!loyalty) return { customerId: customer.id, totalPoints: 0, lifetimePoints: 0, tier: "new", birthday: null, birthdayEligible: false };
+    if (!loyalty) {
+      return {
+        customerId: customer.id,
+        totalPoints: 0,
+        lifetimePoints: 0,
+        totalStamps: 0,
+        lifetimeStamps: 0,
+        stampGoal: 10,
+        stampProgress: 0,
+        stampsUntilMilestone: 10,
+        tier: "new",
+        birthday: null,
+        birthdayEligible: false,
+      };
+    }
 
     // Check birthday eligibility
     let birthdayEligible = false;
@@ -181,7 +215,12 @@ export const customerMyPageRouter = router({
       birthdayEligible = diffDays >= -1 && diffDays <= 7;
     }
 
-    return { ...loyalty, customerId: customer.id, birthdayEligible };
+    return {
+      ...loyalty,
+      customerId: customer.id,
+      ...getStampProgress(loyalty.totalStamps),
+      birthdayEligible,
+    };
   }),
 
   myPointsHistory: protectedProcedure
@@ -193,20 +232,21 @@ export const customerMyPageRouter = router({
       const userEmail = ctx.user?.email;
       if (!userEmail) return [];
 
-      const [customer] = await db
-        .select()
-        .from(customers)
-        .where(eq(customers.email, userEmail))
-        .limit(1);
-
+      const customer = await getOrCreateCustomer(db, { email: userEmail, name: ctx.user?.name });
       if (!customer) return [];
 
-      return db
-        .select()
+      const transactions = await db
+        .select({ transaction: pointsTransactions, branchName: branches.name })
         .from(pointsTransactions)
+        .leftJoin(branches, eq(pointsTransactions.branchId, branches.id))
         .where(eq(pointsTransactions.customerId, customer.id))
         .orderBy(desc(pointsTransactions.createdAt))
         .limit(input.limit);
+
+      return transactions.map(({ transaction, branchName }) => ({
+        ...transaction,
+        branchName: branchName ?? null,
+      }));
     }),
 
   myRewards: protectedProcedure.query(async () => {
@@ -228,12 +268,7 @@ export const customerMyPageRouter = router({
       const userEmail = ctx.user?.email;
       if (!userEmail) throw new Error("Not authenticated");
 
-      const [customer] = await db
-        .select()
-        .from(customers)
-        .where(eq(customers.email, userEmail))
-        .limit(1);
-
+      const customer = await getOrCreateCustomer(db, { email: userEmail, name: ctx.user?.name });
       if (!customer) throw new Error("Customer not found");
 
       const [loyalty] = await db

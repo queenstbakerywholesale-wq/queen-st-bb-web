@@ -1,0 +1,1 @@
+ALTER TABLE `points_transactions` ADD CONSTRAINT `points_transactions_order_id_unique` UNIQUE(`orderId`);
