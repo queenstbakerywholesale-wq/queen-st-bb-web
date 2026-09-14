@@ -630,3 +630,9 @@
 
 - [x] Structure Gelato.tsx into two sections: Gelato and Vegan Gelato Sorbet with specified flavors
 - [x] Run regression tests and save a checkpoint for the new Vegan Gelato Sorbet section
+
+## Space Page Content Update
+
+- [x] Remove detailed content for Salmon, The Counter, and Private Dining from the Space page
+- [x] Mark Hawthorn as suitable for study, work meetings, stays with a baby, and Wi-Fi access
+- [x] Run regression tests and save a checkpoint for the Space page update
