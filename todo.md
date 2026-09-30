@@ -661,3 +661,10 @@
 - [x] Add Vitest coverage for ownership, stamp accrual, duplicate-safe behavior, and customer-only data access
 - [x] Verify customer login -> POS purchase -> branch stamp/points -> reward redemption flow
 - [x] Provision a customer record on first authenticated customer loyalty visit when no email-linked customer exists
+
+## App, Payment & POS Verification
+- [ ] Verify whether the published web app is installable as a PWA on iPhone and Android
+- [ ] Verify the current Stripe online checkout path and clearly distinguish it from external branch payments
+- [ ] Verify staff POS login and identify the exact branch testing path
+- [ ] Add a practical POS test mode or explicit test guidance without creating real customer/order data
+- [ ] Verify the external-payment-to-manual-stamp operational flow and document limitations
