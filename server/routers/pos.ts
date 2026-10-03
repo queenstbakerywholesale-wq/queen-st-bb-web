@@ -597,6 +597,32 @@ export const posRouter = router({
       return buildOwnerSalesReport(db, input);
     }),
 
+  staffTransactions: publicProcedure
+    .input(z.object({ limit: z.number().min(1).max(100).default(50) }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const staff = await getStaffFromContext(ctx);
+      if (!staff) throw new TRPCError({ code: "UNAUTHORIZED", message: "Staff login required" });
+      const transactions = await db
+        .select()
+        .from(posOrders)
+        .where(eq(posOrders.branchId, staff.branchId))
+        .orderBy(desc(posOrders.createdAt))
+        .limit(input.limit);
+      const orderIds = transactions.map((order) => order.id);
+      const items = orderIds.length
+        ? await db.select().from(posOrderItems).where(sql`${posOrderItems.posOrderId} IN (${sql.join(orderIds.map((id) => sql`${id}`), sql`, `)})`)
+        : [];
+      const itemsByOrder = new Map<number, typeof items>();
+      for (const item of items) {
+        const current = itemsByOrder.get(item.posOrderId) || [];
+        current.push(item);
+        itemsByOrder.set(item.posOrderId, current);
+      }
+      return transactions.map((order) => ({ ...order, items: itemsByOrder.get(order.id) || [] }));
+    }),
+
   // Recent orders for staff view
   recentOrders: publicProcedure
     .input(z.object({ branchId: z.number(), limit: z.number().default(20) }))

@@ -685,3 +685,10 @@
 - [x] Verified Angela login and owner report in the live preview
 - [x] Verified Sarah staff login does not show Transactions
 - [x] `pnpm check`, 198 tests, and `pnpm build` pass
+
+## POS Transaction Visibility Correction — 2026-10-03
+- [x] Keep Transactions visible to all authenticated POS staff for branch receipt lookup
+- [x] Keep transaction data branch-scoped and authenticated by the signed staff session
+- [x] Hide total sales, average order, category, item, and modifier revenue aggregation from staff
+- [x] Preserve Angela-only owner sales drill-down, defaulting to all branches
+- [x] Verified live Sarah view shows receipt history without revenue summary cards

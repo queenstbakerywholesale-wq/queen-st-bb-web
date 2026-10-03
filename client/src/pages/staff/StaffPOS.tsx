@@ -792,8 +792,8 @@ export default function StaffPOS() {
         </div>
       ) : activeTab === "orders" ? (
         <StaffOnlineOrders branchId={branchId} />
-      ) : activeTab === "transactions" && staffData?.role === "owner" ? (
-        <StaffTransactions branchId={branchId} />
+      ) : activeTab === "transactions" ? (
+        staffData?.role === "owner" ? <StaffTransactions branchId={undefined} /> : <StaffTransactionList />
       ) : activeTab === "shifts" ? (
         <StaffShifts branchId={branchId} staffId={staffData?.id || 0} role={staffData?.role || "staff"} />
       ) : activeTab === "attendance" ? (
@@ -812,7 +812,7 @@ export default function StaffPOS() {
             </svg>
             Checkout
           </button>
-          {staffData?.role === "owner" && (
+          {staffData && (
           <button
             onClick={() => setActiveTab("transactions")}
             className={`flex items-center gap-1.5 py-1 text-xs ${activeTab === "transactions" ? "text-neutral-900 font-medium" : "text-neutral-400"}`}
@@ -1114,14 +1114,14 @@ export default function StaffPOS() {
 }
 
 // ─── Staff Transactions Component ─────────────────────────────────────
-function StaffTransactions({ branchId }: { branchId: number }) {
+function StaffTransactions({ branchId }: { branchId?: number }) {
   const [dateRange, setDateRange] = useState(() => {
     const today = new Date();
     return { startDate: today.toISOString().slice(0, 10), endDate: today.toISOString().slice(0, 10) };
   });
   const { data: summary, isLoading, error } = trpc.pos.ownerSalesReport.useQuery(
     { branchId, startDate: dateRange.startDate, endDate: dateRange.endDate },
-    { enabled: !!branchId }
+    { enabled: true }
   );
 
   return (
@@ -1151,6 +1151,37 @@ function StaffTransactions({ branchId }: { branchId: number }) {
           <ReportTable title="By modifier / option" columns={["Item", "Modifier", "Option", "Qty", "Add-on revenue"]} rows={summary.modifiers.map((row: any) => [row.itemName, row.name, row.option, `${row.quantity}×`, `$${row.revenue.toFixed(2)}`])} emptyLabel="No structured modifiers have been recorded yet." />
         </div>
       )}
+    </div>
+  );
+}
+
+function StaffTransactionList() {
+  const { data: transactions = [], isLoading, error } = trpc.pos.staffTransactions.useQuery({ limit: 50 });
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  return (
+    <div className="flex-1 overflow-y-auto p-6">
+      <div className="mb-4">
+        <p className="text-[10px] uppercase tracking-wider text-neutral-400">Branch transactions</p>
+        <h2 className="text-sm font-medium text-neutral-700">Receipts & order history</h2>
+        <p className="text-xs text-neutral-400 mt-1">Transaction details are available to staff for receipt lookup. Sales totals are restricted to the owner.</p>
+      </div>
+      {isLoading && <p className="text-sm text-neutral-400">Loading transactions...</p>}
+      {error && <p className="text-sm text-red-500">Unable to load transactions.</p>}
+      {!isLoading && !error && transactions.length === 0 && <p className="text-sm text-neutral-400">No transactions yet.</p>}
+      <div className="space-y-2">
+        {transactions.map((order: any) => {
+          const expanded = expandedId === order.id;
+          return (
+            <div key={order.id} className="bg-white border border-neutral-200 rounded-lg">
+              <button onClick={() => setExpandedId(expanded ? null : order.id)} className="w-full flex items-center justify-between gap-3 p-3 text-left">
+                <div><p className="text-xs font-medium text-neutral-800">{order.orderNumber}</p><p className="text-[10px] text-neutral-400">{new Date(order.createdAt).toLocaleString("en-AU")} · {order.paymentMethod.toUpperCase()}</p></div>
+                <div className="text-right"><p className="text-sm font-semibold text-neutral-800">${parseFloat(order.total).toFixed(2)}</p><p className="text-[10px] text-neutral-400">{expanded ? "Hide receipt" : "View receipt"}</p></div>
+              </button>
+              {expanded && <div className="border-t border-neutral-100 px-3 py-3 space-y-2"><div className="text-xs text-neutral-600 space-y-1">{order.items.map((item: any) => <div key={item.id} className="flex justify-between gap-3"><span>{item.quantity}× {item.itemName}</span><span>${parseFloat(item.totalPrice).toFixed(2)}</span></div>)}</div><div className="flex items-center justify-between pt-2 border-t border-neutral-100"><span className="text-[10px] uppercase tracking-wider text-neutral-400">Receipt</span><button onClick={() => window.print()} className="px-3 py-1.5 text-[10px] uppercase tracking-wider border border-neutral-200 rounded text-neutral-600">Print / send</button></div></div>}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
