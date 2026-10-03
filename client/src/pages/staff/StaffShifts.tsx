@@ -79,6 +79,17 @@ export default function StaffShifts({ branchId, staffId, role }: StaffShiftsProp
   const getShiftsForDay = (date: string) => shifts.filter((s: any) => s.date === date);
 
   const isMyShift = (shift: any) => shift.staffId === staffId;
+  const wageSummary = Object.values(shifts.filter((shift: any) => shift.status !== "cancelled").reduce((acc: Record<string, { staffName: string; hours: number; wage: number }>, shift: any) => {
+    const key = String(shift.staffId);
+    const hours = shiftDurationHours(shift.startTime, shift.endTime);
+    const rate = parseFloat(String(shift.hourlyRate || 0));
+    acc[key] = acc[key] || { staffName: shift.staffName || "Unknown", hours: 0, wage: 0 };
+    acc[key].hours += hours;
+    acc[key].wage += hours * rate;
+    return acc;
+  }, {}));
+  const totalScheduledHours = wageSummary.reduce((sum, row) => sum + row.hours, 0);
+  const totalWages = wageSummary.reduce((sum, row) => sum + row.wage, 0);
 
   return (
     <div className="flex-1 overflow-y-auto p-4">
@@ -106,6 +117,11 @@ export default function StaffShifts({ branchId, staffId, role }: StaffShiftsProp
       <p className="text-[10px] text-neutral-400 mb-3">
         {new Date(weekRange.start).toLocaleDateString("en-AU", { month: "short", day: "numeric" })} — {new Date(weekRange.end).toLocaleDateString("en-AU", { month: "short", day: "numeric", year: "numeric" })}
       </p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-5">
+        <div className="bg-white border border-neutral-200 rounded-lg p-3"><p className="text-[9px] uppercase tracking-wider text-neutral-400">Total scheduled hours</p><p className="text-lg font-semibold text-neutral-800">{totalScheduledHours.toFixed(2)}h</p></div>
+        <div className="bg-white border border-neutral-200 rounded-lg p-3"><p className="text-[9px] uppercase tracking-wider text-neutral-400">Estimated wages</p><p className="text-lg font-semibold text-neutral-800">AUD {totalWages.toFixed(2)}</p></div>
+        {wageSummary.slice(0, 2).map((row) => <div key={row.staffName} className="bg-white border border-neutral-200 rounded-lg p-3"><p className="text-[9px] uppercase tracking-wider text-neutral-400 truncate">{row.staffName}</p><p className="text-xs text-neutral-700">{row.hours.toFixed(2)}h · AUD {row.wage.toFixed(2)}</p></div>)}
+      </div>
 
       {/* Weekly Calendar Grid */}
       <div className="grid grid-cols-7 gap-1 mb-6">
@@ -361,8 +377,16 @@ export default function StaffShifts({ branchId, staffId, role }: StaffShiftsProp
 }
 
 function downloadShiftExport(shifts: any[], format: "csv" | "xls") {
-  const rows: string[][] = [["Date", "Staff", "Start", "End", "Status", "Notes"], ...shifts.map((shift) => [shift.date, shift.staffName || "", shift.startTime, shift.endTime, shift.status, shift.notes || ""])];
+  const rows: string[][] = [["Date", "Weekday", "Staff", "Start", "End", "Hours", "Hourly Rate (AUD)", "Estimated Wage (AUD)", "Status", "Notes"], ...shifts.map((shift) => { const hours = shiftDurationHours(shift.startTime, shift.endTime); const rate = parseFloat(String(shift.hourlyRate || 0)); return [shift.date, new Date(`${shift.date}T12:00:00`).toLocaleDateString("en-AU", { weekday: "long" }), shift.staffName || "", shift.startTime, shift.endTime, hours.toFixed(2), rate.toFixed(2), (hours * rate).toFixed(2), shift.status, shift.notes || ""]; })];
   const csv = rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\n");
   const content = format === "csv" ? csv : `<html><head><meta charset="utf-8"></head><body><table>${rows.map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join("")}</tr>`).join("")}</table></body></html>`;
   const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([content], { type: format === "csv" ? "text/csv;charset=utf-8" : "application/vnd.ms-excel" })); link.download = `queen-bb-shifts.${format}`; link.click(); URL.revokeObjectURL(link.href);
+}
+
+function shiftDurationHours(start: string, end: string) {
+  const [startHour, startMinute] = start.split(":").map(Number);
+  const [endHour, endMinute] = end.split(":").map(Number);
+  let minutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
+  if (minutes < 0) minutes += 24 * 60;
+  return minutes / 60;
 }

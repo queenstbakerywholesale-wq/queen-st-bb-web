@@ -18,6 +18,7 @@ export const adminStaffRouter = router({
         displayName: staffMembers.displayName,
         branchId: staffMembers.branchId,
         role: staffMembers.role,
+        hourlyRate: staffMembers.hourlyRate,
         isActive: staffMembers.isActive,
         lastLoginAt: staffMembers.lastLoginAt,
         createdAt: staffMembers.createdAt,
@@ -44,6 +45,7 @@ export const adminStaffRouter = router({
         branchId: z.number(),
         role: z.enum(["staff", "manager"]),
         pin: z.string().min(4).max(10).optional(),
+        hourlyRate: z.number().min(0).max(1000).default(0),
       })
     )
     .mutation(async ({ input }) => {
@@ -59,6 +61,7 @@ export const adminStaffRouter = router({
         branchId: input.branchId,
         role: input.role,
         pin: input.pin || null,
+        hourlyRate: input.hourlyRate.toFixed(2),
       });
 
       return { success: true };
@@ -72,6 +75,7 @@ export const adminStaffRouter = router({
         branchId: z.number().optional(),
         role: z.enum(["staff", "manager"]).optional(),
         pin: z.string().min(4).max(10).optional().nullable(),
+        hourlyRate: z.number().min(0).max(1000).optional(),
         isActive: z.boolean().optional(),
       })
     )
@@ -85,6 +89,7 @@ export const adminStaffRouter = router({
       if (updates.branchId !== undefined) setData.branchId = updates.branchId;
       if (updates.role !== undefined) setData.role = updates.role;
       if (updates.pin !== undefined) setData.pin = updates.pin;
+      if (updates.hourlyRate !== undefined) setData.hourlyRate = updates.hourlyRate.toFixed(2);
       if (updates.isActive !== undefined) setData.isActive = updates.isActive;
 
       await db.update(staffMembers).set(setData).where(eq(staffMembers.id, id));

@@ -18,6 +18,8 @@ describe("POS System", () => {
       expect(procedures).toContain("addLoyaltyStamp");
       expect(procedures).toContain("salesSummary");
       expect(procedures).toContain("ownerSalesReport");
+      expect(procedures).toContain("settlementSummary");
+      expect(procedures).toContain("saveSettlement");
       expect(procedures).toContain("staffTransactions");
       expect(procedures).toContain("recentOrders");
       expect(procedures).toContain("listInvoices");
@@ -143,6 +145,10 @@ describe("POS System", () => {
   });
 
   describe("POS GST & Surcharge Calculation", () => {
+    it("calculates the Zeller fee at 0.6% of card sales", () => {
+      expect(1250 * 0.006).toBeCloseTo(7.5, 2);
+    });
+
     it("should calculate GST 10% inclusive correctly", () => {
       const subtotal = 55.00;
       const surchargeType = "none";

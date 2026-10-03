@@ -1,0 +1,1 @@
+ALTER TABLE `staff_members` ADD `hourlyRate` decimal(10,2) DEFAULT '0' NOT NULL;

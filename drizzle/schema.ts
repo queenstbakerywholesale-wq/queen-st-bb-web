@@ -403,6 +403,7 @@ export const staffMembers = mysqlTable("staff_members", {
   branchId: int("branchId").notNull(),
   role: mysqlEnum("staffRole", ["staff", "manager", "owner"]).default("staff").notNull(),
   pin: varchar("pin", { length: 10 }), // Quick PIN for POS login
+  hourlyRate: decimal("hourlyRate", { precision: 10, scale: 2 }).default("0").notNull(),
   isActive: boolean("isActive").default(true).notNull(),
   lastLoginAt: timestamp("lastLoginAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -478,6 +479,25 @@ export const posOrders = mysqlTable("pos_orders", {
 
 export type PosOrder = typeof posOrders.$inferSelect;
 export type InsertPosOrder = typeof posOrders.$inferInsert;
+
+// ─── POS Daily Settlements ──────────────────────────────────────
+export const posDailySettlements = mysqlTable("pos_daily_settlements", {
+  id: int("id").autoincrement().primaryKey(),
+  branchId: int("branchId").notNull(),
+  settlementDate: varchar("settlementDate", { length: 10 }).notNull(),
+  expectedCash: decimal("expectedCash", { precision: 10, scale: 2 }).default("0").notNull(),
+  expectedCard: decimal("expectedCard", { precision: 10, scale: 2 }).default("0").notNull(),
+  countedCash: decimal("countedCash", { precision: 10, scale: 2 }).default("0").notNull(),
+  countedCard: decimal("countedCard", { precision: 10, scale: 2 }).default("0").notNull(),
+  zellerFee: decimal("zellerFee", { precision: 10, scale: 2 }).default("0").notNull(),
+  discrepancy: decimal("discrepancy", { precision: 10, scale: 2 }).default("0").notNull(),
+  notes: text("notes"),
+  recordedBy: int("recordedBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({ settlementUnique: uniqueIndex("pos_daily_settlement_branch_date").on(table.branchId, table.settlementDate) }));
+export type PosDailySettlement = typeof posDailySettlements.$inferSelect;
+export type InsertPosDailySettlement = typeof posDailySettlements.$inferInsert;
 
 // ─── POS Order Items ────────────────────────────────────────────
 export const posOrderItems = mysqlTable("pos_order_items", {

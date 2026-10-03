@@ -11,6 +11,7 @@ import {
   posMenuItems,
   posOrders,
   posOrderItems,
+  posDailySettlements,
   posItemModifiers,
   customers,
   customerLoyalty,
@@ -23,6 +24,7 @@ import {
 } from "../../drizzle/schema";
 import { ENV } from "../_core/env";
 import { sendEmail } from "../emailService";
+import { sendReceiptSms } from "../smsService";
 
 const ownerSalesProcedure = publicProcedure.use(async ({ ctx, next }) => {
   const staff = await getStaffFromContext(ctx);
@@ -76,10 +78,20 @@ async function buildOwnerSalesReport(
     }
   }
   const totalSales = orders.reduce((sum, order) => sum + parseFloat(String(order.total)), 0);
+  const paymentBreakdown = orders.reduce((acc, order) => {
+    const amount = parseFloat(String(order.total));
+    if (order.paymentMethod === "cash") acc.cash += amount;
+    else if (order.paymentMethod === "card") acc.card += amount;
+    else if (order.paymentMethod === "mixed") acc.mixed += amount;
+    else acc.other += amount;
+    return acc;
+  }, { cash: 0, card: 0, mixed: 0, other: 0 });
   return {
     totalSales,
     orderCount: orders.length,
     avgOrder: orders.length ? totalSales / orders.length : 0,
+    paymentBreakdown,
+    zellerFee: paymentBreakdown.card * 0.006,
     categories: Array.from(categoryMap.values()).sort((a, b) => b.revenue - a.revenue),
     items: Array.from(itemMap.values()).sort((a, b) => b.revenue - a.revenue),
     modifiers: Array.from(modifierMap.values()).sort((a, b) => b.quantity - a.quantity),
@@ -500,8 +512,9 @@ export const posRouter = router({
           html: `<div style="background:#f4eee5;padding:32px;font-family:Georgia,serif;color:#3d2c24"><div style="max-width:560px;margin:auto;background:#fffaf2;padding:32px;border:1px solid #d9c8b6"><p style="letter-spacing:.18em;font-size:12px">QUEEN ST BB</p><h1 style="font-weight:400">Your receipt</h1><p>${order.orderNumber}</p><div>${items.map((item) => `<p style="display:flex;justify-content:space-between"><span>${item.quantity} × ${item.itemName}</span><span>AUD ${parseFloat(String(item.totalPrice)).toFixed(2)}</span></p>`).join("")}</div><hr/><p style="font-size:20px">Total <strong>AUD ${parseFloat(String(order.total)).toFixed(2)}</strong></p><a href="${receiptUrl}" style="display:inline-block;background:#3d2c24;color:#fffaf2;padding:14px 20px;text-decoration:none">View & download receipt</a></div></div>`,
         });
       }
-      const smsUrl = input.phone ? `sms:${encodeURIComponent(input.phone)}?body=${encodeURIComponent(`Queen St BB receipt ${order.orderNumber}: ${receiptUrl}`)}` : null;
-      return { receiptUrl, emailSent, smsUrl };
+      const smsSent = input.phone ? await sendReceiptSms(input.phone, receiptUrl, order.orderNumber) : false;
+      const smsUrl = input.phone && !smsSent ? `sms:${encodeURIComponent(input.phone)}?body=${encodeURIComponent(`Queen St BB receipt ${order.orderNumber}: ${receiptUrl}`)}` : null;
+      return { receiptUrl, emailSent, smsSent, smsUrl };
     }),
 
   // ─── Manual loyalty stamp (staff-only) ─────────────────────────
@@ -636,8 +649,35 @@ export const posRouter = router({
     .input(z.object({ branchId: z.number().optional(), startDate: z.string(), endDate: z.string() }))
     .query(async ({ input }) => {
       const db = await getDb();
-      if (!db) return { totalSales: 0, orderCount: 0, avgOrder: 0, categories: [], items: [], modifiers: [], orders: [] };
+      if (!db) return { totalSales: 0, orderCount: 0, avgOrder: 0, paymentBreakdown: { cash: 0, card: 0, mixed: 0, other: 0 }, zellerFee: 0, categories: [], items: [], modifiers: [], orders: [] };
       return buildOwnerSalesReport(db, input);
+    }),
+
+  settlementSummary: ownerSalesProcedure
+    .input(z.object({ branchId: z.number().optional(), date: z.string() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { date: input.date, expectedCash: 0, expectedCard: 0, zellerFee: 0, totalSales: 0, settlement: null };
+      const report = await buildOwnerSalesReport(db, { branchId: input.branchId, startDate: input.date, endDate: input.date });
+      const [settlement] = await db.select().from(posDailySettlements).where(and(eq(posDailySettlements.branchId, input.branchId || 0), eq(posDailySettlements.settlementDate, input.date))).limit(1);
+      return { date: input.date, expectedCash: report.paymentBreakdown.cash, expectedCard: report.paymentBreakdown.card, zellerFee: report.zellerFee, totalSales: report.totalSales, settlement: settlement || null };
+    }),
+
+  saveSettlement: ownerSalesProcedure
+    .input(z.object({ branchId: z.number(), date: z.string(), countedCash: z.number().min(0), countedCard: z.number().min(0), notes: z.string().max(500).optional() }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const report = await buildOwnerSalesReport(db, { branchId: input.branchId, startDate: input.date, endDate: input.date });
+      const expectedCash = report.paymentBreakdown.cash;
+      const expectedCard = report.paymentBreakdown.card;
+      const zellerFee = expectedCard * 0.006;
+      const discrepancy = (input.countedCash - expectedCash) + (input.countedCard - expectedCard);
+      const values = { branchId: input.branchId, settlementDate: input.date, expectedCash: expectedCash.toFixed(2), expectedCard: expectedCard.toFixed(2), countedCash: input.countedCash.toFixed(2), countedCard: input.countedCard.toFixed(2), zellerFee: zellerFee.toFixed(2), discrepancy: discrepancy.toFixed(2), notes: input.notes || null, recordedBy: (ctx as any).ownerStaff.staffId };
+      const [existing] = await db.select({ id: posDailySettlements.id }).from(posDailySettlements).where(and(eq(posDailySettlements.branchId, input.branchId), eq(posDailySettlements.settlementDate, input.date))).limit(1);
+      if (existing) await db.update(posDailySettlements).set(values).where(eq(posDailySettlements.id, existing.id));
+      else await db.insert(posDailySettlements).values(values);
+      return { success: true, expectedCash, expectedCard, zellerFee, discrepancy };
     }),
 
   staffTransactions: publicProcedure

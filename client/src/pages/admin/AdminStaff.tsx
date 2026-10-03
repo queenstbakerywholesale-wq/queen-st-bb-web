@@ -113,7 +113,7 @@ export default function AdminStaff() {
                     {s.displayName}
                   </p>
                   <p className="text-[10px] uppercase" style={{ ...labelStyle }}>
-                    @{s.username} · {s.branchName} · {s.role}
+                    @{s.username} · {s.branchName} · {s.role} · AUD {parseFloat(String(s.hourlyRate || 0)).toFixed(2)}/hr
                   </p>
                   {s.lastLoginAt && (
                     <p className="text-[9px] mt-0.5" style={{ color: "oklch(0.34 0.05 45 / 0.3)" }}>
@@ -181,6 +181,7 @@ function CreateStaffForm({
     branchId: branches[0]?.id || 1,
     role: "staff" as "staff" | "manager",
     pin: "",
+    hourlyRate: "0",
   });
 
   const inputStyle: React.CSSProperties = {
@@ -225,6 +226,12 @@ function CreateStaffForm({
         </div>
         <div>
           <label className="block mb-1 text-[10px] uppercase" style={{ fontFamily: "var(--font-body)", letterSpacing: "0.15em", color: "oklch(0.34 0.05 45 / 0.5)" }}>
+            Hourly wage (AUD)
+          </label>
+          <input style={inputStyle} type="number" min="0" step="0.01" value={form.hourlyRate} onChange={(e) => setForm({ ...form, hourlyRate: e.target.value })} placeholder="0.00" />
+        </div>
+        <div>
+          <label className="block mb-1 text-[10px] uppercase" style={{ fontFamily: "var(--font-body)", letterSpacing: "0.15em", color: "oklch(0.34 0.05 45 / 0.5)" }}>
             Branch
           </label>
           <select style={inputStyle} value={form.branchId} onChange={(e) => setForm({ ...form, branchId: Number(e.target.value) })}>
@@ -245,7 +252,7 @@ function CreateStaffForm({
       </div>
       <div className="flex gap-3 pt-2">
         <button
-          onClick={() => onSubmit(form)}
+          onClick={() => onSubmit({ ...form, hourlyRate: Number(form.hourlyRate) || 0 })}
           disabled={isLoading || !form.username || !form.password || !form.displayName}
           className="px-4 py-2 text-xs uppercase transition-all hover:opacity-80 disabled:opacity-40"
           style={{ fontFamily: "var(--font-body)", letterSpacing: "0.15em", backgroundColor: "oklch(0.34 0.05 45)", color: "oklch(0.94 0.015 80)" }}

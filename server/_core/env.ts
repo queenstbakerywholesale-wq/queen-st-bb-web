@@ -16,4 +16,7 @@ export const ENV = {
   squareAccessToken: process.env.SQUARE_ACCESS_TOKEN ?? "",
   squareLocationId: process.env.SQUARE_LOCATION_ID ?? "",
   squareEnvironment: (process.env.SQUARE_ENVIRONMENT ?? "sandbox") as "sandbox" | "production",
+  twilioAccountSid: process.env.TWILIO_ACCOUNT_SID ?? "",
+  twilioAuthToken: process.env.TWILIO_AUTH_TOKEN ?? "",
+  twilioFromNumber: process.env.TWILIO_FROM_NUMBER ?? "",
 };

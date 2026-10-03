@@ -32,17 +32,18 @@ export const shiftsRouter = router({
           )
         );
 
-      // Get staff names for display
+      // Get staff names and hourly wages for display/reporting
       const staffList = await db
-        .select({ id: staffMembers.id, displayName: staffMembers.displayName })
+        .select({ id: staffMembers.id, displayName: staffMembers.displayName, hourlyRate: staffMembers.hourlyRate })
         .from(staffMembers)
         .where(eq(staffMembers.branchId, input.branchId));
 
-      const staffMap = Object.fromEntries(staffList.map(s => [s.id, s.displayName]));
+      const staffMap = Object.fromEntries(staffList.map(s => [s.id, s]));
 
       return shifts.map(s => ({
         ...s,
-        staffName: staffMap[s.staffId] || "Unknown",
+        staffName: staffMap[s.staffId]?.displayName || "Unknown",
+        hourlyRate: staffMap[s.staffId]?.hourlyRate || "0",
       }));
     }),
 
@@ -295,6 +296,7 @@ export const shiftsRouter = router({
           id: staffMembers.id,
           displayName: staffMembers.displayName,
           role: staffMembers.role,
+          hourlyRate: staffMembers.hourlyRate,
         })
         .from(staffMembers)
         .where(

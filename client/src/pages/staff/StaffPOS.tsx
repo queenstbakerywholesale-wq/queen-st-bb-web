@@ -121,7 +121,7 @@ export default function StaffPOS() {
     onError: (e) => toast.error(e.message),
   });
   const sendReceiptMutation = trpc.pos.sendReceipt.useMutation({
-    onSuccess: (data) => { toast.success(data.emailSent ? "E-receipt sent by email" : "Receipt link ready to share"); if (data.smsUrl) window.open(data.smsUrl, "_blank"); },
+    onSuccess: (data) => { toast.success(data.smsSent ? "E-receipt sent by email and SMS" : data.emailSent ? "E-receipt sent by email" : "Receipt link ready to share"); if (data.smsUrl) window.open(data.smsUrl, "_blank"); },
     onError: (e) => toast.error(e.message),
   });
 
@@ -1137,6 +1137,12 @@ function StaffTransactions({ branchId }: { branchId?: number }) {
     { branchId, startDate: dateRange.startDate, endDate: dateRange.endDate },
     { enabled: true }
   );
+  const { data: settlement } = trpc.pos.settlementSummary.useQuery({ branchId, date: dateRange.startDate }, { enabled: Boolean(branchId) });
+  const [countedCash, setCountedCash] = useState("");
+  const [countedCard, setCountedCard] = useState("");
+  const [settlementNotes, setSettlementNotes] = useState("");
+  const saveSettlementMutation = trpc.pos.saveSettlement.useMutation({ onSuccess: (data) => toast.success(`Settlement saved · discrepancy AUD ${data.discrepancy.toFixed(2)}`), onError: (e) => toast.error(e.message) });
+  const setReportPeriod = (period: "day" | "month" | "year") => { const now = new Date(); const end = now.toISOString().slice(0, 10); const start = period === "day" ? end : period === "month" ? new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10) : new Date(now.getFullYear(), 0, 1).toISOString().slice(0, 10); setDateRange({ startDate: start, endDate: end }); };
 
   return (
     <div className="flex-1 overflow-y-auto p-6">
@@ -1150,6 +1156,7 @@ function StaffTransactions({ branchId }: { branchId?: number }) {
           <span className="text-xs text-neutral-400">to</span>
           <input aria-label="Sales end date" type="date" value={dateRange.endDate} onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })} className="px-2 py-1 text-xs border border-neutral-200 rounded" />
           <button disabled={!summary} onClick={() => summary && downloadReport("queen-bb-sales", summary)} className="px-2 py-1 text-[10px] border border-neutral-200 rounded disabled:opacity-40">CSV / Excel</button>
+          <button onClick={() => setReportPeriod("day")} className="px-2 py-1 text-[10px] border border-neutral-200 rounded">Day</button><button onClick={() => setReportPeriod("month")} className="px-2 py-1 text-[10px] border border-neutral-200 rounded">Month</button><button onClick={() => setReportPeriod("year")} className="px-2 py-1 text-[10px] border border-neutral-200 rounded">Year</button>
         </div>
       </div>
       {isLoading && <p className="text-sm text-neutral-400">Loading sales...</p>}
@@ -1161,6 +1168,13 @@ function StaffTransactions({ branchId }: { branchId?: number }) {
             <ReportCard label="Paid orders" value={String(summary.orderCount)} />
             <ReportCard label="Average order" value={`$${summary.avgOrder.toFixed(2)}`} />
           </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <ReportCard label="Cash sales" value={`$${summary.paymentBreakdown.cash.toFixed(2)}`} />
+            <ReportCard label="Card / Zeller sales" value={`$${summary.paymentBreakdown.card.toFixed(2)}`} />
+            <ReportCard label="Zeller fee · 0.6%" value={`-$${summary.zellerFee.toFixed(2)}`} />
+            <ReportCard label="After Zeller fee" value={`$${(summary.totalSales - summary.zellerFee).toFixed(2)}`} />
+          </div>
+          {settlement && <div className="bg-[#fffaf2] border border-[#d9c8b6] rounded-lg p-4 space-y-3"><div><p className="text-[10px] uppercase tracking-wider text-neutral-400">Daily settlement · {settlement.date}</p><p className="text-xs text-neutral-600 mt-1">Enter the counted cash and the Zeller/card terminal total. The system compares both against paid POS orders.</p></div><div className="grid grid-cols-2 gap-3"><label className="text-[10px] text-neutral-500">Counted cash (AUD)<input type="number" min="0" step="0.01" value={countedCash} onChange={(e) => setCountedCash(e.target.value)} placeholder={settlement.expectedCash.toFixed(2)} className="mt-1 w-full border border-neutral-200 rounded px-2 py-2 text-xs" /></label><label className="text-[10px] text-neutral-500">Card/Zeller total (AUD)<input type="number" min="0" step="0.01" value={countedCard} onChange={(e) => setCountedCard(e.target.value)} placeholder={settlement.expectedCard.toFixed(2)} className="mt-1 w-full border border-neutral-200 rounded px-2 py-2 text-xs" /></label></div><input value={settlementNotes} onChange={(e) => setSettlementNotes(e.target.value)} placeholder="Settlement notes (optional)" className="w-full border border-neutral-200 rounded px-2 py-2 text-xs" /><div className="flex items-center justify-between gap-3"><p className="text-xs text-neutral-500">Expected cash AUD {settlement.expectedCash.toFixed(2)} · expected card AUD {settlement.expectedCard.toFixed(2)} · fee AUD {settlement.zellerFee.toFixed(2)}</p><button disabled={!branchId || saveSettlementMutation.isPending || countedCash === "" || countedCard === ""} onClick={() => branchId && saveSettlementMutation.mutate({ branchId, date: settlement.date, countedCash: Number(countedCash), countedCard: Number(countedCard), notes: settlementNotes || undefined })} className="shrink-0 px-3 py-2 bg-neutral-900 text-white rounded text-[10px] disabled:opacity-40">{saveSettlementMutation.isPending ? "SAVING…" : "SAVE SETTLEMENT"}</button></div></div>}
           <ReportTable title="By category" columns={["Category", "Qty", "Revenue"]} rows={summary.categories.map((row: any) => [row.name, `${row.quantity}×`, `$${row.revenue.toFixed(2)}`])} />
           <ReportTable title="By item" columns={["Item", "Category", "Qty", "Revenue"]} rows={summary.items.map((row: any) => [row.name, row.category, `${row.quantity}×`, `$${row.revenue.toFixed(2)}`])} />
           <ReportTable title="By modifier / option" columns={["Item", "Modifier", "Option", "Qty", "Add-on revenue"]} rows={summary.modifiers.map((row: any) => [row.itemName, row.name, row.option, `${row.quantity}×`, `$${row.revenue.toFixed(2)}`])} emptyLabel="No structured modifiers have been recorded yet." />
@@ -1203,7 +1217,7 @@ function StaffTransactionList() {
 function ReceiptDeliveryActions({ token }: { token: string }) {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const mutation = trpc.pos.sendReceipt.useMutation({ onSuccess: (data) => { toast.success(data.emailSent ? "Receipt emailed" : "Receipt link ready"); if (data.smsUrl) window.open(data.smsUrl, "_blank"); }, onError: (e) => toast.error(e.message) });
+  const mutation = trpc.pos.sendReceipt.useMutation({ onSuccess: (data) => { toast.success(data.smsSent ? "Receipt sent by SMS" : data.emailSent ? "Receipt emailed" : "Receipt link ready"); if (data.smsUrl) window.open(data.smsUrl, "_blank"); }, onError: (e) => toast.error(e.message) });
   return <div className="border-t border-neutral-100 pt-3 space-y-2"><div className="flex items-center justify-between"><span className="text-[10px] uppercase tracking-wider text-neutral-400">Receipt</span><a href={`/receipt/${token}`} target="_blank" rel="noreferrer" className="text-[10px] underline">Open / download</a></div><div className="grid grid-cols-2 gap-2"><input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email" className="border border-neutral-200 rounded px-2 py-1.5 text-[10px]" /><input value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" placeholder="Phone" className="border border-neutral-200 rounded px-2 py-1.5 text-[10px]" /></div><button disabled={mutation.isPending || (!email && !phone)} onClick={() => mutation.mutate({ token, email: email || undefined, phone: phone || undefined, origin: window.location.origin })} className="w-full px-3 py-1.5 text-[10px] border border-neutral-200 rounded disabled:opacity-40">{mutation.isPending ? "Sending…" : "Email / share receipt"}</button></div>;
 }
 function ReportCard({ label, value }: { label: string; value: string }) {
