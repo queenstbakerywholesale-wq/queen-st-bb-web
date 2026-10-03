@@ -663,11 +663,11 @@
 - [x] Provision a customer record on first authenticated customer loyalty visit when no email-linked customer exists
 
 ## App, Payment & POS Verification
-- [ ] Verify whether the published web app is installable as a PWA on iPhone and Android
-- [ ] Verify the current Stripe online checkout path and clearly distinguish it from external branch payments
-- [ ] Verify staff POS login and identify the exact branch testing path
-- [ ] Add a practical POS test mode or explicit test guidance without creating real customer/order data
-- [ ] Verify the external-payment-to-manual-stamp operational flow and document limitations
+- [x] Verify whether the published web app is installable as a PWA on iPhone and Android
+- [x] Verify the current Stripe online checkout path and clearly distinguish it from external branch payments
+- [x] Verify staff POS login and identify the exact branch testing path
+- [x] Add a practical POS test mode or explicit test guidance without creating real customer/order data
+- [x] Verify the external-payment-to-manual-stamp operational flow and document limitations
 
 ## Gelato Catalogue Redesign — 2026-09-30
 - [x] Review Gelato Messina-inspired dietary filter and product-grid references
