@@ -1127,17 +1127,24 @@ export default function StaffPOS() {
   );
 }
 
+const SETTLEMENT_BRANCHES = [
+  { id: 1, name: "Hawthorn" },
+  { id: 2, name: "Windsor" },
+  { id: 3, name: "CBD" },
+];
+
 // ─── Staff Transactions Component ─────────────────────────────────────
 function StaffTransactions({ branchId, settlementBranchId }: { branchId?: number; settlementBranchId: number }) {
   const [dateRange, setDateRange] = useState(() => {
     const today = new Date();
     return { startDate: today.toISOString().slice(0, 10), endDate: today.toISOString().slice(0, 10) };
   });
+  const [selectedSettlementBranch, setSelectedSettlementBranch] = useState(settlementBranchId || 1);
   const { data: summary, isLoading, error } = trpc.pos.ownerSalesReport.useQuery(
     { branchId, startDate: dateRange.startDate, endDate: dateRange.endDate },
     { enabled: true }
   );
-  const { data: settlement } = trpc.pos.settlementSummary.useQuery({ branchId: settlementBranchId, date: dateRange.startDate }, { enabled: Boolean(settlementBranchId) });
+  const { data: settlement } = trpc.pos.settlementSummary.useQuery({ branchId: selectedSettlementBranch, date: dateRange.startDate }, { enabled: Boolean(selectedSettlementBranch) });
   const [countedCash, setCountedCash] = useState("");
   const [countedCard, setCountedCard] = useState("");
   const [settlementNotes, setSettlementNotes] = useState("");
@@ -1152,6 +1159,9 @@ function StaffTransactions({ branchId, settlementBranchId }: { branchId?: number
           <h2 className="text-sm font-medium text-neutral-700">Sales drill-down</h2>
         </div>
         <div className="flex items-center gap-2">
+          <select aria-label="Settlement branch" value={selectedSettlementBranch} onChange={(e) => setSelectedSettlementBranch(Number(e.target.value))} className="px-2 py-1 text-xs border border-neutral-200 rounded">
+            {SETTLEMENT_BRANCHES.map((branch) => <option key={branch.id} value={branch.id}>{branch.name} settlement</option>)}
+          </select>
           <input aria-label="Sales start date" type="date" value={dateRange.startDate} onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })} className="px-2 py-1 text-xs border border-neutral-200 rounded" />
           <span className="text-xs text-neutral-400">to</span>
           <input aria-label="Sales end date" type="date" value={dateRange.endDate} onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })} className="px-2 py-1 text-xs border border-neutral-200 rounded" />
@@ -1174,7 +1184,7 @@ function StaffTransactions({ branchId, settlementBranchId }: { branchId?: number
             <ReportCard label="Zeller fee · 0.6%" value={`-$${summary.zellerFee.toFixed(2)}`} />
             <ReportCard label="After Zeller fee" value={`$${(summary.totalSales - summary.zellerFee).toFixed(2)}`} />
           </div>
-          {settlement && <div className="bg-[#fffaf2] border border-[#d9c8b6] rounded-lg p-4 space-y-3"><div><p className="text-[10px] uppercase tracking-wider text-neutral-400">Daily settlement · {settlement.date}</p><p className="text-xs text-neutral-600 mt-1">Enter the counted cash and the Zeller/card terminal total for the Angela account branch. The system compares both against paid POS orders.</p></div><div className="grid grid-cols-2 gap-3"><label className="text-[10px] text-neutral-500">Counted cash (AUD)<input type="number" min="0" step="0.01" value={countedCash} onChange={(e) => setCountedCash(e.target.value)} placeholder={settlement.expectedCash.toFixed(2)} className="mt-1 w-full border border-neutral-200 rounded px-2 py-2 text-xs" /></label><label className="text-[10px] text-neutral-500">Card/Zeller total (AUD)<input type="number" min="0" step="0.01" value={countedCard} onChange={(e) => setCountedCard(e.target.value)} placeholder={settlement.expectedCard.toFixed(2)} className="mt-1 w-full border border-neutral-200 rounded px-2 py-2 text-xs" /></label></div><input value={settlementNotes} onChange={(e) => setSettlementNotes(e.target.value)} placeholder="Settlement notes (optional)" className="w-full border border-neutral-200 rounded px-2 py-2 text-xs" /><div className="flex items-center justify-between gap-3"><p className="text-xs text-neutral-500">Expected cash AUD {settlement.expectedCash.toFixed(2)} · expected card AUD {settlement.expectedCard.toFixed(2)} · fee AUD {settlement.zellerFee.toFixed(2)}</p><button disabled={!settlementBranchId || saveSettlementMutation.isPending || countedCash === "" || countedCard === ""} onClick={() => settlementBranchId && saveSettlementMutation.mutate({ branchId: settlementBranchId, date: settlement.date, countedCash: Number(countedCash), countedCard: Number(countedCard), notes: settlementNotes || undefined })} className="shrink-0 px-3 py-2 bg-neutral-900 text-white rounded text-[10px] disabled:opacity-40">{saveSettlementMutation.isPending ? "SAVING…" : "SAVE SETTLEMENT"}</button></div></div>}
+          {settlement && <div className="bg-[#fffaf2] border border-[#d9c8b6] rounded-lg p-4 space-y-3"><div><p className="text-[10px] uppercase tracking-wider text-neutral-400">Daily settlement · {settlement.date} · {SETTLEMENT_BRANCHES.find((branch) => branch.id === selectedSettlementBranch)?.name}</p><p className="text-xs text-neutral-600 mt-1">Enter the counted cash and the Zeller/card terminal total for the selected branch. Hawthorn, Windsor, and CBD are reconciled separately.</p></div><div className="grid grid-cols-2 gap-3"><label className="text-[10px] text-neutral-500">Counted cash (AUD)<input type="number" min="0" step="0.01" value={countedCash} onChange={(e) => setCountedCash(e.target.value)} placeholder={settlement.expectedCash.toFixed(2)} className="mt-1 w-full border border-neutral-200 rounded px-2 py-2 text-xs" /></label><label className="text-[10px] text-neutral-500">Card/Zeller total (AUD)<input type="number" min="0" step="0.01" value={countedCard} onChange={(e) => setCountedCard(e.target.value)} placeholder={settlement.expectedCard.toFixed(2)} className="mt-1 w-full border border-neutral-200 rounded px-2 py-2 text-xs" /></label></div><input value={settlementNotes} onChange={(e) => setSettlementNotes(e.target.value)} placeholder="Settlement notes (optional)" className="w-full border border-neutral-200 rounded px-2 py-2 text-xs" /><div className="flex items-center justify-between gap-3"><p className="text-xs text-neutral-500">Expected cash AUD {settlement.expectedCash.toFixed(2)} · expected card AUD {settlement.expectedCard.toFixed(2)} · fee AUD {settlement.zellerFee.toFixed(2)}</p><button disabled={!selectedSettlementBranch || saveSettlementMutation.isPending || countedCash === "" || countedCard === ""} onClick={() => selectedSettlementBranch && saveSettlementMutation.mutate({ branchId: selectedSettlementBranch, date: settlement.date, countedCash: Number(countedCash), countedCard: Number(countedCard), notes: settlementNotes || undefined })} className="shrink-0 px-3 py-2 bg-neutral-900 text-white rounded text-[10px] disabled:opacity-40">{saveSettlementMutation.isPending ? "SAVING…" : "SAVE SETTLEMENT"}</button></div></div>}
           <ReportTable title="By category" columns={["Category", "Qty", "Revenue"]} rows={summary.categories.map((row: any) => [row.name, `${row.quantity}×`, `$${row.revenue.toFixed(2)}`])} />
           <ReportTable title="By item" columns={["Item", "Category", "Qty", "Revenue"]} rows={summary.items.map((row: any) => [row.name, row.category, `${row.quantity}×`, `$${row.revenue.toFixed(2)}`])} />
           <ReportTable title="By modifier / option" columns={["Item", "Modifier", "Option", "Qty", "Add-on revenue"]} rows={summary.modifiers.map((row: any) => [row.itemName, row.name, row.option, `${row.quantity}×`, `$${row.revenue.toFixed(2)}`])} emptyLabel="No structured modifiers have been recorded yet." />
