@@ -89,6 +89,8 @@ export default function StaffShifts({ branchId, staffId, role }: StaffShiftsProp
           <button onClick={() => setWeekOffset(w => w - 1)} className="px-2 py-1 text-xs border border-neutral-200 rounded hover:bg-neutral-50">←</button>
           <button onClick={() => setWeekOffset(0)} className="px-3 py-1 text-xs border border-neutral-200 rounded hover:bg-neutral-50">Today</button>
           <button onClick={() => setWeekOffset(w => w + 1)} className="px-2 py-1 text-xs border border-neutral-200 rounded hover:bg-neutral-50">→</button>
+          <button onClick={() => downloadShiftExport(shifts, "csv")} className="px-2 py-1 text-[10px] border border-neutral-200 rounded">CSV</button>
+          <button onClick={() => downloadShiftExport(shifts, "xls")} className="px-2 py-1 text-[10px] border border-neutral-200 rounded">Excel</button>
           {role === "manager" && (
             <button
               onClick={() => setShowCreateModal(true)}
@@ -356,4 +358,11 @@ export default function StaffShifts({ branchId, staffId, role }: StaffShiftsProp
       )}
     </div>
   );
+}
+
+function downloadShiftExport(shifts: any[], format: "csv" | "xls") {
+  const rows: string[][] = [["Date", "Staff", "Start", "End", "Status", "Notes"], ...shifts.map((shift) => [shift.date, shift.staffName || "", shift.startTime, shift.endTime, shift.status, shift.notes || ""])];
+  const csv = rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\n");
+  const content = format === "csv" ? csv : `<html><head><meta charset="utf-8"></head><body><table>${rows.map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join("")}</tr>`).join("")}</table></body></html>`;
+  const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([content], { type: format === "csv" ? "text/csv;charset=utf-8" : "application/vnd.ms-excel" })); link.download = `queen-bb-shifts.${format}`; link.click(); URL.revokeObjectURL(link.href);
 }

@@ -24,6 +24,7 @@ interface CartItem {
 
 interface ReceiptData {
   orderNumber: string;
+  receiptToken: string;
   total: string;
   items: CartItem[];
   paymentMethod: string;
@@ -45,6 +46,8 @@ export default function StaffPOS() {
   const [weightValue, setWeightValue] = useState("");
   const [customPrice, setCustomPrice] = useState("");
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
+  const [receiptEmail, setReceiptEmail] = useState("");
+  const [receiptPhone, setReceiptPhone] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"checkout" | "transactions" | "orders" | "shifts" | "attendance">("checkout");
@@ -94,6 +97,7 @@ export default function StaffPOS() {
     onSuccess: (data) => {
       setReceipt({
         orderNumber: data.orderNumber,
+        receiptToken: data.receiptToken,
         total: data.total,
         items: [...cart],
         paymentMethod: showPayment ? "cash" : "card",
@@ -114,6 +118,10 @@ export default function StaffPOS() {
         toast.success(`+${data.pointsEarned} points earned!`);
       }
     },
+    onError: (e) => toast.error(e.message),
+  });
+  const sendReceiptMutation = trpc.pos.sendReceipt.useMutation({
+    onSuccess: (data) => { toast.success(data.emailSent ? "E-receipt sent by email" : "Receipt link ready to share"); if (data.smsUrl) window.open(data.smsUrl, "_blank"); },
     onError: (e) => toast.error(e.message),
   });
 
@@ -938,6 +946,12 @@ export default function StaffPOS() {
             <p className="text-center text-[10px] text-neutral-400">
               {receipt.staffName} • {receipt.timestamp.toLocaleTimeString()}
             </p>
+            <div className="border-t border-neutral-100 pt-3 space-y-2">
+              <p className="text-[10px] uppercase tracking-wider text-neutral-400">Send e-receipt</p>
+              <input value={receiptEmail} onChange={(e) => setReceiptEmail(e.target.value)} type="email" placeholder="Customer email" className="w-full border border-neutral-200 rounded px-3 py-2 text-xs" />
+              <input value={receiptPhone} onChange={(e) => setReceiptPhone(e.target.value)} type="tel" placeholder="Customer phone (opens SMS share)" className="w-full border border-neutral-200 rounded px-3 py-2 text-xs" />
+              <button disabled={sendReceiptMutation.isPending || (!receiptEmail && !receiptPhone)} onClick={() => sendReceiptMutation.mutate({ token: receipt.receiptToken, email: receiptEmail || undefined, phone: receiptPhone || undefined, origin: window.location.origin })} className="w-full py-2 text-xs border border-neutral-900 rounded disabled:opacity-40">{sendReceiptMutation.isPending ? "SENDING…" : "SEND / SHARE RECEIPT LINK"}</button>
+            </div>
             <button
               onClick={() => setReceipt(null)}
               className="w-full py-3 text-sm font-medium bg-neutral-900 text-white rounded-lg"
@@ -1135,6 +1149,7 @@ function StaffTransactions({ branchId }: { branchId?: number }) {
           <input aria-label="Sales start date" type="date" value={dateRange.startDate} onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })} className="px-2 py-1 text-xs border border-neutral-200 rounded" />
           <span className="text-xs text-neutral-400">to</span>
           <input aria-label="Sales end date" type="date" value={dateRange.endDate} onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })} className="px-2 py-1 text-xs border border-neutral-200 rounded" />
+          <button disabled={!summary} onClick={() => summary && downloadReport("queen-bb-sales", summary)} className="px-2 py-1 text-[10px] border border-neutral-200 rounded disabled:opacity-40">CSV / Excel</button>
         </div>
       </div>
       {isLoading && <p className="text-sm text-neutral-400">Loading sales...</p>}
@@ -1177,7 +1192,7 @@ function StaffTransactionList() {
                 <div><p className="text-xs font-medium text-neutral-800">{order.orderNumber}</p><p className="text-[10px] text-neutral-400">{new Date(order.createdAt).toLocaleString("en-AU")} · {order.paymentMethod.toUpperCase()}</p></div>
                 <div className="text-right"><p className="text-sm font-semibold text-neutral-800">${parseFloat(order.total).toFixed(2)}</p><p className="text-[10px] text-neutral-400">{expanded ? "Hide receipt" : "View receipt"}</p></div>
               </button>
-              {expanded && <div className="border-t border-neutral-100 px-3 py-3 space-y-2"><div className="text-xs text-neutral-600 space-y-1">{order.items.map((item: any) => <div key={item.id} className="flex justify-between gap-3"><span>{item.quantity}× {item.itemName}</span><span>${parseFloat(item.totalPrice).toFixed(2)}</span></div>)}</div><div className="flex items-center justify-between pt-2 border-t border-neutral-100"><span className="text-[10px] uppercase tracking-wider text-neutral-400">Receipt</span><button onClick={() => window.print()} className="px-3 py-1.5 text-[10px] uppercase tracking-wider border border-neutral-200 rounded text-neutral-600">Print / send</button></div></div>}
+              {expanded && <div className="border-t border-neutral-100 px-3 py-3 space-y-2"><div className="text-xs text-neutral-600 space-y-1">{order.items.map((item: any) => <div key={item.id} className="flex justify-between gap-3"><span>{item.quantity}× {item.itemName}</span><span>${parseFloat(item.totalPrice).toFixed(2)}</span></div>)}</div>{order.receiptToken ? <ReceiptDeliveryActions token={order.receiptToken} /> : <p className="text-[10px] text-neutral-400">This historical order has no e-receipt link.</p>}</div>}
             </div>
           );
         })}
@@ -1185,11 +1200,22 @@ function StaffTransactionList() {
     </div>
   );
 }
-
+function ReceiptDeliveryActions({ token }: { token: string }) {
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const mutation = trpc.pos.sendReceipt.useMutation({ onSuccess: (data) => { toast.success(data.emailSent ? "Receipt emailed" : "Receipt link ready"); if (data.smsUrl) window.open(data.smsUrl, "_blank"); }, onError: (e) => toast.error(e.message) });
+  return <div className="border-t border-neutral-100 pt-3 space-y-2"><div className="flex items-center justify-between"><span className="text-[10px] uppercase tracking-wider text-neutral-400">Receipt</span><a href={`/receipt/${token}`} target="_blank" rel="noreferrer" className="text-[10px] underline">Open / download</a></div><div className="grid grid-cols-2 gap-2"><input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email" className="border border-neutral-200 rounded px-2 py-1.5 text-[10px]" /><input value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" placeholder="Phone" className="border border-neutral-200 rounded px-2 py-1.5 text-[10px]" /></div><button disabled={mutation.isPending || (!email && !phone)} onClick={() => mutation.mutate({ token, email: email || undefined, phone: phone || undefined, origin: window.location.origin })} className="w-full px-3 py-1.5 text-[10px] border border-neutral-200 rounded disabled:opacity-40">{mutation.isPending ? "Sending…" : "Email / share receipt"}</button></div>;
+}
 function ReportCard({ label, value }: { label: string; value: string }) {
   return <div className="bg-white p-4 rounded-lg border border-neutral-200"><p className="text-[10px] text-neutral-400 uppercase tracking-wider">{label}</p><p className="text-2xl font-bold text-neutral-800 mt-1">{value}</p></div>;
 }
-
+function downloadReport(prefix: string, summary: any) {
+  const rows: string[][] = [["Section", "Name", "Category", "Quantity", "Revenue", "Modifier", "Option"], ...summary.categories.map((row: any) => ["Category", row.name, "", String(row.quantity), row.revenue.toFixed(2), "", ""]), ...summary.items.map((row: any) => ["Item", row.name, row.category, String(row.quantity), row.revenue.toFixed(2), "", ""]), ...summary.modifiers.map((row: any) => ["Modifier", row.itemName, "", String(row.quantity), row.revenue.toFixed(2), row.name, row.option])];
+  const csv = rows.map((row) => row.map((cell) => `"${String(cell ?? "").replaceAll('"', '""')}"`).join(",")).join("\n");
+  const csvLink = document.createElement("a"); csvLink.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" })); csvLink.download = `${prefix}.csv`; csvLink.click(); URL.revokeObjectURL(csvLink.href);
+  const table = `<table><tr>${rows[0].map((cell) => `<th>${cell}</th>`).join("")}</tr>${rows.slice(1).map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join("")}</tr>`).join("")}</table>`;
+  const xlsLink = document.createElement("a"); xlsLink.href = URL.createObjectURL(new Blob([`<html><head><meta charset="utf-8"></head><body>${table}</body></html>`], { type: "application/vnd.ms-excel" })); xlsLink.download = `${prefix}.xls`; xlsLink.click(); URL.revokeObjectURL(xlsLink.href);
+}
 function ReportTable({ title, columns, rows, emptyLabel = "No data for this period." }: { title: string; columns: string[]; rows: string[][]; emptyLabel?: string }) {
   return <div className="bg-white rounded-lg border border-neutral-200 p-4"><h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-3">{title}</h3>{rows.length === 0 ? <p className="text-xs text-neutral-400">{emptyLabel}</p> : <div className="overflow-x-auto"><table className="w-full text-left"><thead><tr>{columns.map((column) => <th key={column} className="pb-2 pr-4 text-[10px] uppercase tracking-wider text-neutral-400">{column}</th>)}</tr></thead><tbody>{rows.map((row, rowIndex) => <tr key={`${title}-${rowIndex}`} className="border-t border-neutral-100">{row.map((cell, cellIndex) => <td key={`${rowIndex}-${cellIndex}`} className={`py-2 pr-4 text-xs ${cellIndex === row.length - 1 ? "font-medium text-neutral-800" : "text-neutral-600"}`}>{cell}</td>)}</tr>)}</tbody></table></div>}</div>;
 }

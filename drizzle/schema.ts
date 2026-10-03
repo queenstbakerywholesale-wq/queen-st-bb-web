@@ -469,7 +469,9 @@ export const posOrders = mysqlTable("pos_orders", {
   discountPercent: decimal("discountPercent", { precision: 5, scale: 2 }).default("0").notNull(),
   discountAmount: decimal("discountAmount", { precision: 10, scale: 2 }).default("0").notNull(),
   customerName: varchar("customerName", { length: 200 }),
+  customerEmail: varchar("customerEmail", { length: 320 }),
   customerPhone: varchar("customerPhone", { length: 50 }),
+  receiptToken: varchar("receiptToken", { length: 80 }).unique(),
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });

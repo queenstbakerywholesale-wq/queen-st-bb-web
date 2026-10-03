@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { randomBytes } from "node:crypto";
 import { TRPCError } from "@trpc/server";
 import { eq, and, asc, desc, sql, gte, lte, count } from "drizzle-orm";
 import { publicProcedure, router } from "../_core/trpc";
@@ -21,6 +22,7 @@ import {
   orderItems,
 } from "../../drizzle/schema";
 import { ENV } from "../_core/env";
+import { sendEmail } from "../emailService";
 
 const ownerSalesProcedure = publicProcedure.use(async ({ ctx, next }) => {
   const staff = await getStaffFromContext(ctx);
@@ -305,6 +307,7 @@ export const posRouter = router({
       customerId: z.number().optional(),
       customerName: z.string().optional(),
       customerPhone: z.string().optional(),
+      customerEmail: z.string().email().optional(),
       notes: z.string().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
@@ -321,10 +324,10 @@ export const posRouter = router({
         throw new TRPCError({ code: "FORBIDDEN", message: "This staff account cannot create orders for another branch" });
       }
 
-      let linkedCustomer: { id: number; name: string; phone: string | null } | null = null;
+      let linkedCustomer: { id: number; name: string; phone: string | null; email: string | null } | null = null;
       if (input.customerId) {
         const [customer] = await db
-          .select({ id: customers.id, name: customers.name, phone: customers.phone })
+          .select({ id: customers.id, name: customers.name, phone: customers.phone, email: customers.email })
           .from(customers)
           .where(eq(customers.id, input.customerId))
           .limit(1);
@@ -339,6 +342,7 @@ export const posRouter = router({
       const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
       const random = Math.floor(Math.random() * 9999).toString().padStart(4, "0");
       const orderNumber = `POS-${staffSession.branchId}-${dateStr}-${random}`;
+      const receiptToken = randomBytes(24).toString("hex");
 
       // Calculate totals with discount, surcharge, and GST
       const subtotal = input.items.reduce((sum, item) => sum + parseFloat(item.totalPrice), 0);
@@ -377,7 +381,9 @@ export const posRouter = router({
         cashReceived: input.cashReceived || null,
         changeGiven: input.changeGiven || null,
         customerName: linkedCustomer?.name ?? input.customerName ?? null,
+        customerEmail: linkedCustomer?.email ?? input.customerEmail ?? null,
         customerPhone: linkedCustomer?.phone ?? input.customerPhone ?? null,
+        receiptToken,
         notes: input.notes || null,
       });
 
@@ -458,7 +464,44 @@ export const posRouter = router({
         });
       }
 
-      return { success: true, orderNumber, orderId, total: total.toFixed(2), tax: tax.toFixed(2), surchargeAmount: surchargeAmount.toFixed(2), discountAmount: discountAmount.toFixed(2), pointsEarned, stampsEarned };
+      return { success: true, orderNumber, orderId, total: total.toFixed(2), tax: tax.toFixed(2), surchargeAmount: surchargeAmount.toFixed(2), discountAmount: discountAmount.toFixed(2), pointsEarned, stampsEarned, receiptToken };
+    }),
+
+  publicReceipt: publicProcedure
+    .input(z.object({ token: z.string().min(32).max(80) }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [order] = await db.select().from(posOrders).where(eq(posOrders.receiptToken, input.token)).limit(1);
+      if (!order) throw new TRPCError({ code: "NOT_FOUND", message: "Receipt not found" });
+      const items = await db.select().from(posOrderItems).where(eq(posOrderItems.posOrderId, order.id));
+      const [branch] = await db.select({ name: branches.name, address: branches.address }).from(branches).where(eq(branches.id, order.branchId)).limit(1);
+      return { order, items, branch };
+    }),
+
+  sendReceipt: publicProcedure
+    .input(z.object({ token: z.string().min(32).max(80), email: z.string().email().optional(), phone: z.string().min(6).max(50).optional(), origin: z.string().url().optional() }).refine((value) => value.email || value.phone, { message: "Email or phone is required" }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const staff = await getStaffFromContext(ctx);
+      if (!staff) throw new TRPCError({ code: "UNAUTHORIZED", message: "Staff login required" });
+      const [order] = await db.select().from(posOrders).where(and(eq(posOrders.receiptToken, input.token), eq(posOrders.branchId, staff.branchId))).limit(1);
+      if (!order) throw new TRPCError({ code: "NOT_FOUND", message: "Receipt not found for this branch" });
+      await db.update(posOrders).set({ customerEmail: input.email || order.customerEmail, customerPhone: input.phone || order.customerPhone }).where(eq(posOrders.id, order.id));
+      const origin = input.origin || ctx.req.headers.origin || "http://localhost:3000";
+      const receiptUrl = `${origin}/receipt/${order.receiptToken}`;
+      let emailSent = false;
+      if (input.email) {
+        const items = await db.select().from(posOrderItems).where(eq(posOrderItems.posOrderId, order.id));
+        emailSent = await sendEmail({
+          to: input.email,
+          subject: `Your Queen St BB receipt · ${order.orderNumber}`,
+          html: `<div style="background:#f4eee5;padding:32px;font-family:Georgia,serif;color:#3d2c24"><div style="max-width:560px;margin:auto;background:#fffaf2;padding:32px;border:1px solid #d9c8b6"><p style="letter-spacing:.18em;font-size:12px">QUEEN ST BB</p><h1 style="font-weight:400">Your receipt</h1><p>${order.orderNumber}</p><div>${items.map((item) => `<p style="display:flex;justify-content:space-between"><span>${item.quantity} × ${item.itemName}</span><span>AUD ${parseFloat(String(item.totalPrice)).toFixed(2)}</span></p>`).join("")}</div><hr/><p style="font-size:20px">Total <strong>AUD ${parseFloat(String(order.total)).toFixed(2)}</strong></p><a href="${receiptUrl}" style="display:inline-block;background:#3d2c24;color:#fffaf2;padding:14px 20px;text-decoration:none">View & download receipt</a></div></div>`,
+        });
+      }
+      const smsUrl = input.phone ? `sms:${encodeURIComponent(input.phone)}?body=${encodeURIComponent(`Queen St BB receipt ${order.orderNumber}: ${receiptUrl}`)}` : null;
+      return { receiptUrl, emailSent, smsUrl };
     }),
 
   // ─── Manual loyalty stamp (staff-only) ─────────────────────────

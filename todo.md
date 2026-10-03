@@ -692,3 +692,11 @@
 - [x] Hide total sales, average order, category, item, and modifier revenue aggregation from staff
 - [x] Preserve Angela-only owner sales drill-down, defaulting to all branches
 - [x] Verified live Sarah view shows receipt history without revenue summary cards
+
+## E-receipts and Data Exports — 2026-10-03
+- [x] Added secure receipt tokens and a designed public e-receipt page with print/PDF download
+- [x] Added staff controls to email a receipt link or open a phone SMS share with the receipt link
+- [x] Added Angela-only POS sales CSV and Excel-compatible `.xls` export
+- [x] Added staff shift schedule CSV and Excel-compatible `.xls` export
+- [x] Applied migration `0019_colorful_titania.sql` for POS customer email and receipt token fields
+- [x] Verified invalid receipt links fail safely; TypeScript, 198 tests, and production build pass

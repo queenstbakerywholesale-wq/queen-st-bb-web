@@ -41,6 +41,7 @@ import AdminPosMenu from "./pages/admin/AdminPosMenu";
 import AdminSales from "./pages/admin/AdminSales";
 import AdminInvoices from "./pages/admin/AdminInvoices";
 import StaffPOS from "./pages/staff/StaffPOS";
+import Receipt from "./pages/Receipt";
 
 const ADMIN_BASE = "/admin-angela91";
 
@@ -63,6 +64,7 @@ function Router() {
       <Route path="/gift-cards/success" component={GiftCardSuccess} />
       <Route path="/gift-cards/balance" component={MyGiftCards} />
       <Route path="/my-page" component={MyPage} />
+      <Route path="/receipt/:token" component={Receipt} />
 
       {/* Admin login */}
       <Route path={`${ADMIN_BASE}/login`} component={AdminLogin} />
