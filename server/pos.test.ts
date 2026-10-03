@@ -15,6 +15,7 @@ describe("POS System", () => {
       expect(procedures).toContain("createOrder");
       expect(procedures).toContain("addLoyaltyStamp");
       expect(procedures).toContain("salesSummary");
+      expect(procedures).toContain("ownerSalesReport");
       expect(procedures).toContain("recentOrders");
       expect(procedures).toContain("listInvoices");
       expect(procedures).toContain("createInvoice");
@@ -267,6 +268,26 @@ describe("POS System", () => {
       expect(aggregated[1].name).toBe("Gelato Scoop");
       expect(aggregated[1].quantity).toBe(4);
       expect(aggregated[1].revenue).toBe(34.00);
+    });
+
+    it("should aggregate modifier options by item and selection", () => {
+      const items = [
+        { itemName: "White Coffee (Large)", quantity: 2, modifiers: [{ name: "Size", option: "Large", priceAdjustment: 1.5 }] },
+        { itemName: "White Coffee (Large)", quantity: 1, modifiers: [{ name: "Size", option: "Large", priceAdjustment: 1.5 }] },
+        { itemName: "Black Coffee (Small)", quantity: 1, modifiers: [{ name: "Size", option: "Small", priceAdjustment: 0 }] },
+      ];
+      const modifierMap = new Map<string, { quantity: number; revenue: number }>();
+      for (const item of items) {
+        for (const modifier of item.modifiers) {
+          const key = `${item.itemName}:${modifier.name}:${modifier.option}`;
+          const current = modifierMap.get(key) || { quantity: 0, revenue: 0 };
+          current.quantity += item.quantity;
+          current.revenue += item.quantity * modifier.priceAdjustment;
+          modifierMap.set(key, current);
+        }
+      }
+      expect(modifierMap.get("White Coffee (Large):Size:Large")).toEqual({ quantity: 3, revenue: 4.5 });
+      expect(modifierMap.get("Black Coffee (Small):Size:Small")).toEqual({ quantity: 1, revenue: 0 });
     });
 
     it("should calculate hourly breakdown correctly", () => {

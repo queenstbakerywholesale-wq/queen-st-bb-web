@@ -295,6 +295,7 @@ export default function StaffPOS() {
         weightGrams: item.weightGrams,
         unitPrice: item.unitPrice.toFixed(2),
         totalPrice: item.totalPrice.toFixed(2),
+        modifiers: item.modifiers,
       })),
       paymentMethod: method,
       fulfillmentType,
@@ -791,7 +792,7 @@ export default function StaffPOS() {
         </div>
       ) : activeTab === "orders" ? (
         <StaffOnlineOrders branchId={branchId} />
-      ) : activeTab === "transactions" && staffData?.role === "manager" ? (
+      ) : activeTab === "transactions" && staffData?.role === "owner" ? (
         <StaffTransactions branchId={branchId} />
       ) : activeTab === "shifts" ? (
         <StaffShifts branchId={branchId} staffId={staffData?.id || 0} role={staffData?.role || "staff"} />
@@ -811,7 +812,7 @@ export default function StaffPOS() {
             </svg>
             Checkout
           </button>
-          {staffData?.role === "manager" && (
+          {staffData?.role === "owner" && (
           <button
             onClick={() => setActiveTab("transactions")}
             className={`flex items-center gap-1.5 py-1 text-xs ${activeTab === "transactions" ? "text-neutral-900 font-medium" : "text-neutral-400"}`}
@@ -1005,6 +1006,7 @@ export default function StaffPOS() {
                       weightGrams: item.weightGrams,
                       unitPrice: item.unitPrice.toFixed(2),
                       totalPrice: item.totalPrice.toFixed(2),
+                      modifiers: item.modifiers,
                     })),
                     paymentMethod: "card",
                     fulfillmentType,
@@ -1113,47 +1115,52 @@ export default function StaffPOS() {
 
 // ─── Staff Transactions Component ─────────────────────────────────────
 function StaffTransactions({ branchId }: { branchId: number }) {
-  const { data: summary } = trpc.pos.salesSummary.useQuery(
-    { branchId, startDate: new Date(new Date().setHours(0,0,0,0)).toISOString(), endDate: new Date().toISOString() },
+  const [dateRange, setDateRange] = useState(() => {
+    const today = new Date();
+    return { startDate: today.toISOString().slice(0, 10), endDate: today.toISOString().slice(0, 10) };
+  });
+  const { data: summary, isLoading, error } = trpc.pos.ownerSalesReport.useQuery(
+    { branchId, startDate: dateRange.startDate, endDate: dateRange.endDate },
     { enabled: !!branchId }
   );
 
   return (
     <div className="flex-1 overflow-y-auto p-6">
-      <h2 className="text-sm font-medium text-neutral-700 mb-4">Today's Transactions</h2>
-      {summary ? (
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg border border-neutral-200">
-            <p className="text-xs text-neutral-400 uppercase tracking-wider">Total Sales</p>
-            <p className="text-2xl font-bold text-neutral-800 mt-1">${(summary as any).totalSales?.toFixed(2) || "0.00"}</p>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-neutral-200">
-            <p className="text-xs text-neutral-400 uppercase tracking-wider">Orders</p>
-            <p className="text-2xl font-bold text-neutral-800 mt-1">{(summary as any).orderCount || 0}</p>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-neutral-200">
-            <p className="text-xs text-neutral-400 uppercase tracking-wider">Avg Order</p>
-            <p className="text-2xl font-bold text-neutral-800 mt-1">${(summary as any).avgOrder?.toFixed(2) || "0.00"}</p>
-          </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div>
+          <p className="text-[10px] uppercase tracking-wider text-neutral-400">Owner report</p>
+          <h2 className="text-sm font-medium text-neutral-700">Sales drill-down</h2>
         </div>
-      ) : (
-        <p className="text-sm text-neutral-400">Loading transactions...</p>
-      )}
-      {(summary as any)?.items && (summary as any).items.length > 0 && (
-        <div className="bg-white rounded-lg border border-neutral-200 p-4">
-          <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-3">Top Items Today</h3>
-          <div className="space-y-2">
-            {(summary as any).items.slice(0, 10).map((item: any, i: number) => (
-              <div key={i} className="flex justify-between text-xs text-neutral-700">
-                <span>{item.itemName}</span>
-                <span className="font-medium">{item.totalQuantity}× — ${item.totalRevenue}</span>
-              </div>
-            ))}
+        <div className="flex items-center gap-2">
+          <input aria-label="Sales start date" type="date" value={dateRange.startDate} onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })} className="px-2 py-1 text-xs border border-neutral-200 rounded" />
+          <span className="text-xs text-neutral-400">to</span>
+          <input aria-label="Sales end date" type="date" value={dateRange.endDate} onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })} className="px-2 py-1 text-xs border border-neutral-200 rounded" />
+        </div>
+      </div>
+      {isLoading && <p className="text-sm text-neutral-400">Loading sales...</p>}
+      {error && <p className="text-sm text-red-500">Owner report unavailable.</p>}
+      {summary && !error && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <ReportCard label="Total sales" value={`$${summary.totalSales.toFixed(2)}`} />
+            <ReportCard label="Paid orders" value={String(summary.orderCount)} />
+            <ReportCard label="Average order" value={`$${summary.avgOrder.toFixed(2)}`} />
           </div>
+          <ReportTable title="By category" columns={["Category", "Qty", "Revenue"]} rows={summary.categories.map((row: any) => [row.name, `${row.quantity}×`, `$${row.revenue.toFixed(2)}`])} />
+          <ReportTable title="By item" columns={["Item", "Category", "Qty", "Revenue"]} rows={summary.items.map((row: any) => [row.name, row.category, `${row.quantity}×`, `$${row.revenue.toFixed(2)}`])} />
+          <ReportTable title="By modifier / option" columns={["Item", "Modifier", "Option", "Qty", "Add-on revenue"]} rows={summary.modifiers.map((row: any) => [row.itemName, row.name, row.option, `${row.quantity}×`, `$${row.revenue.toFixed(2)}`])} emptyLabel="No structured modifiers have been recorded yet." />
         </div>
       )}
     </div>
   );
+}
+
+function ReportCard({ label, value }: { label: string; value: string }) {
+  return <div className="bg-white p-4 rounded-lg border border-neutral-200"><p className="text-[10px] text-neutral-400 uppercase tracking-wider">{label}</p><p className="text-2xl font-bold text-neutral-800 mt-1">{value}</p></div>;
+}
+
+function ReportTable({ title, columns, rows, emptyLabel = "No data for this period." }: { title: string; columns: string[]; rows: string[][]; emptyLabel?: string }) {
+  return <div className="bg-white rounded-lg border border-neutral-200 p-4"><h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-3">{title}</h3>{rows.length === 0 ? <p className="text-xs text-neutral-400">{emptyLabel}</p> : <div className="overflow-x-auto"><table className="w-full text-left"><thead><tr>{columns.map((column) => <th key={column} className="pb-2 pr-4 text-[10px] uppercase tracking-wider text-neutral-400">{column}</th>)}</tr></thead><tbody>{rows.map((row, rowIndex) => <tr key={`${title}-${rowIndex}`} className="border-t border-neutral-100">{row.map((cell, cellIndex) => <td key={`${rowIndex}-${cellIndex}`} className={`py-2 pr-4 text-xs ${cellIndex === row.length - 1 ? "font-medium text-neutral-800" : "text-neutral-600"}`}>{cell}</td>)}</tr>)}</tbody></table></div>}</div>;
 }
 
 // ─── Staff Online Orders Component ─────────────────────────────────────

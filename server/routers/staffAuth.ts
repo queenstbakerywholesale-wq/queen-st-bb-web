@@ -15,7 +15,7 @@ const STAFF_JWT_SECRET = new TextEncoder().encode(ENV.cookieSecret + "_staff");
 interface StaffTokenPayload {
   staffId: number;
   branchId: number;
-  role: "staff" | "manager";
+  role: "staff" | "manager" | "owner";
   displayName: string;
 }
 

@@ -22,6 +22,69 @@ import {
 } from "../../drizzle/schema";
 import { ENV } from "../_core/env";
 
+const ownerSalesProcedure = publicProcedure.use(async ({ ctx, next }) => {
+  const staff = await getStaffFromContext(ctx);
+  if (!staff || staff.role !== "owner") {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Owner access required" });
+  }
+  return next({ ctx: { ...ctx, ownerStaff: staff } });
+});
+
+async function buildOwnerSalesReport(
+  db: NonNullable<Awaited<ReturnType<typeof getDb>>>,
+  input: { branchId?: number; startDate: string; endDate: string },
+) {
+  const conditions = [
+    gte(posOrders.createdAt, new Date(input.startDate)),
+    lte(posOrders.createdAt, new Date(input.endDate + "T23:59:59")),
+    eq(posOrders.paymentStatus, "paid"),
+  ];
+  if (input.branchId) conditions.push(eq(posOrders.branchId, input.branchId));
+  const orders = await db.select().from(posOrders).where(and(...conditions)).orderBy(desc(posOrders.createdAt));
+  const orderIds = orders.map((order) => order.id);
+  const allItems = orderIds.length
+    ? await db.select().from(posOrderItems).where(sql`${posOrderItems.posOrderId} IN (${sql.join(orderIds.map((id) => sql`${id}`), sql`, `)})`)
+    : [];
+  const categories = await db.select().from(posCategories);
+  const menuItems = await db.select().from(posMenuItems);
+  const categoryById = new Map(categories.map((category) => [category.id, category.name]));
+  const menuItemById = new Map(menuItems.map((item) => [item.id, item]));
+  const categoryMap = new Map<string, { name: string; quantity: number; revenue: number }>();
+  const itemMap = new Map<string, { name: string; category: string; quantity: number; revenue: number }>();
+  const modifierMap = new Map<string, { itemName: string; name: string; option: string; quantity: number; revenue: number }>();
+  for (const item of allItems) {
+    const menuItem = item.menuItemId ? menuItemById.get(item.menuItemId) : undefined;
+    const category = menuItem ? (categoryById.get(menuItem.categoryId) || "Uncategorised") : "Custom / Other";
+    const revenue = parseFloat(String(item.totalPrice));
+    const categoryEntry = categoryMap.get(category) || { name: category, quantity: 0, revenue: 0 };
+    categoryEntry.quantity += item.quantity;
+    categoryEntry.revenue += revenue;
+    categoryMap.set(category, categoryEntry);
+    const itemKey = `${category}:${item.itemName}`;
+    const itemEntry = itemMap.get(itemKey) || { name: item.itemName, category, quantity: 0, revenue: 0 };
+    itemEntry.quantity += item.quantity;
+    itemEntry.revenue += revenue;
+    itemMap.set(itemKey, itemEntry);
+    for (const modifier of (item.modifiers || []) as { name: string; option: string; priceAdjustment: number }[]) {
+      const modifierKey = `${item.itemName}:${modifier.name}:${modifier.option}`;
+      const modifierEntry = modifierMap.get(modifierKey) || { itemName: item.itemName, name: modifier.name, option: modifier.option, quantity: 0, revenue: 0 };
+      modifierEntry.quantity += item.quantity;
+      modifierEntry.revenue += item.quantity * Number(modifier.priceAdjustment || 0);
+      modifierMap.set(modifierKey, modifierEntry);
+    }
+  }
+  const totalSales = orders.reduce((sum, order) => sum + parseFloat(String(order.total)), 0);
+  return {
+    totalSales,
+    orderCount: orders.length,
+    avgOrder: orders.length ? totalSales / orders.length : 0,
+    categories: Array.from(categoryMap.values()).sort((a, b) => b.revenue - a.revenue),
+    items: Array.from(itemMap.values()).sort((a, b) => b.revenue - a.revenue),
+    modifiers: Array.from(modifierMap.values()).sort((a, b) => b.quantity - a.quantity),
+    orders,
+  };
+}
+
 export const posRouter = router({
   // ─── Categories ───────────────────────────────────────────────
   listCategories: publicProcedure
@@ -230,6 +293,7 @@ export const posRouter = router({
         weightGrams: z.number().optional(),
         unitPrice: z.string(),
         totalPrice: z.string(),
+        modifiers: z.array(z.object({ name: z.string(), option: z.string(), priceAdjustment: z.number() })).optional(),
         notes: z.string().optional(),
       })),
       paymentMethod: z.enum(["cash", "card", "gift_card", "mixed"]),
@@ -330,6 +394,7 @@ export const posRouter = router({
             weightGrams: item.weightGrams || null,
             unitPrice: item.unitPrice,
             totalPrice: item.totalPrice,
+            modifiers: item.modifiers || null,
           }))
         );
       }
@@ -522,6 +587,14 @@ export const posRouter = router({
       }
 
       return { totalSales, orderCount, avgOrder, items: itemSales, hourly, orders };
+    }),
+
+  ownerSalesReport: ownerSalesProcedure
+    .input(z.object({ branchId: z.number().optional(), startDate: z.string(), endDate: z.string() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { totalSales: 0, orderCount: 0, avgOrder: 0, categories: [], items: [], modifiers: [], orders: [] };
+      return buildOwnerSalesReport(db, input);
     }),
 
   // Recent orders for staff view

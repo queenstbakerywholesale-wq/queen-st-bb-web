@@ -668,3 +668,20 @@
 - [ ] Verify staff POS login and identify the exact branch testing path
 - [ ] Add a practical POS test mode or explicit test guidance without creating real customer/order data
 - [ ] Verify the external-payment-to-manual-stamp operational flow and document limitations
+
+## Gelato Catalogue Redesign — 2026-09-30
+- [x] Review Gelato Messina-inspired dietary filter and product-grid references
+- [x] Add image-led flavour cards with flavour names, descriptions, prices, and dietary/allergen notes
+- [x] Add interactive filters for All, Vegan, Alcohol Free, Egg Free, Gluten Free, Nut Free, and Soy Free
+- [x] Add and upload five cohesive gelato/sorbet product images
+- [x] Add catalogue unit coverage; 197 Vitest tests, TypeScript check, and production build pass
+- [x] Save WebDev checkpoint 8d544673
+
+## Owner-only POS Sales Reporting — 2026-10-03
+- [x] Added dedicated `owner` staff role and provisioned Angela's POS account
+- [x] Restricted POS Transactions and owner sales API to owner sessions only
+- [x] Added total sales, paid orders, average order, category, item, and modifier/option reporting
+- [x] Persisted structured modifier selections on new POS order items
+- [x] Verified Angela login and owner report in the live preview
+- [x] Verified Sarah staff login does not show Transactions
+- [x] `pnpm check`, 198 tests, and `pnpm build` pass

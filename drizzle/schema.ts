@@ -401,7 +401,7 @@ export const staffMembers = mysqlTable("staff_members", {
   passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
   displayName: varchar("displayName", { length: 200 }).notNull(),
   branchId: int("branchId").notNull(),
-  role: mysqlEnum("staffRole", ["staff", "manager"]).default("staff").notNull(),
+  role: mysqlEnum("staffRole", ["staff", "manager", "owner"]).default("staff").notNull(),
   pin: varchar("pin", { length: 10 }), // Quick PIN for POS login
   isActive: boolean("isActive").default(true).notNull(),
   lastLoginAt: timestamp("lastLoginAt"),
@@ -487,6 +487,7 @@ export const posOrderItems = mysqlTable("pos_order_items", {
   weightGrams: int("weightGrams"), // For weight-based items
   unitPrice: decimal("unitPrice", { precision: 10, scale: 2 }).notNull(),
   totalPrice: decimal("totalPrice", { precision: 10, scale: 2 }).notNull(),
+  modifiers: json("modifiers").$type<{ name: string; option: string; priceAdjustment: number }[]>(),
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
