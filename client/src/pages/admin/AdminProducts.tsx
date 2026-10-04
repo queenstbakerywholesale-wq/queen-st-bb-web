@@ -38,6 +38,7 @@ function ProductForm({
     description: initial?.description ?? "",
     shortDescription: initial?.shortDescription ?? "",
     price: initial?.price ?? "",
+    weightGrams: initial?.weightGrams ?? 0,
     compareAtPrice: initial?.compareAtPrice ?? "",
     stock: initial?.stock ?? 0,
     lowStockThreshold: initial?.lowStockThreshold ?? 5,
@@ -113,6 +114,20 @@ function ProductForm({
             className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none"
             style={inputStyle}
           />
+        </div>
+        <div>
+          <label style={labelStyle} className="block mb-1">Shipping Weight (grams)</label>
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={form.weightGrams}
+            onChange={(e) => setForm({ ...form, weightGrams: Number(e.target.value) })}
+            className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none"
+            style={inputStyle}
+            placeholder="e.g. 350"
+          />
+          <p className="text-[10px] mt-1" style={{ fontFamily: "var(--font-body)", color: "#5A3A2E60" }}>Used to calculate Australia Post shipping by cart weight.</p>
         </div>
         <div>
           <label style={labelStyle} className="block mb-1">Product Type</label>

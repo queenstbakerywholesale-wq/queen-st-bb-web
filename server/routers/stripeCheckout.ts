@@ -20,6 +20,7 @@ const cartItemSchema = z.object({
   productName: z.string(),
   price: z.number().min(0.5), // Stripe min $0.50
   quantity: z.number().int().min(1).max(99),
+  weightGrams: z.number().int().min(0).optional(),
   size: z.string().optional(),
   imageUrl: z.string().optional(),
   productType: z.string().default("merchandise"),
@@ -34,10 +35,11 @@ export const stripeCheckoutRouter = router({
     .input(
       z.object({
         postcode: z.string().min(3).max(6),
+        weightGrams: z.number().int().min(0).optional(),
       })
     )
     .query(async ({ input }) => {
-      const result = await calculateShipping(input.postcode);
+      const result = await calculateShipping(input.postcode, input.weightGrams ? { weight: Math.max(0.1, input.weightGrams / 1000) } : undefined);
       return {
         quotes: result.quotes.map((q) => ({
           serviceName: q.serviceName,
@@ -110,7 +112,8 @@ export const stripeCheckoutRouter = router({
       if (effectiveFulfillment === "shipping") {
         if (input.shippingPostcode) {
           try {
-            const shippingResult = await calculateShipping(input.shippingPostcode);
+            const totalWeightGrams = input.items.reduce((sum, item) => sum + (item.weightGrams || 0) * item.quantity, 0);
+            const shippingResult = await calculateShipping(input.shippingPostcode, totalWeightGrams > 0 ? { weight: Math.max(0.1, totalWeightGrams / 1000) } : undefined);
             // If a specific service was selected, find it
             if (input.shippingServiceCode) {
               const selected = shippingResult.quotes.find(

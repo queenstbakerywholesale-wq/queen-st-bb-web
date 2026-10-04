@@ -27,6 +27,7 @@ type CartItem = {
   productName: string;
   price: number;
   quantity: number;
+  weightGrams?: number;
   size?: string;
   imageUrl?: string;
   productType: string;
@@ -37,24 +38,24 @@ const fallbackObjects = [
   {
     category: "Ceramics",
     items: [
-      { id: 901, name: "Atelier Espresso Cup", detail: "Hand-thrown stoneware, ivory glaze", price: 48, imageUrl: "", productType: "merchandise", stock: 50 },
-      { id: 902, name: "Dessert Plate — Terracotta", detail: "Artisan ceramic, matte finish", price: 62, imageUrl: "", productType: "merchandise", stock: 50 },
-      { id: 903, name: "Serving Bowl — Marble", detail: "Carrara marble, hand-polished", price: 185, imageUrl: "", productType: "merchandise", stock: 50 },
+      { id: 901, name: "Atelier Espresso Cup", detail: "Hand-thrown stoneware, ivory glaze", price: 48, imageUrl: "", productType: "merchandise", stock: 50, weightGrams: 0 },
+      { id: 902, name: "Dessert Plate — Terracotta", detail: "Artisan ceramic, matte finish", price: 62, imageUrl: "", productType: "merchandise", stock: 50, weightGrams: 0 },
+      { id: 903, name: "Serving Bowl — Marble", detail: "Carrara marble, hand-polished", price: 185, imageUrl: "", productType: "merchandise", stock: 50, weightGrams: 0 },
     ],
   },
   {
     category: "Textiles",
     items: [
-      { id: 904, name: "Linen Napkin Set", detail: "Belgian linen, natural dye", price: 38, imageUrl: "", productType: "merchandise", stock: 50 },
-      { id: 905, name: "Apron — Atelier Edition", detail: "Washed cotton, brass hardware", price: 95, imageUrl: "", productType: "merchandise", stock: 50 },
+      { id: 904, name: "Linen Napkin Set", detail: "Belgian linen, natural dye", price: 38, imageUrl: "", productType: "merchandise", stock: 50, weightGrams: 0 },
+      { id: 905, name: "Apron — Atelier Edition", detail: "Washed cotton, brass hardware", price: 95, imageUrl: "", productType: "merchandise", stock: 50, weightGrams: 0 },
     ],
   },
   {
     category: "Confections",
     items: [
-      { id: 906, name: "Chocolate Collection", detail: "Single-origin, hand-tempered", price: 42, imageUrl: "", productType: "merchandise", stock: 50 },
-      { id: 907, name: "Biscotti Gift Box", detail: "Almond & pistachio, wrapped in tissue", price: 36, imageUrl: "", productType: "merchandise", stock: 50 },
-      { id: 908, name: "House Blend Coffee", detail: "Medium roast, caramel & hazelnut notes", price: 28, imageUrl: "", productType: "merchandise", stock: 50 },
+      { id: 906, name: "Chocolate Collection", detail: "Single-origin, hand-tempered", price: 42, imageUrl: "", productType: "merchandise", stock: 50, weightGrams: 0 },
+      { id: 907, name: "Biscotti Gift Box", detail: "Almond & pistachio, wrapped in tissue", price: 36, imageUrl: "", productType: "merchandise", stock: 50, weightGrams: 0 },
+      { id: 908, name: "House Blend Coffee", detail: "Medium roast, caramel & hazelnut notes", price: 28, imageUrl: "", productType: "merchandise", stock: 50, weightGrams: 0 },
     ],
   },
 ];
@@ -113,7 +114,7 @@ export default function Objects() {
   const [postcodeInput, setPostcodeInput] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState<{ id: number; name: string; detail: string; description?: string; price: number; imageUrl: string; productType: string; category?: string } | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<{ id: number; name: string; detail: string; description?: string; price: number; imageUrl: string; productType: string; category?: string; weightGrams?: number } | null>(null);
   const [shippingQuote, setShippingQuote] = useState<{
     price: number;
     serviceName: string;
@@ -126,8 +127,9 @@ export default function Objects() {
   const { data: liveCategories } = trpc.publicProducts.categories.useQuery();
   const { data: branchesData } = trpc.publicBookings.branches.useQuery();
   const checkoutMutation = trpc.stripe.createCheckoutSession.useMutation();
+  const cartWeightGrams = useMemo(() => cart.reduce((sum, item) => sum + (item.weightGrams || 0) * item.quantity, 0), [cart]);
   const shippingCalcQuery = trpc.stripe.calculateShipping.useQuery(
-    { postcode: postcodeInput },
+    { postcode: postcodeInput, weightGrams: cartWeightGrams },
     { enabled: postcodeInput.length >= 4, staleTime: 60000 }
   );
 
@@ -190,7 +192,7 @@ export default function Objects() {
     if (liveCategories) {
       for (const c of liveCategories) categoryMap.set(c.id, c.name);
     }
-    const grouped: Record<string, { id: number; name: string; detail: string; description?: string; price: number; imageUrl: string; productType: string; stock: number }[]> = {};
+    const grouped: Record<string, { id: number; name: string; detail: string; description?: string; price: number; imageUrl: string; productType: string; stock: number; weightGrams: number }[]> = {};
     for (const p of liveProducts) {
       // Only show merchandise items on Objects page (exclude food/cake/gelato)
       if (p.productType !== "merchandise") continue;
@@ -207,6 +209,7 @@ export default function Objects() {
         imageUrl: p.imageUrl || "",
         productType: p.productType,
         stock: p.stock || 0,
+        weightGrams: p.weightGrams || 0,
       });
     }
     // Sort categories by preferred order
@@ -255,13 +258,13 @@ export default function Objects() {
       return data;
     }, [displayData, activeCategory, searchQuery]);
 
-  const addToCart = useCallback((item: { id: number; name: string; price: number; imageUrl?: string; productType: string }) => {
+  const addToCart = useCallback((item: { id: number; name: string; price: number; imageUrl?: string; productType: string; weightGrams?: number }) => {
     setCart((prev) => {
       const existing = prev.find((c) => c.productId === item.id);
       if (existing) {
         return prev.map((c) => c.productId === item.id ? { ...c, quantity: c.quantity + 1 } : c);
       }
-      return [...prev, { productId: item.id, productName: item.name, price: item.price, quantity: 1, imageUrl: item.imageUrl || undefined, productType: item.productType }];
+      return [...prev, { productId: item.id, productName: item.name, price: item.price, quantity: 1, weightGrams: item.weightGrams || 0, imageUrl: item.imageUrl || undefined, productType: item.productType }];
     });
     if (!navigator.onLine) {
       queueAction({ type: "add", productId: item.id, productName: item.name, price: item.price, imageUrl: item.imageUrl, productType: item.productType });
@@ -1148,7 +1151,7 @@ export default function Objects() {
                       )}
                       {item.stock > 0 ? (
                         <button
-                          onClick={() => addToCart({ id: item.id, name: item.name, price: item.price, imageUrl: item.imageUrl, productType: item.productType })}
+                          onClick={() => addToCart({ id: item.id, name: item.name, price: item.price, imageUrl: item.imageUrl, productType: item.productType, weightGrams: item.weightGrams })}
                           className="absolute bottom-0 left-0 right-0 py-3 text-[10px] font-medium uppercase tracking-[0.2em] text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer hover:opacity-100"
                           style={{ fontFamily: "var(--font-body)", backgroundColor: "oklch(0.34 0.05 45 / 0.9)", color: cream }}
                         >
@@ -1255,7 +1258,7 @@ export default function Objects() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      addToCart({ id: selectedProduct.id, name: selectedProduct.name, price: selectedProduct.price, imageUrl: selectedProduct.imageUrl, productType: selectedProduct.productType });
+                      addToCart({ id: selectedProduct.id, name: selectedProduct.name, price: selectedProduct.price, imageUrl: selectedProduct.imageUrl, productType: selectedProduct.productType, weightGrams: selectedProduct.weightGrams });
                       setSelectedProduct(null);
                     }}
                     className="mt-6 w-full py-3.5 text-[10px] font-medium uppercase tracking-[0.2em] text-center cursor-pointer rounded-sm transition-opacity hover:opacity-90"

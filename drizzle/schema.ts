@@ -67,6 +67,7 @@ export const products = mysqlTable("products", {
   shortDescription: varchar("shortDescription", { length: 500 }),
   categoryId: int("categoryId"),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  weightGrams: int("weightGrams").default(0).notNull(),
   compareAtPrice: decimal("compareAtPrice", { precision: 10, scale: 2 }),
   imageUrl: text("imageUrl"),
   images: json("images").$type<string[]>(),
