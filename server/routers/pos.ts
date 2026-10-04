@@ -25,6 +25,7 @@ import {
 import { ENV } from "../_core/env";
 import { sendEmail } from "../emailService";
 import { sendReceiptSms } from "../smsService";
+import { buildBranchPeriodReport } from "../branchReport";
 
 const ownerSalesProcedure = publicProcedure.use(async ({ ctx, next }) => {
   const staff = await getStaffFromContext(ctx);
@@ -651,6 +652,14 @@ export const posRouter = router({
       const db = await getDb();
       if (!db) return { totalSales: 0, orderCount: 0, avgOrder: 0, paymentBreakdown: { cash: 0, card: 0, mixed: 0, other: 0 }, zellerFee: 0, categories: [], items: [], modifiers: [], orders: [] };
       return buildOwnerSalesReport(db, input);
+    }),
+
+  branchPeriodReport: ownerSalesProcedure
+    .input(z.object({ startDate: z.string(), endDate: z.string(), group: z.enum(["day", "weekday", "month", "year"]) }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      return buildBranchPeriodReport(db, input);
     }),
 
   settlementSummary: ownerSalesProcedure
