@@ -152,6 +152,17 @@ export const adminProductsRouter = router({
       return { success: true };
     }),
 
+  bulkUpdateWeights: publicProcedure
+    .input(z.object({ items: z.array(z.object({ id: z.number().int().positive(), weightGrams: z.number().int().min(0) })).min(1).max(100) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      for (const item of input.items) {
+        await db.update(products).set({ weightGrams: item.weightGrams }).where(eq(products.id, item.id));
+      }
+      return { success: true, updated: input.items.length };
+    }),
+
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {

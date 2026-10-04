@@ -121,6 +121,7 @@ export default function Objects() {
     estimatedDays: string | null;
     serviceCode: string;
   } | null>(null);
+  const [selectedShippingServiceCode, setSelectedShippingServiceCode] = useState("");
   const [isCalculatingShipping, setIsCalculatingShipping] = useState(false);
 
   const { data: liveProducts } = trpc.publicProducts.list.useQuery({ limit: 100 });
@@ -172,15 +173,18 @@ export default function Objects() {
   // Update shipping quote when API returns
   useEffect(() => {
     if (shippingCalcQuery.data && !shippingCalcQuery.isLoading) {
+      const selected = shippingCalcQuery.data.quotes.find((quote) => quote.serviceCode === selectedShippingServiceCode) || shippingCalcQuery.data.quotes[0];
+      if (!selected) return;
+      setSelectedShippingServiceCode(selected.serviceCode);
       setShippingQuote({
-        price: shippingCalcQuery.data.selectedPrice,
-        serviceName: shippingCalcQuery.data.selectedService,
-        estimatedDays: shippingCalcQuery.data.estimatedDays,
-        serviceCode: shippingCalcQuery.data.quotes[0]?.serviceCode || "",
+        price: selected.price,
+        serviceName: selected.serviceName,
+        estimatedDays: selected.estimatedDays,
+        serviceCode: selected.serviceCode,
       });
       setIsCalculatingShipping(false);
     }
-  }, [shippingCalcQuery.data, shippingCalcQuery.isLoading]);
+  }, [shippingCalcQuery.data, shippingCalcQuery.isLoading, selectedShippingServiceCode]);
 
   // Group live products by category
   // Category display order preference
@@ -708,24 +712,16 @@ export default function Objects() {
                               <Loader2 size={14} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin" style={{ color: midBrown }} />
                             )}
                           </div>
-                          {shippingQuote && (
-                            <div className="mt-2 p-3 rounded" style={{ backgroundColor: `${cream}`, border: `1px solid ${borderColor}` }}>
-                              <div className="flex justify-between items-center">
-                                <div>
-                                  <p className="text-xs" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: brown }}>
-                                    {shippingQuote.serviceName}
-                                  </p>
-                                  {shippingQuote.estimatedDays && (
-                                    <p className="text-[10px] mt-0.5" style={{ fontFamily: "var(--font-body)", color: `${brown}70` }}>
-                                      Est. {shippingQuote.estimatedDays} business days
-                                    </p>
-                                  )}
-                                </div>
-                                <p className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: brown }}>
-                                  ${shippingQuote.price.toFixed(2)}
-                                </p>
-                              </div>
+                          {shippingCalcQuery.data?.quotes?.length ? (
+                            <div className="mt-2 space-y-2">
+                              {shippingCalcQuery.data.quotes.map((quote) => (
+                                <button type="button" key={quote.serviceCode} onClick={() => { setSelectedShippingServiceCode(quote.serviceCode); setShippingQuote({ price: quote.price, serviceName: quote.serviceName, estimatedDays: quote.estimatedDays, serviceCode: quote.serviceCode }); }} className="w-full p-3 rounded text-left transition-colors" style={{ backgroundColor: quote.serviceCode === shippingQuote?.serviceCode ? `${cream}` : "#fff", border: `1px solid ${quote.serviceCode === shippingQuote?.serviceCode ? midBrown : borderColor}` }}>
+                                  <div className="flex justify-between items-center"><div><p className="text-xs" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: brown }}>{quote.serviceName}</p>{quote.estimatedDays && <p className="text-[10px] mt-0.5" style={{ fontFamily: "var(--font-body)", color: `${brown}70` }}>Est. {quote.estimatedDays} business days</p>}</div><p className="text-sm" style={{ fontFamily: "var(--font-body)", fontWeight: 500, color: brown }}>${quote.price.toFixed(2)}</p></div>
+                                </button>
+                              ))}
                             </div>
+                          ) : shippingQuote && (
+                            <div className="mt-2 p-3 rounded" style={{ backgroundColor: `${cream}`, border: `1px solid ${borderColor}` }}><div className="flex justify-between items-center"><span className="text-xs" style={{ color: brown }}>{shippingQuote.serviceName}</span><span className="text-sm" style={{ color: brown }}>${shippingQuote.price.toFixed(2)}</span></div></div>
                           )}
                           {!shippingQuote && postcodeInput.length < 4 && (
                             <p className="text-[10px] mt-1" style={{ fontFamily: "var(--font-body)", color: `${brown}60` }}>

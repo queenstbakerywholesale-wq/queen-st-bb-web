@@ -19,6 +19,8 @@ describe("POS System", () => {
       expect(procedures).toContain("salesSummary");
       expect(procedures).toContain("ownerSalesReport");
       expect(procedures).toContain("branchPeriodReport");
+      expect(procedures).toContain("branchSalesTargets");
+      expect(procedures).toContain("saveBranchSalesTarget");
       expect(procedures).toContain("settlementSummary");
       expect(procedures).toContain("saveSettlement");
       expect(procedures).toContain("staffTransactions");

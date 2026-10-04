@@ -132,6 +132,18 @@ export const branches = mysqlTable("branches", {
 export type Branch = typeof branches.$inferSelect;
 export type InsertBranch = typeof branches.$inferInsert;
 
+export const branchSalesTargets = mysqlTable("branch_sales_targets", {
+  id: int("id").autoincrement().primaryKey(),
+  branchId: int("branchId").notNull().unique(),
+  monthlyTarget: decimal("monthlyTarget", { precision: 12, scale: 2 }).default("0").notNull(),
+  annualTarget: decimal("annualTarget", { precision: 12, scale: 2 }).default("0").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BranchSalesTarget = typeof branchSalesTargets.$inferSelect;
+export type InsertBranchSalesTarget = typeof branchSalesTargets.$inferInsert;
+
 // ─── Orders ──────────────────────────────────────────────────────
 export const orders = mysqlTable("orders", {
   id: int("id").autoincrement().primaryKey(),

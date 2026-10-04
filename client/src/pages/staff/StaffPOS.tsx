@@ -1204,13 +1204,21 @@ function StaffTransactions({ branchId, settlementBranchId }: { branchId?: number
 
 function BranchComparisonChart({ rows, periodLabel }: { rows: any[]; periodLabel: string }) {
   const defaultTarget = periodLabel === "Annual" ? 120000 : 10000;
-  const [targets, setTargets] = useState<Record<string, number>>(() => {
-    try { return JSON.parse(localStorage.getItem(`qsb-${periodLabel.toLowerCase()}-targets`) || "{}"); } catch { return {}; }
+  const [targets, setTargets] = useState<Record<number, { monthlyTarget: number; annualTarget: number }>>({});
+  const { data: savedTargets = [] } = trpc.pos.branchSalesTargets.useQuery();
+  const saveTargetMutation = trpc.pos.saveBranchSalesTarget.useMutation({
+    onSuccess: () => toast.success("Branch target saved across devices"),
+    onError: (error) => toast.error(error.message),
   });
-  useEffect(() => { localStorage.setItem(`qsb-${periodLabel.toLowerCase()}-targets`, JSON.stringify(targets)); }, [periodLabel, targets]);
-  const byBranch = new Map<string, { sales: number; fee: number }>();
+  useEffect(() => {
+    setTargets(Object.fromEntries(savedTargets.map((target: any) => [target.branchId, {
+      monthlyTarget: target.monthlyTarget,
+      annualTarget: target.annualTarget,
+    }])));
+  }, [savedTargets]);
+  const byBranch = new Map<string, { branchId: number; sales: number; fee: number }>();
   for (const row of rows) {
-    const current = byBranch.get(row.branchName) || { sales: 0, fee: 0 };
+    const current = byBranch.get(row.branchName) || { branchId: Number(row.branchId), sales: 0, fee: 0 };
     current.sales += Number(row.totalSales || 0);
     current.fee += Number(row.zellerFee || 0);
     byBranch.set(row.branchName, current);
@@ -1218,9 +1226,20 @@ function BranchComparisonChart({ rows, periodLabel }: { rows: any[]; periodLabel
   const values = Array.from(byBranch.entries());
   const maxSales = Math.max(...values.map(([, value]) => value.sales), 1);
   const maxFee = Math.max(...values.map(([, value]) => value.fee), 0.01);
-  return <div className="bg-[#fffaf2] border border-[#d9c8b6] rounded-lg p-4"><div className="flex flex-wrap items-end justify-between gap-3 mb-4"><div><p className="text-[10px] uppercase tracking-wider text-neutral-400">Visual comparison</p><h3 className="text-xs font-medium text-neutral-700">{periodLabel} branch performance</h3><p className="text-[10px] text-neutral-400 mt-1">Targets are editable and saved on this device.</p></div><div className="flex gap-3 text-[10px] text-neutral-500"><span><i className="inline-block w-2 h-2 rounded-full bg-[#5a3a2e] mr-1" />Sales</span><span><i className="inline-block w-2 h-2 rounded-full bg-[#c48d69] mr-1" />Zeller fee</span></div></div>{values.length === 0 ? <p className="text-xs text-neutral-400">No paid POS sales for this period.</p> : <div className="space-y-5">{values.map(([branch, value]) => { const target = Number(targets[branch] || defaultTarget); const attainment = target > 0 ? (value.sales / target) * 100 : 0; const color = BRANCH_COLORS[branch] || "#5a3a2e"; return <div key={branch} className="space-y-2"><div className="flex flex-wrap items-center justify-between gap-2 text-xs"><span className="font-medium text-neutral-700"><i className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ backgroundColor: color }} />{branch}</span><span className="text-neutral-500">Sales ${value.sales.toFixed(2)} · Fee ${value.fee.toFixed(2)}</span></div><div className="space-y-1"><div className="h-3 bg-white rounded-full overflow-hidden"><div className="h-full rounded-full transition-all" style={{ width: `${(value.sales / maxSales) * 100}%`, backgroundColor: color }} /></div><div className="h-2 bg-white rounded-full overflow-hidden"><div className="h-full bg-[#c48d69] rounded-full transition-all" style={{ width: `${(value.fee / maxFee) * 100}%` }} /></div></div><div className="flex items-center justify-between gap-2 text-[10px] text-neutral-500"><span>Target attainment <strong style={{ color }}>{attainment.toFixed(1)}%</strong></span><label className="flex items-center gap-1">Target AUD <input aria-label={`${branch} sales target`} type="number" min="0" step="100" value={target} onChange={(e) => setTargets((current) => ({ ...current, [branch]: Number(e.target.value) }))} className="w-24 border border-neutral-200 rounded px-1.5 py-1 text-[10px] bg-white" /></label></div></div>; })}</div>}</div>;
+  return <div className="bg-[#fffaf2] border border-[#d9c8b6] rounded-lg p-4">
+    <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+      <div><p className="text-[10px] uppercase tracking-wider text-neutral-400">Visual comparison</p><h3 className="text-xs font-medium text-neutral-700">{periodLabel} branch performance</h3><p className="text-[10px] text-neutral-400 mt-1">Targets are saved on the server and shared across devices.</p></div>
+      <div className="flex gap-3 text-[10px] text-neutral-500"><span><i className="inline-block w-2 h-2 rounded-full bg-[#5a3a2e] mr-1" />Sales</span><span><i className="inline-block w-2 h-2 rounded-full bg-[#c48d69] mr-1" />Zeller fee</span></div>
+    </div>
+    {values.length === 0 ? <p className="text-xs text-neutral-400">No paid POS sales for this period.</p> : <div className="space-y-5">{values.map(([branch, value]) => {
+      const saved = targets[value.branchId];
+      const target = Number(saved?.[periodLabel === "Annual" ? "annualTarget" : "monthlyTarget"] || defaultTarget);
+      const attainment = target > 0 ? (value.sales / target) * 100 : 0;
+      const color = BRANCH_COLORS[branch] || "#5a3a2e";
+      return <div key={branch} className="space-y-2"><div className="flex flex-wrap items-center justify-between gap-2 text-xs"><span className="font-medium text-neutral-700"><i className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ backgroundColor: color }} />{branch}</span><span className="text-neutral-500">Sales ${value.sales.toFixed(2)} · Fee ${value.fee.toFixed(2)}</span></div><div className="space-y-1"><div className="h-3 bg-white rounded-full overflow-hidden"><div className="h-full rounded-full transition-all" style={{ width: `${(value.sales / maxSales) * 100}%`, backgroundColor: color }} /></div><div className="h-2 bg-white rounded-full overflow-hidden"><div className="h-full bg-[#c48d69] rounded-full transition-all" style={{ width: `${(value.fee / maxFee) * 100}%` }} /></div></div><div className="flex items-center justify-between gap-2 text-[10px] text-neutral-500"><span>Target attainment <strong style={{ color }}>{attainment.toFixed(1)}%</strong></span><label className="flex items-center gap-1">Target AUD <input aria-label={`${branch} sales target`} type="number" min="0" step="100" value={target} onChange={(e) => setTargets((current) => ({ ...current, [value.branchId]: { ...(current[value.branchId] || { monthlyTarget: defaultTarget, annualTarget: defaultTarget }), ...(periodLabel === "Monthly" ? { monthlyTarget: Number(e.target.value) } : { annualTarget: Number(e.target.value) }) } }))} onBlur={() => { const current = targets[value.branchId] || { monthlyTarget: defaultTarget, annualTarget: defaultTarget }; saveTargetMutation.mutate({ branchId: value.branchId, monthlyTarget: current.monthlyTarget, annualTarget: current.annualTarget }); }} className="w-24 border border-neutral-200 rounded px-1.5 py-1 text-[10px] bg-white" /></label></div></div>;
+    })}</div>}
+  </div>;
 }
-
 function BranchMonthlyTrendChart({ rows, isLoading }: { rows: any[]; isLoading: boolean }) {
   const periods = Array.from(new Set(rows.map((row) => row.period))).sort();
   const branches = Array.from(new Set(rows.map((row) => row.branchName)));

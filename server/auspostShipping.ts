@@ -26,6 +26,7 @@ const FALLBACK_RATES: Record<string, number> = {
   remote: 22.0, // Remote / rural areas
   default: 14.0, // Catch-all
 };
+const EXPRESS_MULTIPLIER = 1.6;
 
 // Postcode zone classification (simplified Australian zones)
 function classifyZone(fromPostcode: string, toPostcode: string): string {
@@ -157,17 +158,24 @@ export async function calculateShipping(
   const zone = classifyZone(fromPostcode, toPostcode);
   const price = FALLBACK_RATES[zone] || FALLBACK_RATES.default;
 
-  const fallbackQuote: ShippingQuote = {
+  const standardQuote: ShippingQuote = {
     serviceName: "Standard Parcel",
     serviceCode: "FALLBACK_STANDARD",
     price,
     estimatedDays: zone === "metro" ? "2-4" : zone === "remote" ? "5-10" : "3-7",
     source: "fallback",
   };
+  const expressQuote: ShippingQuote = {
+    serviceName: "Express Post",
+    serviceCode: "FALLBACK_EXPRESS",
+    price: Number((price * EXPRESS_MULTIPLIER).toFixed(2)),
+    estimatedDays: zone === "remote" ? "3-6" : "1-2",
+    source: "fallback",
+  };
 
   return {
-    quotes: [fallbackQuote],
-    selectedQuote: fallbackQuote,
+    quotes: [standardQuote, expressQuote],
+    selectedQuote: standardQuote,
     fromPostcode,
     toPostcode,
   };

@@ -12,6 +12,7 @@ import {
   posOrders,
   posOrderItems,
   posDailySettlements,
+  branchSalesTargets,
   posItemModifiers,
   customers,
   customerLoyalty,
@@ -660,6 +661,30 @@ export const posRouter = router({
       const db = await getDb();
       if (!db) return [];
       return buildBranchPeriodReport(db, input);
+    }),
+
+  branchSalesTargets: ownerSalesProcedure
+    .query(async () => {
+      const db = await getDb();
+      if (!db) return [];
+      const rows = await db.select().from(branchSalesTargets).orderBy(asc(branchSalesTargets.branchId));
+      return rows.map((row) => ({
+        branchId: row.branchId,
+        monthlyTarget: Number(row.monthlyTarget),
+        annualTarget: Number(row.annualTarget),
+      }));
+    }),
+
+  saveBranchSalesTarget: ownerSalesProcedure
+    .input(z.object({ branchId: z.number().int().positive(), monthlyTarget: z.number().min(0), annualTarget: z.number().min(0) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const values = { branchId: input.branchId, monthlyTarget: input.monthlyTarget.toFixed(2), annualTarget: input.annualTarget.toFixed(2) };
+      const [existing] = await db.select({ id: branchSalesTargets.id }).from(branchSalesTargets).where(eq(branchSalesTargets.branchId, input.branchId)).limit(1);
+      if (existing) await db.update(branchSalesTargets).set(values).where(eq(branchSalesTargets.id, existing.id));
+      else await db.insert(branchSalesTargets).values(values);
+      return { success: true, ...values };
     }),
 
   settlementSummary: ownerSalesProcedure

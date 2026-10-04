@@ -47,10 +47,12 @@ describe("Australia Post Shipping Module", () => {
     expect(result.selectedQuote.price).toBe(22.0); // remote rate
   });
 
-  it("should return quotes array with exactly one fallback quote", async () => {
+  it("should return Standard and Express fallback quotes", async () => {
     const result = await calculateShipping("2100");
-    expect(result.quotes).toHaveLength(1);
+    expect(result.quotes).toHaveLength(2);
     expect(result.quotes[0].serviceCode).toBe("FALLBACK_STANDARD");
+    expect(result.quotes[1].serviceCode).toBe("FALLBACK_EXPRESS");
+    expect(result.quotes[1].price).toBe(16);
   });
 
   it("should include estimated delivery days", async () => {

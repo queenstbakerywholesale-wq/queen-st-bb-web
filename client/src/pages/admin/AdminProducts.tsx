@@ -1,5 +1,5 @@
 import { trpc } from "@/lib/trpc";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, Search, X, Truck, Store } from "lucide-react";
 import { toast } from "sonner";
 import { PRODUCT_TYPES, isPickupOnlyType } from "@shared/const";
@@ -259,6 +259,7 @@ export default function AdminProducts() {
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [bulkWeights, setBulkWeights] = useState<Record<number, number>>({});
 
   const utils = trpc.useUtils();
   const { data, isLoading } = trpc.adminProducts.list.useQuery({
@@ -291,6 +292,13 @@ export default function AdminProducts() {
       toast.success("Product deleted");
     },
   });
+  const bulkWeightMutation = trpc.adminProducts.bulkUpdateWeights.useMutation({
+    onSuccess: (result) => { utils.adminProducts.list.invalidate(); toast.success(`${result.updated} product weights saved`); },
+    onError: (error) => toast.error(error.message),
+  });
+  useEffect(() => {
+    if (data?.items) setBulkWeights(Object.fromEntries(data.items.map((product) => [product.id, product.weightGrams ?? 0])));
+  }, [data?.items]);
 
   const handleSave = (data: any) => {
     if (editingProduct) {
@@ -375,6 +383,18 @@ export default function AdminProducts() {
           </button>
         )}
       </div>
+
+      {data?.items && data.items.length > 0 && (
+        <div className="rounded-lg border p-4" style={{ backgroundColor: "#fffaf2", borderColor: "#5A3A2E18" }}>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <div><p className="text-[10px] uppercase tracking-[0.08em]" style={{ color: "#5A3A2E80" }}>Fast editor</p><h2 className="text-sm" style={{ color: "#5A3A2E", fontFamily: "var(--font-body)" }}>Bulk shipping weights</h2><p className="text-[11px] mt-1" style={{ color: "#5A3A2E70" }}>Edit the products on this page, then save all weights together.</p></div>
+            <button disabled={bulkWeightMutation.isPending} onClick={() => bulkWeightMutation.mutate({ items: data.items.map((product) => ({ id: product.id, weightGrams: Number(bulkWeights[product.id] ?? 0) })) })} className="px-4 py-2 rounded-md text-[10px] uppercase tracking-[0.05em] disabled:opacity-50" style={{ backgroundColor: "#5A3A2E", color: "#F5F0EB" }}>{bulkWeightMutation.isPending ? "Saving…" : "Save page weights"}</button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {data.items.map((product) => <label key={product.id} className="flex items-center justify-between gap-3 rounded border px-3 py-2" style={{ borderColor: "#5A3A2E12" }}><span className="text-xs truncate" style={{ color: "#5A3A2E" }}>{product.name}</span><span className="flex items-center gap-1 text-[10px] whitespace-nowrap" style={{ color: "#5A3A2E80" }}><input aria-label={`${product.name} bulk shipping weight`} type="number" min="0" step="1" value={bulkWeights[product.id] ?? 0} onChange={(e) => setBulkWeights((current) => ({ ...current, [product.id]: Number(e.target.value) }))} className="w-20 px-2 py-1 border rounded text-right text-xs" style={{ borderColor: "#5A3A2E20", color: "#5A3A2E" }} /> g</span></label>)}
+          </div>
+        </div>
+      )}
 
       {/* Table */}
       <div className="rounded-lg border overflow-hidden" style={{ backgroundColor: "#fff", borderColor: "#5A3A2E10" }}>
