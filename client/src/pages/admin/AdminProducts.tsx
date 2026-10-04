@@ -260,6 +260,7 @@ export default function AdminProducts() {
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [bulkWeights, setBulkWeights] = useState<Record<number, number>>({});
+  const [bulkWeightUnit, setBulkWeightUnit] = useState<"g" | "kg">("g");
 
   const utils = trpc.useUtils();
   const { data, isLoading } = trpc.adminProducts.list.useQuery({
@@ -387,11 +388,11 @@ export default function AdminProducts() {
       {data?.items && data.items.length > 0 && (
         <div className="rounded-lg border p-4" style={{ backgroundColor: "#fffaf2", borderColor: "#5A3A2E18" }}>
           <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-            <div><p className="text-[10px] uppercase tracking-[0.08em]" style={{ color: "#5A3A2E80" }}>Fast editor</p><h2 className="text-sm" style={{ color: "#5A3A2E", fontFamily: "var(--font-body)" }}>Bulk shipping weights</h2><p className="text-[11px] mt-1" style={{ color: "#5A3A2E70" }}>Edit the products on this page, then save all weights together.</p></div>
-            <button disabled={bulkWeightMutation.isPending} onClick={() => bulkWeightMutation.mutate({ items: data.items.map((product) => ({ id: product.id, weightGrams: Number(bulkWeights[product.id] ?? 0) })) })} className="px-4 py-2 rounded-md text-[10px] uppercase tracking-[0.05em] disabled:opacity-50" style={{ backgroundColor: "#5A3A2E", color: "#F5F0EB" }}>{bulkWeightMutation.isPending ? "Saving…" : "Save page weights"}</button>
+            <div><p className="text-[10px] uppercase tracking-[0.08em]" style={{ color: "#5A3A2E80" }}>Fast editor</p><h2 className="text-sm" style={{ color: "#5A3A2E", fontFamily: "var(--font-body)" }}>Bulk shipping weights</h2><p className="text-[11px] mt-1" style={{ color: "#5A3A2E70" }}>Edit the products on this page, then save all weights together. Values are stored in grams.</p></div>
+            <div className="flex items-center gap-2"><select aria-label="Bulk weight unit" value={bulkWeightUnit} onChange={(e) => setBulkWeightUnit(e.target.value as "g" | "kg")} className="px-2 py-2 rounded-md text-[10px] border" style={{ borderColor: "#5A3A2E20", color: "#5A3A2E" }}><option value="g">grams (g)</option><option value="kg">kilograms (kg)</option></select><button disabled={bulkWeightMutation.isPending} onClick={() => bulkWeightMutation.mutate({ items: data.items.map((product) => ({ id: product.id, weightGrams: Math.round(Number(bulkWeights[product.id] ?? 0) * (bulkWeightUnit === "kg" ? 1000 : 1)) })) })} className="px-4 py-2 rounded-md text-[10px] uppercase tracking-[0.05em] disabled:opacity-50" style={{ backgroundColor: "#5A3A2E", color: "#F5F0EB" }}>{bulkWeightMutation.isPending ? "Saving…" : "Save page weights"}</button></div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {data.items.map((product) => <label key={product.id} className="flex items-center justify-between gap-3 rounded border px-3 py-2" style={{ borderColor: "#5A3A2E12" }}><span className="text-xs truncate" style={{ color: "#5A3A2E" }}>{product.name}</span><span className="flex items-center gap-1 text-[10px] whitespace-nowrap" style={{ color: "#5A3A2E80" }}><input aria-label={`${product.name} bulk shipping weight`} type="number" min="0" step="1" value={bulkWeights[product.id] ?? 0} onChange={(e) => setBulkWeights((current) => ({ ...current, [product.id]: Number(e.target.value) }))} className="w-20 px-2 py-1 border rounded text-right text-xs" style={{ borderColor: "#5A3A2E20", color: "#5A3A2E" }} /> g</span></label>)}
+            {data.items.map((product) => <label key={product.id} className="flex items-center justify-between gap-3 rounded border px-3 py-2" style={{ borderColor: "#5A3A2E12" }}><span className="text-xs truncate" style={{ color: "#5A3A2E" }}>{product.name}</span><span className="flex items-center gap-1 text-[10px] whitespace-nowrap" style={{ color: "#5A3A2E80" }}><input aria-label={`${product.name} bulk shipping weight`} type="number" min="0" step={bulkWeightUnit === "kg" ? "0.001" : "1"} value={bulkWeightUnit === "kg" ? Number((Number(bulkWeights[product.id] ?? 0) / 1000).toFixed(3)) : (bulkWeights[product.id] ?? 0)} onChange={(e) => setBulkWeights((current) => ({ ...current, [product.id]: Number(e.target.value) * (bulkWeightUnit === "kg" ? 1000 : 1) }))} className="w-20 px-2 py-1 border rounded text-right text-xs" style={{ borderColor: "#5A3A2E20", color: "#5A3A2E" }} /> {bulkWeightUnit}</span></label>)}
           </div>
         </div>
       )}
