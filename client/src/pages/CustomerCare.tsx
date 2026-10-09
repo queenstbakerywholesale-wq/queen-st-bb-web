@@ -17,7 +17,7 @@ const faqs = [
   {
     question: "What are your opening hours?",
     answer:
-      "We are open daily from 2:00 PM to 11:00 PM. Private dining and event bookings may be arranged outside these hours by prior arrangement.",
+      "CBD — Daily: 2:00 PM — 11:00 PM\nHawthorn — Monday to Saturday: 12:00 PM — 10:00 PM\nHawthorn — Sunday: Closed\n\nPrivate dining and event bookings may be arranged outside these hours by prior arrangement.",
   },
   {
     question: "Do you cater for dietary requirements?",
@@ -101,6 +101,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
                 fontWeight: 400,
                 lineHeight: 1.65,
                 color: "oklch(0.34 0.05 45 / 0.6)",
+                whiteSpace: "pre-line",
               }}
             >
               {answer}
@@ -393,7 +394,9 @@ export default function CustomerCare() {
                     color: "oklch(0.34 0.05 45)",
                   }}
                 >
-                  Daily, 2 PM — 11 PM
+                  CBD: Daily, 2 PM — 11 PM
+                  <br />
+                  Hawthorn: Mon–Sat, 12 PM — 10 PM · Sun closed
                 </p>
               </div>
             </div>
