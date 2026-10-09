@@ -3,8 +3,11 @@ import { filterFlavours, flavours } from "../client/src/lib/gelatoCatalog";
 
 describe("Gelato flavour catalogue", () => {
   it("shows the complete catalogue by default", () => {
-    expect(filterFlavours("All")).toHaveLength(12);
+    expect(filterFlavours("All")).toHaveLength(13);
     expect(filterFlavours("All")).toEqual(flavours);
+    expect(flavours.find((flavour) => flavour.name === "Mint Chocolate")?.image).toContain("blueocean_");
+    expect(flavours.find((flavour) => flavour.name === "Coconut Pistachio")?.image).toContain("pischoc_");
+    expect(flavours.find((flavour) => flavour.name === "Strawberry Lovers")?.image).toContain("strawberry_");
   });
 
   it("keeps vegan filtering explicit and plant-based", () => {
