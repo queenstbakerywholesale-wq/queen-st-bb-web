@@ -1,6 +1,5 @@
 /**
- * Tiramisu — Editorial product page
- * Typography: Playfair Display 500 headings, Inter 400 body
+ * Tiramisu — an editorial flavour directory with exact recipe and allergen notes.
  */
 import { motion } from "framer-motion";
 import PageLayout from "@/components/PageLayout";
@@ -9,26 +8,85 @@ import { usePageImage } from "@/hooks/usePageImage";
 const DEFAULT_HERO =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-tiramisu-5h2ZTWStaR9kXHw97oAsV7.webp";
 
-const flavours = [
+type Flavour = {
+  name: string;
+  details: string[];
+};
+
+const flavours: Flavour[] = [
   {
-    name: "Classico",
-    description: "Mascarpone, espresso-soaked savoiardi, Valrhona cocoa",
-    note: "Our signature",
+    name: "Cherry Noir Bloom",
+    details: [
+      "Ladyfingers: Gluten, Egg",
+      "Cream: Dairy",
+      "Coffee: Caffeine",
+      "May contain traces of Nuts, Soy, Sesame",
+    ],
   },
   {
-    name: "Pistachio",
-    description: "Sicilian pistachio cream, white chocolate, delicate crumb",
-    note: "Seasonal favourite",
+    name: "Queen's Original",
+    details: [
+      "Ladyfingers: Gluten, Egg",
+      "Cream: Dairy",
+      "Coffee: Caffeine",
+      "May contain traces of Nuts, Soy, Sesame",
+    ],
   },
   {
-    name: "Matcha",
-    description: "Ceremonial grade Uji matcha, yuzu zest, mascarpone",
-    note: "East meets West",
+    name: "Blueberry & Earlgrey Bloom",
+    details: [
+      "Ladyfingers: Gluten, Egg",
+      "Cream: Dairy",
+      "Coffee: Caffeine",
+      "May contain traces of Nuts, Soy, Sesame",
+    ],
   },
   {
-    name: "Strawberry Rose",
-    description: "Fresh strawberries, rosewater cream, almond biscuit",
-    note: "Limited edition",
+    name: "Verde Dolce PISTACCHIO",
+    details: [
+      "Ladyfingers: Gluten, Egg",
+      "Cream: Dairy",
+      "Coffee: Caffeine",
+      "Pistacchio: Gluten, nut, tree nut",
+    ],
+  },
+  {
+    name: "MANGO CROWN",
+    details: [
+      "Ladyfingers: Gluten, Egg",
+      "Cream: Dairy",
+      "Coffee: Caffeine",
+      "May contain traces of Nuts, Soy, Sesame",
+    ],
+  },
+  {
+    name: "MATCHA forest",
+    details: [
+      "Ladyfingers: Gluten, Egg",
+      "Cream: Dairy",
+      "Matcha: Caffeine",
+      "Mulberry: Caffeine",
+      "May contain traces of Nuts, Soy, Sesame",
+    ],
+  },
+  {
+    name: "Loyal BANANA",
+    details: [
+      "Ladyfingers: Gluten, Egg",
+      "Cream: Dairy",
+      "Coffee: Caffeine",
+      "May contain traces of Nuts, Soy, Sesame",
+    ],
+  },
+  {
+    name: "Golden Biscoff Lotus",
+    details: [
+      "Ladyfingers: Gluten, Egg",
+      "Cream: Dairy",
+      "Coffee: Caffeine",
+      "Lotus: Gluten, Egg, Soy",
+      "May contain traces of Nuts, Sesame",
+    ],
   },
 ];
 
@@ -48,9 +106,8 @@ export default function Tiramisu() {
       heroTitle="Tiramisu"
       heroSubtitle="The art of layered indulgence"
     >
-      {/* Introduction */}
-      <section className="py-20 md:py-28 px-6 md:px-10">
-        <div className="max-w-2xl mx-auto text-center">
+      <section className="px-6 py-20 md:px-10 md:py-28">
+        <div className="mx-auto max-w-3xl text-center">
           <motion.div {...fade}>
             <div className="editorial-rule mx-auto mb-8" />
             <p
@@ -63,114 +120,141 @@ export default function Tiramisu() {
               }}
             >
               Each tiramisu is crafted by hand in our atelier, layered with
-              intention and served as a moment of quiet indulgence. We source
-              mascarpone from Lombardy, espresso from a single-origin roaster,
-              and cocoa from Valrhona's finest reserves.
+              intention and served as a moment of quiet indulgence. Explore
+              our collection and the exact ingredient notes for every flavour.
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Flavour Collection */}
-      <section className="pb-20 md:pb-28 px-6 md:px-10">
-        <div className="max-w-5xl mx-auto">
-          <motion.div {...fade} className="text-center mb-12">
+      <section className="px-6 pb-20 md:px-10 md:pb-28">
+        <div className="mx-auto max-w-6xl">
+          <motion.div {...fade} className="mb-12 text-center">
             <span
-              className="text-[11px] uppercase block mb-3"
+              className="mb-3 block text-[11px] uppercase"
               style={{
                 fontFamily: "var(--font-body)",
                 fontWeight: 500,
-                letterSpacing: "0.04em",
-                color: "oklch(0.45 0.06 45 / 0.5)",
+                letterSpacing: "0.14em",
+                color: "oklch(0.45 0.06 45 / 0.58)",
               }}
             >
               The Collection
             </span>
+            <h2
+              className="mb-5 text-4xl md:text-5xl"
+              style={{
+                fontFamily: "var(--font-display)",
+                fontWeight: 500,
+                color: "oklch(0.34 0.05 45)",
+              }}
+            >
+              Eight layered signatures
+            </h2>
             <span
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] uppercase"
+              className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-[10px] uppercase"
               style={{
                 fontFamily: "var(--font-body)",
                 fontWeight: 500,
-                letterSpacing: "0.06em",
+                letterSpacing: "0.08em",
                 backgroundColor: "oklch(0.34 0.05 45 / 0.08)",
-                color: "oklch(0.34 0.05 45 / 0.7)",
-                border: "1px solid oklch(0.34 0.05 45 / 0.12)",
+                color: "oklch(0.34 0.05 45 / 0.72)",
+                border: "1px solid oklch(0.34 0.05 45 / 0.14)",
               }}
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></svg>
+              <span aria-hidden="true">◌</span>
               Dine-in Only
             </span>
           </motion.div>
 
-          <div
-            className="grid grid-cols-1 md:grid-cols-2"
-            style={{ gap: "1px", backgroundColor: "oklch(0.84 0.025 72 / 0.4)" }}
-          >
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {flavours.map((flavour, i) => (
-              <motion.div
+              <motion.article
                 key={flavour.name}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: i * 0.08 }}
-                className="p-8 md:p-12 group transition-colors duration-500"
-                style={{ backgroundColor: "oklch(0.94 0.015 80)" }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor = "oklch(0.91 0.02 75)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.backgroundColor = "oklch(0.94 0.015 80)")
-                }
+                transition={{ duration: 0.6, delay: i * 0.06 }}
+                className="group relative overflow-hidden rounded-[2px] p-7 transition-transform duration-500 hover:-translate-y-1 md:p-10"
+                style={{
+                  background:
+                    i % 2 === 0
+                      ? "linear-gradient(135deg, oklch(0.35 0.05 45), oklch(0.28 0.045 45))"
+                      : "linear-gradient(135deg, oklch(0.90 0.025 75), oklch(0.95 0.018 82))",
+                  boxShadow: "0 12px 35px oklch(0.25 0.03 45 / 0.08)",
+                }}
               >
-                <span
-                  className="text-[11px] uppercase block mb-4"
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    fontWeight: 500,
-                    letterSpacing: "0.04em",
-                    color: "oklch(0.45 0.06 45 / 0.5)",
-                  }}
-                >
-                  {flavour.note}
-                </span>
-                <h3
-                  className="text-2xl md:text-3xl mb-3 transition-opacity duration-300 group-hover:opacity-70"
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    fontWeight: 500,
-                    letterSpacing: "0.005em",
-                    lineHeight: 1.15,
-                    color: "oklch(0.34 0.05 45)",
-                  }}
-                >
-                  {flavour.name}
-                </h3>
-                <p
-                  className="text-sm"
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    fontWeight: 400,
-                    lineHeight: 1.6,
-                    color: "oklch(0.34 0.05 45 / 0.65)",
-                  }}
-                >
-                  {flavour.description}
-                </p>
-              </motion.div>
+                <div
+                  className="absolute right-7 top-7 h-16 w-16 rounded-full border opacity-20 transition-transform duration-700 group-hover:scale-125"
+                  style={{ borderColor: i % 2 === 0 ? "#f4eee2" : "#5a3a2e" }}
+                />
+                <div className="relative z-10 flex min-h-[245px] flex-col justify-between">
+                  <div>
+                    <div className="mb-7 flex items-start justify-between gap-4">
+                      <span
+                        className="text-[10px] uppercase"
+                        style={{
+                          fontFamily: "var(--font-body)",
+                          letterSpacing: "0.16em",
+                          color: i % 2 === 0 ? "oklch(0.92 0.02 80 / 0.6)" : "oklch(0.34 0.05 45 / 0.55)",
+                        }}
+                      >
+                        0{i + 1} / Tiramisu
+                      </span>
+                      <span
+                        className="rounded-full border px-2.5 py-1 text-[9px] uppercase"
+                        style={{
+                          fontFamily: "var(--font-body)",
+                          letterSpacing: "0.08em",
+                          color: i % 2 === 0 ? "#f4eee2" : "#5a3a2e",
+                          borderColor: i % 2 === 0 ? "oklch(0.92 0.02 80 / 0.35)" : "oklch(0.34 0.05 45 / 0.25)",
+                        }}
+                      >
+                        Halal
+                      </span>
+                    </div>
+                    <h3
+                      className="max-w-[85%] text-3xl md:text-4xl"
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        fontWeight: 500,
+                        lineHeight: 1.08,
+                        color: i % 2 === 0 ? "#f4eee2" : "oklch(0.34 0.05 45)",
+                      }}
+                    >
+                      {flavour.name}
+                    </h3>
+                  </div>
+                  <ul
+                    className="mt-8 space-y-2 text-xs md:text-sm"
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      lineHeight: 1.45,
+                      color: i % 2 === 0 ? "oklch(0.92 0.02 80 / 0.78)" : "oklch(0.34 0.05 45 / 0.7)",
+                    }}
+                  >
+                    {flavour.details.map((detail) => (
+                      <li key={detail} className="flex gap-2">
+                        <span aria-hidden="true">•</span>
+                        <span>{detail}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </motion.article>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Quote */}
       <section
-        className="py-20 md:py-28 px-6 md:px-10"
+        className="px-6 py-20 md:px-10 md:py-28"
         style={{ backgroundColor: "oklch(0.91 0.02 75)" }}
       >
-        <div className="max-w-2xl mx-auto text-center">
+        <div className="mx-auto max-w-2xl text-center">
           <motion.div {...fade}>
             <p
-              className="text-xl md:text-2xl lg:text-3xl italic"
+              className="text-xl italic md:text-2xl lg:text-3xl"
               style={{
                 fontFamily: "var(--font-display)",
                 fontWeight: 500,
