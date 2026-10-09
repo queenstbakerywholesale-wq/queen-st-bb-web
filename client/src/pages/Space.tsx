@@ -8,8 +8,8 @@ import { usePageImage } from "@/hooks/usePageImage";
 
 const DEFAULT_HERO =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-space-d9F8XM8hZ4d35LsKJG8x5i.webp";
-const HAWTHORN_IMAGE =
-  "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-space-mUcyKwAcR2rwS4oEzm2GpP.png";
+const CBD_BRANCH_IMAGE = "/manus-storage/IMG_24732_d4c47399.webp";
+const HAWTHORN_BRANCH_IMAGE = "/manus-storage/IMG_3274_2f51a630.webp";
 
 const branches = [
   {
@@ -20,7 +20,7 @@ const branches = [
     description:
       "Our Queen Street flagship — a central Melbourne stop for slow afternoons, after-work dessert rituals, and the full Queen St BB collection.",
     features: ["Flagship location", "Tiramisu & gelato", "Central Melbourne"],
-    image: DEFAULT_HERO,
+    image: CBD_BRANCH_IMAGE,
     imageAlt: "Queen St BB dessert atelier atmosphere in Melbourne CBD",
     mapUrl: "https://www.google.com/maps/search/?api=1&query=408+Queen+St+Melbourne+VIC+3000",
     status: "Open daily · 2:00 PM — 11:00 PM",
@@ -34,7 +34,7 @@ const branches = [
     description:
       "A softer, neighbourhood expression of Queen St BB — made for focused study, relaxed work meetings, families, and lingering over something sweet.",
     features: ["Study & work meetings", "Baby-friendly", "Wi-Fi area"],
-    image: HAWTHORN_IMAGE,
+    image: HAWTHORN_BRANCH_IMAGE,
     imageAlt: "Queen St BB Hawthorn space and dessert atelier interior",
     mapUrl: "https://www.google.com/maps/search/?api=1&query=616+Glenferrie+Rd+Hawthorn+VIC+3122",
     status: "Open daily · 2:00 PM — 11:00 PM",
