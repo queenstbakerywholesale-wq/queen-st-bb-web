@@ -700,3 +700,11 @@
 - [x] Added staff shift schedule CSV and Excel-compatible `.xls` export
 - [x] Applied migration `0019_colorful_titania.sql` for POS customer email and receipt token fields
 - [x] Verified invalid receipt links fail safely; TypeScript, 198 tests, and production build pass
+
+## Space 三店位置页改版 — 2026-10-09
+- [x] 新增 CBD 门店：408 Queen St, Melbourne VIC 3000
+- [x] 新增 Hawthorn 门店：616 Glenferrie Rd, Hawthorn VIC 3122
+- [x] 新增 Windsor Coming Soon 门店卡片，暂不显示虚构地址
+- [x] 为每家门店加入独立图片展示区域；Windsor 使用正式的待补图占位设计
+- [x] 加入门店特色标签、营业时间、地图入口与门店叙事
+- [x] TypeScript、200 项测试、production build 和预览验证通过
