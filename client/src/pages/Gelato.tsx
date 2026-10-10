@@ -45,9 +45,9 @@ export default function Gelato() {
               color: "oklch(0.34 0.05 45 / 0.8)",
             }}
           >
-            A daily rotation of slow-churned flavours, made with a little drama and
-            served at the perfect temperature. Browse by dietary preference, then
-            find your flavour by image, name and starting price.
+            A daily rotation of slow-churned flavours, made with fresh fruit rather
+            than frozen fruit wherever the recipe calls for it. Browse by dietary
+            preference, then find your flavour by image, name and starting price.
           </p>
         </motion.div>
       </section>

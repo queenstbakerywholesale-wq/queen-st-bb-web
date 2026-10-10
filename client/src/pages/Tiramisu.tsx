@@ -7,6 +7,10 @@ import { usePageImage } from "@/hooks/usePageImage";
 
 const DEFAULT_HERO =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-tiramisu-5h2ZTWStaR9kXHw97oAsV7.webp";
+const TIRAMISU_CROSS_SECTION = "/manus-storage/tiramisu-ladyfinger-cross-section_b789093e.jpeg";
+const FRESH_CHERRIES = "/manus-storage/fresh-cherries_0f83cdd4.jpeg";
+const TIRAMISU_MOUTH = "/manus-storage/tiramisu-mouth_540109b1.jpeg";
+const TIRAMISU_QUEEN = "/manus-storage/tiramisu-queen_d15d0080.jpeg";
 
 type Flavour = {
   name: string;
@@ -119,10 +123,36 @@ export default function Tiramisu() {
                 color: "oklch(0.34 0.05 45 / 0.8)",
               }}
             >
-              Each tiramisu is crafted by hand in our atelier, layered with
-              intention and served as a moment of quiet indulgence. Explore
-              our collection and the exact ingredient notes for every flavour.
+              Made fresh in our atelier every day, each tiramisu is given a full
+              24 hours to rest before it is served. We work toward a ladyfinger
+              that feels light and sponge-like, use wholesome ingredients, and
+              never use artificial flavours or colours.
             </p>
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="px-6 pb-20 md:px-10 md:pb-28">
+        <div className="mx-auto grid max-w-6xl gap-5 md:grid-cols-[1.05fr_0.95fr] md:items-stretch">
+          <motion.div {...fade} className="grid grid-cols-2 gap-3">
+            <img src={TIRAMISU_CROSS_SECTION} alt="Fresh tiramisu showing creamy layers and sponge-like ladyfingers" className="h-full min-h-[320px] w-full rounded-[2px] object-cover" />
+            <div className="grid gap-3">
+              <img src={TIRAMISU_MOUTH} alt="Tiramisu enjoyed as a sensory dessert ritual" className="h-full min-h-[155px] w-full rounded-[2px] object-cover object-center" />
+              <img src={FRESH_CHERRIES} alt="Fresh cherries used as a seasonal ingredient" className="h-full min-h-[155px] w-full rounded-[2px] object-cover" />
+            </div>
+          </motion.div>
+          <motion.div {...fade} className="flex flex-col justify-between rounded-[2px] p-8 md:p-12" style={{ backgroundColor: "oklch(0.91 0.02 75)" }}>
+            <div>
+              <span className="mb-5 block text-[11px] uppercase tracking-[0.16em] text-brand-cocoa/65">The Queen St BB method</span>
+              <h2 className="font-serif text-4xl italic leading-tight text-brand-brown md:text-5xl">Patience makes the texture.</h2>
+              <p className="mt-7 text-sm leading-7 text-brand-brown/75 md:text-base">The first spoonful should be soft, airy and deeply soaked — never heavy. We make our ladyfingers to behave more like a delicate sponge, then let every layer settle overnight so the coffee, cream and cocoa become one calm, balanced bite.</p>
+            </div>
+            <div className="mt-10 grid grid-cols-2 gap-4 border-t border-brand-brown/20 pt-6 text-[11px] uppercase tracking-[0.1em] text-brand-cocoa/75">
+              <div><strong className="block text-brand-brown">Daily</strong>Made fresh</div>
+              <div><strong className="block text-brand-brown">24 hours</strong>Rested before service</div>
+              <div><strong className="block text-brand-brown">No artificial</strong>Flavours or colours</div>
+              <div><strong className="block text-brand-brown">Whole ingredients</strong>Chosen with care</div>
+            </div>
           </motion.div>
         </div>
       </section>
@@ -266,6 +296,17 @@ export default function Tiramisu() {
               on patience and pleasure."
             </p>
             <div className="editorial-rule mx-auto mt-8" />
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="px-6 pb-20 md:px-10 md:pb-28">
+        <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-[0.8fr_1.2fr] md:items-center">
+          <motion.div {...fade}><img src={TIRAMISU_QUEEN} alt="Queen St BB tiramisu moment in Melbourne" className="max-h-[620px] w-full rounded-[2px] object-cover object-center" /></motion.div>
+          <motion.div {...fade} className="max-w-xl md:pl-8">
+            <span className="mb-5 block text-[11px] uppercase tracking-[0.16em] text-brand-cocoa/65">Made with intention</span>
+            <p className="font-serif text-3xl italic leading-tight text-brand-brown md:text-5xl">A dessert that asks you to slow down.</p>
+            <p className="mt-7 text-sm leading-7 text-brand-brown/70 md:text-base">From the first whisk to the final dusting of cocoa, our process is designed around freshness, texture and restraint.</p>
           </motion.div>
         </div>
       </section>

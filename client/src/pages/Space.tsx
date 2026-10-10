@@ -10,6 +10,7 @@ const DEFAULT_HERO =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-space-d9F8XM8hZ4d35LsKJG8x5i.webp";
 const CBD_BRANCH_IMAGE = "/manus-storage/IMG_24732_d4c47399.webp";
 const HAWTHORN_BRANCH_IMAGE = "/manus-storage/IMG_3274_2f51a630.webp";
+const CBD_LISTING_IMAGE = "/manus-storage/cbd-store-public-listing_b96a9b35.webp";
 
 const branches = [
   {
@@ -242,6 +243,20 @@ export default function Space() {
               </div>
             </motion.article>
           ))}
+        </div>
+      </section>
+
+      <section className="px-6 pb-20 md:px-10 md:pb-28">
+        <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-[1.2fr_0.8fr] md:items-end">
+          <motion.div {...fade} className="overflow-hidden rounded-[2px] bg-[#eee4d6]">
+            <img src={CBD_LISTING_IMAGE} alt="QueenSt.BB CBD dessert counter and gelato display" className="h-[280px] w-full object-cover md:h-[430px]" />
+            <p className="px-5 py-3 text-[10px] uppercase tracking-[0.12em] text-brand-cocoa/60">CBD / Queen Street · dessert counter and gelato display</p>
+          </motion.div>
+          <motion.div {...fade} className="pb-2 md:pb-10">
+            <span className="mb-5 block text-[11px] uppercase tracking-[0.16em] text-brand-cocoa/65">Inside the CBD room</span>
+            <h2 className="font-serif text-4xl italic leading-tight text-brand-brown md:text-5xl">The city atelier, in its element.</h2>
+            <p className="mt-6 text-sm leading-7 text-brand-brown/70 md:text-base">A closer look at the counter, the light and the everyday rituals that make our Queen Street room feel like more than a stop for dessert.</p>
+          </motion.div>
         </div>
       </section>
 
