@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import Navigation from "@/components/Navigation";
 import ProgressiveImage from "@/components/ProgressiveImage";
 import { usePageImages } from "@/hooks/usePageImage";
+import { trpc } from "@/lib/trpc";
 
 const DEFAULT_IMAGES = {
   "hero-main": "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-main-DCvSGXsexKPMwmhrmBHewa.webp",
@@ -34,6 +35,10 @@ const quickLinks = [
 
 export default function Home() {
   const images = usePageImages("home", DEFAULT_IMAGES);
+  const { data: liveProducts } = trpc.publicProducts.list.useQuery({ limit: 100 });
+  const featuredGoods = (liveProducts ?? [])
+    .filter((product) => product.productType === "merchandise" && Boolean(product.imageUrl) && Number(product.stock ?? 0) > 0)
+    .slice(0, 4);
 
   return (
     <div className="min-h-screen bg-[#f4eee2] text-[#3d2c24]">
@@ -96,6 +101,37 @@ export default function Home() {
           </motion.p>
         </div>
       </section>
+
+      {featuredGoods.length > 0 && (
+        <section className="px-6 py-20 md:px-10 md:py-28">
+          <div className="mx-auto max-w-6xl">
+            <motion.div {...fade} className="mb-9 flex items-end justify-between gap-5">
+              <div>
+                <span className="mb-3 block text-[10px] uppercase tracking-[0.2em] text-[#7c6250]/75">The Objects edit</span>
+                <h2 className="font-serif text-4xl italic md:text-5xl">Small things, made memorable.</h2>
+              </div>
+              <Link href="/objects" className="hidden text-[10px] uppercase tracking-[0.16em] underline underline-offset-4 md:block">Shop all objects ↗</Link>
+            </motion.div>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              {featuredGoods.map((product, index) => (
+                <motion.div key={product.id} {...fade} transition={{ duration: 0.55, delay: index * 0.06 }}>
+                  <Link href="/objects">
+                    <article className="group">
+                      <div className="aspect-[4/5] overflow-hidden rounded-[2px] bg-[#eadfd2]">
+                        <ProgressiveImage src={product.imageUrl!} alt={product.name} containerClassName="h-full w-full" objectFit="contain" className="p-3 transition-transform duration-700 group-hover:scale-[1.04]" />
+                      </div>
+                      <div className="px-1 pt-4">
+                        <h3 className="font-serif text-xl italic leading-tight">{product.name}</h3>
+                        <p className="mt-2 text-[10px] uppercase tracking-[0.1em] text-[#7c6250]/70">AUD {Number(product.price).toFixed(2)}</p>
+                      </div>
+                    </article>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="px-6 py-20 md:px-10 md:py-28">
         <div className="mx-auto max-w-6xl">
