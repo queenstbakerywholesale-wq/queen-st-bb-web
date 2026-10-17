@@ -1,12 +1,5 @@
-/**
- * Home — 4 full-screen scrolling sections
- * Typography: Playfair Display 500 for headings, Inter 500 for subtitles
- * Pure white text over images, no opacity reduction on headings
- * Cinematic, immersive, editorial — luxury brand story
- */
-import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Navigation from "@/components/Navigation";
 import ProgressiveImage from "@/components/ProgressiveImage";
 import { usePageImages } from "@/hooks/usePageImage";
@@ -18,323 +11,114 @@ const DEFAULT_IMAGES = {
   "hero-space": "https://d2xsxph8kpxj0f.cloudfront.net/310519663564421247/kKmGie8G5N5Yj6wNmxZVBs/hero-space-d9F8XM8hZ4d35LsKJG8x5i.webp",
 };
 
-interface Section {
-  id: string;
-  title: string;
-  subtitle: string;
-  image: string;
-  href: string;
-}
+const fade = {
+  initial: { opacity: 0, y: 18 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-60px" },
+  transition: { duration: 0.6 },
+};
+
+const collectionCards = [
+  { label: "Tiramisu", note: "Layered with intention", href: "/tiramisu", image: "hero-tiramisu", tone: "dark" },
+  { label: "Gelato & Sorbet", note: "Churned daily", href: "/gelato", image: "hero-gelato", tone: "light" },
+  { label: "The Space", note: "Three Melbourne rooms", href: "/space", image: "hero-space", tone: "dark" },
+  { label: "Objects", note: "Objects for the everyday", href: "/objects", image: "hero-main", tone: "light" },
+];
+
+const quickLinks = [
+  { label: "Cake Booking", note: "Made to order", href: "/cake-booking" },
+  { label: "Gift Cards", note: "Give a little Queen St BB", href: "/gift-cards" },
+  { label: "Wholesale", note: "Bring us to your room", href: "/wholesale" },
+  { label: "Franchise", note: "A new chapter", href: "/franchise" },
+];
 
 export default function Home() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [currentSection, setCurrentSection] = useState(0);
-  const [isScrolling, setIsScrolling] = useState(false);
-
   const images = usePageImages("home", DEFAULT_IMAGES);
 
-  const sections: Section[] = useMemo(() => [
-    {
-      id: "hero",
-      title: "Queen St BB",
-      subtitle: "A Dessert Atelier",
-      image: images["hero-main"],
-      href: "/about",
-    },
-    {
-      id: "tiramisu",
-      title: "Tiramisu",
-      subtitle: "Layered with Intention",
-      image: images["hero-tiramisu"],
-      href: "/tiramisu",
-    },
-    {
-      id: "gelato",
-      title: "Gelato",
-      subtitle: "Crafted from Tradition",
-      image: images["hero-gelato"],
-      href: "/gelato",
-    },
-    {
-      id: "space",
-      title: "The Space",
-      subtitle: "Where Craft Meets Ceremony",
-      image: images["hero-space"],
-      href: "/space",
-    },
-  ], [images]);
-
-  const scrollToSection = useCallback(
-    (index: number) => {
-      if (isScrolling || index < 0 || index >= sections.length) return;
-      setIsScrolling(true);
-      setCurrentSection(index);
-      setTimeout(() => setIsScrolling(false), 1000);
-    },
-    [isScrolling, sections.length]
-  );
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    let lastScrollTime = 0;
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      const now = Date.now();
-      if (now - lastScrollTime < 1000) return;
-      lastScrollTime = now;
-
-      if (e.deltaY > 0) scrollToSection(currentSection + 1);
-      else scrollToSection(currentSection - 1);
-    };
-
-    container.addEventListener("wheel", handleWheel, { passive: false });
-    return () => container.removeEventListener("wheel", handleWheel);
-  }, [currentSection, scrollToSection]);
-
-  // Touch support
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    let touchStartY = 0;
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartY = e.touches[0].clientY;
-    };
-    const handleTouchEnd = (e: TouchEvent) => {
-      const diff = touchStartY - e.changedTouches[0].clientY;
-      if (Math.abs(diff) > 50) {
-        if (diff > 0) scrollToSection(currentSection + 1);
-        else scrollToSection(currentSection - 1);
-      }
-    };
-
-    container.addEventListener("touchstart", handleTouchStart, { passive: true });
-    container.addEventListener("touchend", handleTouchEnd, { passive: true });
-    return () => {
-      container.removeEventListener("touchstart", handleTouchStart);
-      container.removeEventListener("touchend", handleTouchEnd);
-    };
-  }, [currentSection, scrollToSection]);
-
-  // Keyboard support
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowDown" || e.key === " ") {
-        e.preventDefault();
-        scrollToSection(currentSection + 1);
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        scrollToSection(currentSection - 1);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentSection, scrollToSection]);
-
   return (
-    <div className="h-screen overflow-hidden relative">
+    <div className="min-h-screen bg-[#f4eee2] text-[#3d2c24]">
       <Navigation variant="transparent" />
 
-      {/* Sections */}
-      <div ref={containerRef} className="h-screen overflow-hidden">
-        {sections.map((section, index) => (
-          <div
-            key={section.id}
-            className="h-screen w-full absolute inset-0 overflow-hidden"
-            style={{
-              transform: `translateY(${(index - currentSection) * 100}%)`,
-              transition: "transform 0.9s cubic-bezier(0.65, 0, 0.35, 1)",
-              zIndex: currentSection === index ? 10 : 1,
-            }}
-          >
-            {/* Background Image — slow Ken Burns */}
-            <div className="absolute inset-0">
-              <motion.div
-                className="absolute inset-0"
-                animate={{
-                  scale: currentSection === index ? 1.04 : 1,
-                }}
-                transition={{ duration: 14, ease: "linear" }}
-              >
-                <ProgressiveImage
-                  src={section.image}
-                  alt={section.title}
-                  containerClassName="w-full h-full"
-                  className="saturate-[0.85] contrast-[0.95]"
-                />
-              </motion.div>
-              {/* Slightly darker overlay for strong text contrast */}
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "linear-gradient(to top, oklch(0.12 0.03 45 / 0.7) 0%, oklch(0.18 0.02 45 / 0.3) 40%, oklch(0.2 0.01 45 / 0.08) 70%)",
-                }}
-              />
-              {/* Subtle grain */}
-              <div className="absolute inset-0 film-grain" />
+      <section className="relative min-h-[78vh] overflow-hidden bg-[#3d2c24]">
+        <ProgressiveImage
+          src={images["hero-main"]}
+          alt="Queen St BB dessert atelier"
+          containerClassName="absolute inset-0 h-full w-full"
+          className="saturate-[0.85] contrast-[0.95]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#2b1e18]/80 via-[#2b1e18]/15 to-transparent" />
+        <motion.div {...fade} className="absolute inset-x-6 bottom-12 mx-auto max-w-6xl text-center text-[#fffaf2] md:bottom-20">
+          <p className="mb-4 text-[10px] uppercase tracking-[0.24em] text-white/70">Melbourne / A dessert atelier</p>
+          <h1 className="font-serif text-6xl italic leading-none md:text-8xl">Queen St BB</h1>
+          <p className="mx-auto mt-5 max-w-md text-sm leading-6 text-white/80">Fresh tiramisu, slow-churned gelato, and objects made to make an everyday moment feel special.</p>
+          <a href="#collections" className="mt-8 inline-block border-b border-white/60 pb-2 text-[10px] uppercase tracking-[0.18em] text-white/90">Discover the collection</a>
+        </motion.div>
+      </section>
+
+      <section id="collections" className="px-6 py-20 md:px-10 md:py-28">
+        <div className="mx-auto max-w-6xl">
+          <motion.div {...fade} className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <span className="mb-4 block text-[10px] uppercase tracking-[0.2em] text-[#7c6250]/75">Explore Queen St BB</span>
+              <h2 className="font-serif text-4xl italic md:text-6xl">Wonders of the atelier</h2>
             </div>
-
-            {/* Content Overlay — minimal text, strong typography */}
-            <div className="absolute inset-0 flex flex-col items-center justify-end pb-20 md:pb-28 z-10">
-              <AnimatePresence mode="wait">
-                {currentSection === index && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 25 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -15 }}
-                    transition={{ duration: 0.7, delay: 0.25 }}
-                    className="text-center"
-                  >
-                    {index === 0 ? (
-                      <>
-                        <h1
-                          className="text-5xl md:text-7xl lg:text-8xl mb-4"
-                          style={{
-                            fontFamily: "var(--font-display)",
-                            fontWeight: 500,
-                            letterSpacing: "0.01em",
-                            lineHeight: 1.1,
-                            color: "#FFFFFF",
-                          }}
-                        >
-                          Queen St BB
-                        </h1>
-                        <p
-                          className="text-xs md:text-sm uppercase"
-                          style={{
-                            fontFamily: "var(--font-body)",
-                            fontWeight: 500,
-                            letterSpacing: "0.05em",
-                            color: "#FFFFFF",
-                          }}
-                        >
-                          {section.subtitle}
-                        </p>
-                      </>
-                    ) : (
-                      <Link href={section.href}>
-                        <div className="group">
-                          <h2
-                            className="text-4xl md:text-6xl lg:text-7xl mb-3 group-hover:opacity-75 transition-opacity duration-500"
-                            style={{
-                              fontFamily: "var(--font-display)",
-                              fontWeight: 500,
-                              letterSpacing: "0.01em",
-                              lineHeight: 1.1,
-                              color: "#FFFFFF",
-                            }}
-                          >
-                            {section.title}
-                          </h2>
-                          <p
-                            className="text-xs md:text-sm uppercase"
-                            style={{
-                              fontFamily: "var(--font-body)",
-                              fontWeight: 500,
-                              letterSpacing: "0.05em",
-                              color: "#FFFFFF",
-                            }}
-                          >
-                            {section.subtitle}
-                          </p>
-                          <div className="flex justify-center mt-6">
-                            <span
-                              className="text-[10px] uppercase pb-1 group-hover:opacity-80 transition-all duration-400"
-                              style={{
-                                fontFamily: "var(--font-body)",
-                                fontWeight: 500,
-                                letterSpacing: "0.05em",
-                                color: "rgba(255,255,255,0.5)",
-                                borderBottom: "1px solid rgba(255,255,255,0.3)",
-                              }}
-                            >
-                              Explore
-                            </span>
-                          </div>
-                        </div>
-                      </Link>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Pagination — thin vertical lines */}
-      <div className="fixed right-6 md:right-10 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-3">
-        {sections.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => scrollToSection(index)}
-            className="group flex items-center"
-            aria-label={`Go to section ${index + 1}`}
-          >
-            <motion.div
-              className="w-[1.5px] transition-all duration-500"
-              animate={{
-                height: currentSection === index ? 28 : 10,
-                backgroundColor:
-                  currentSection === index
-                    ? "rgba(255,255,255,0.85)"
-                    : "rgba(255,255,255,0.25)",
-              }}
-              transition={{ duration: 0.5 }}
-            />
-          </button>
-        ))}
-      </div>
-
-      {/* Section Counter */}
-      <div className="fixed bottom-7 left-1/2 -translate-x-1/2 z-30">
-        <span
-          className="text-[11px]"
-          style={{
-            fontFamily: "var(--font-body)",
-            fontWeight: 500,
-            letterSpacing: "0.05em",
-            color: "rgba(255,255,255,0.5)",
-          }}
-        >
-          {String(currentSection + 1).padStart(2, "0")} /{" "}
-          {String(sections.length).padStart(2, "0")}
-        </span>
-      </div>
-
-      {/* Scroll hint — first section only */}
-      <AnimatePresence>
-        {currentSection === 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ delay: 2, duration: 0.6 }}
-            className="fixed bottom-14 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2"
-          >
-            <span
-              className="text-[10px] uppercase"
-              style={{
-                fontFamily: "var(--font-body)",
-                fontWeight: 500,
-                letterSpacing: "0.05em",
-                color: "rgba(255,255,255,0.45)",
-              }}
-            >
-              Scroll
-            </span>
-            <motion.div
-              animate={{ y: [0, 5, 0] }}
-              transition={{ duration: 1.8, repeat: Infinity }}
-              className="w-[1px] h-4"
-              style={{ backgroundColor: "rgba(255,255,255,0.3)" }}
-            />
+            <p className="max-w-sm text-sm leading-6 text-[#5a4335]/70">Everything we make, serve, and share — gathered in one place.</p>
           </motion.div>
-        )}
-      </AnimatePresence>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {collectionCards.map((card, index) => (
+              <motion.div key={card.label} {...fade} transition={{ duration: 0.6, delay: index * 0.06 }}>
+                <Link href={card.href}>
+                  <article className={`group relative min-h-[300px] overflow-hidden rounded-[2px] ${card.tone === "dark" ? "bg-[#3d2c24] text-[#fffaf2]" : "bg-[#e6d7c5] text-[#3d2c24]"}`}>
+                    <ProgressiveImage src={images[card.image as keyof typeof images]} alt={card.label} containerClassName="absolute inset-0 h-full w-full" className="transition-transform duration-700 group-hover:scale-[1.04]" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#241813]/75 via-transparent to-transparent" />
+                    <div className="absolute inset-x-6 bottom-6 md:inset-x-8 md:bottom-8">
+                      <p className="mb-2 text-[10px] uppercase tracking-[0.18em] text-white/70">{card.note}</p>
+                      <h3 className="font-serif text-4xl italic text-white md:text-5xl">{card.label}</h3>
+                      <span className="mt-5 inline-block border-b border-white/60 pb-1 text-[10px] uppercase tracking-[0.16em] text-white/80">See collection ↗</span>
+                    </div>
+                  </article>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-[#8d705b]/20 bg-[#ebe0d1] px-6 py-16 md:px-10 md:py-20">
+        <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-[0.8fr_1.2fr] md:items-center">
+          <motion.div {...fade}>
+            <span className="mb-4 block text-[10px] uppercase tracking-[0.2em] text-[#7c6250]/75">Made fresh, shared slowly</span>
+            <h2 className="font-serif text-4xl italic leading-tight md:text-6xl">A little indulgence, with a point of view.</h2>
+          </motion.div>
+          <motion.p {...fade} className="max-w-xl text-sm leading-7 text-[#5a4335]/75 md:text-base">
+            We make tiramisu fresh every day and let it rest for 24 hours before serving. Our gelato is churned in small batches, with fresh fruit wherever the recipe calls for it. Come for one spoonful, stay for the room.
+          </motion.p>
+        </div>
+      </section>
+
+      <section className="px-6 py-20 md:px-10 md:py-28">
+        <div className="mx-auto max-w-6xl">
+          <motion.div {...fade} className="mb-8 flex items-end justify-between gap-5">
+            <div>
+              <span className="mb-3 block text-[10px] uppercase tracking-[0.2em] text-[#7c6250]/75">More from Queen St BB</span>
+              <h2 className="font-serif text-4xl italic md:text-5xl">Find your next moment</h2>
+            </div>
+            <Link href="/customer-care" className="hidden text-[10px] uppercase tracking-[0.16em] underline underline-offset-4 md:block">Visit the care guide ↗</Link>
+          </motion.div>
+          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[2px] bg-[#8d705b]/20 md:grid-cols-4">
+            {quickLinks.map((item) => (
+              <Link key={item.href} href={item.href}>
+                <div className="group min-h-[150px] bg-[#f4eee2] p-5 transition-colors hover:bg-[#e6d7c5] md:min-h-[190px] md:p-7">
+                  <span className="text-[9px] uppercase tracking-[0.16em] text-[#7c6250]/65">Explore</span>
+                  <h3 className="mt-8 font-serif text-2xl italic md:text-3xl">{item.label}</h3>
+                  <p className="mt-2 text-[11px] text-[#5a4335]/65">{item.note}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
