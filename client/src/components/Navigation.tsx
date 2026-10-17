@@ -1,9 +1,3 @@
-/**
- * Navigation — Luxury editorial header
- * Typography: Inter weight 500, tight letter-spacing
- * Brand wordmark: Playfair Display weight 500
- * Pure white text over images, no opacity reduction
- */
 import { useState, useEffect, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,199 +14,87 @@ const navLinks = [
   { label: "Gift Cards", href: "/gift-cards" },
 ];
 
-const baseAllLinks = [
-  ...navLinks,
-  { label: "About", href: "/about" },
-  { label: "Customer Care", href: "/customer-care" },
-];
+const desktopLeft = navLinks.slice(0, 4);
+const desktopRight = navLinks.slice(6, 8);
+const baseAllLinks = [...navLinks, { label: "About", href: "/about" }, { label: "Customer Care", href: "/customer-care" }];
 
-interface NavigationProps {
-  variant?: "transparent" | "solid";
-}
+interface NavigationProps { variant?: "transparent" | "solid"; }
 
 export default function Navigation({ variant = "solid" }: NavigationProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [location] = useLocation();
   const { isAuthenticated } = useAuth();
-
-  const allLinks = useMemo(
-    () =>
-      isAuthenticated
-        ? [...baseAllLinks, { label: "My Page", href: "/my-page" }]
-        : baseAllLinks,
-    [isAuthenticated]
-  );
-
+  const allLinks = useMemo(() => isAuthenticated ? [...baseAllLinks, { label: "My Page", href: "/my-page" }] : baseAllLinks, [isAuthenticated]);
   const isTransparent = variant === "transparent";
+  const showSolid = !isTransparent || scrolled || menuOpen;
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 80);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 80);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const showSolid = !isTransparent || scrolled || menuOpen;
+  const linkColor = menuOpen ? "rgba(255,255,255,0.78)" : showSolid ? "oklch(0.34 0.05 45 / 0.72)" : "rgba(255,255,255,0.88)";
 
   return (
     <>
+      <div className={`fixed left-0 right-0 top-0 z-[60] text-center transition-colors duration-300 ${showSolid ? "bg-[#3d2c24] text-[#f7eee2]" : "bg-[#3d2c24]/70 text-white"}`}>
+        <p className="px-4 py-2 text-[9px] uppercase tracking-[0.18em]">Fresh tiramisu daily · Melbourne CBD, Hawthorn & Windsor coming soon</p>
+      </div>
       <header
-        className="fixed top-0 left-0 right-0 z-50 transition-colors duration-300"
+        className="fixed left-0 right-0 top-[29px] z-50 border-b transition-colors duration-300"
         style={{
-          backgroundColor: menuOpen
-            ? "oklch(0.30 0.04 45)"
-            : showSolid
-              ? "oklch(0.94 0.015 80 / 0.96)"
-              : "transparent",
-          backdropFilter: showSolid && !menuOpen ? "blur(4px)" : "none",
-          borderBottom: showSolid && !menuOpen
-            ? "1px solid oklch(0.84 0.025 72 / 0.3)"
-            : "1px solid transparent",
+          backgroundColor: menuOpen ? "#3d2c24" : showSolid ? "rgba(247,238,226,0.96)" : "transparent",
+          backdropFilter: showSolid && !menuOpen ? "blur(8px)" : "none",
+          borderColor: showSolid && !menuOpen ? "rgba(126,96,75,0.22)" : "transparent",
         }}
       >
-        <div className="flex items-center justify-between px-6 md:px-10 py-4 md:py-5">
-          {/* Brand Wordmark — Playfair Display, weight 500 */}
-          <Link href="/">
-            <span
-              className="text-lg md:text-xl transition-colors duration-200"
-              style={{
-                fontFamily: "var(--font-display)",
-                fontWeight: 500,
-                letterSpacing: "0.04em",
-                color: menuOpen
-                  ? "#FFFFFF"
-                  : showSolid
-                    ? "oklch(0.34 0.05 45)"
-                    : "#FFFFFF",
-              }}
-            >
-              QUEEN ST BB
-            </span>
-          </Link>
-
-          {/* Desktop Nav — Inter, weight 500, sharp */}
-          <nav className="hidden lg:flex items-center gap-7">
-            {navLinks.map((link) => (
-              <Link key={link.href} href={link.href}>
-                <span
-                  className="text-[11px] uppercase transition-all duration-400 hover:opacity-60"
-                  style={{
-                    fontFamily: "var(--font-nav)",
-                    fontWeight: 500,
-                    letterSpacing: "0.04em",
-                    color: menuOpen
-                      ? "rgba(255,255,255,0.7)"
-                      : showSolid
-                        ? location === link.href
-                          ? "oklch(0.34 0.05 45)"
-                          : "oklch(0.34 0.05 45 / 0.65)"
-                        : location === link.href
-                          ? "#FFFFFF"
-                          : "rgba(255,255,255,0.85)",
-                  }}
-                >
-                  {link.label}
-                </span>
-              </Link>
-            ))}
+        <div className="hidden items-center justify-between px-6 py-4 lg:flex xl:px-10">
+          <nav className="flex min-w-[330px] items-center gap-6">
+            {desktopLeft.map((link) => <NavItem key={link.href} link={link} location={location} color={linkColor} />)}
           </nav>
-
-          {/* Menu Toggle — three thin lines */}
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="relative z-60 flex flex-col items-end gap-[5px]"
-            aria-label="Toggle menu"
-          >
-            <motion.span
-              animate={menuOpen ? { rotate: 45, y: 7 } : { rotate: 0, y: 0 }}
-              className="block w-6 h-[1px] origin-center"
-              style={{
-                backgroundColor: menuOpen
-                  ? "#FFFFFF"
-                  : showSolid
-                    ? "oklch(0.34 0.05 45)"
-                    : "#FFFFFF",
-              }}
-              transition={{ duration: 0.3 }}
-            />
-            <motion.span
-              animate={menuOpen ? { opacity: 0 } : { opacity: 1 }}
-              className="block w-4 h-[1px]"
-              style={{
-                backgroundColor: showSolid
-                  ? "oklch(0.34 0.05 45)"
-                  : "#FFFFFF",
-              }}
-              transition={{ duration: 0.2 }}
-            />
-            <motion.span
-              animate={menuOpen ? { rotate: -45, y: -7 } : { rotate: 0, y: 0 }}
-              className="block w-6 h-[1px] origin-center"
-              style={{
-                backgroundColor: menuOpen
-                  ? "#FFFFFF"
-                  : showSolid
-                    ? "oklch(0.34 0.05 45)"
-                    : "#FFFFFF",
-              }}
-              transition={{ duration: 0.3 }}
-            />
+          <Link href="/" className="absolute left-1/2 -translate-x-1/2">
+            <span className="font-serif text-xl tracking-[0.08em]" style={{ color: menuOpen ? "#fffaf2" : showSolid ? "#3d2c24" : "#fffaf2" }}>QUEEN ST BB</span>
+          </Link>
+          <nav className="flex min-w-[330px] items-center justify-end gap-6">
+            {desktopRight.map((link) => <NavItem key={link.href} link={link} location={location} color={linkColor} />)}
+            <button onClick={() => setMenuOpen(!menuOpen)} aria-label="Open menu" className="ml-2 flex flex-col gap-1.5">
+              <span className="block h-px w-6" style={{ backgroundColor: menuOpen ? "#fffaf2" : showSolid ? "#3d2c24" : "#fffaf2" }} />
+              <span className="block h-px w-4 self-end" style={{ backgroundColor: menuOpen ? "#fffaf2" : showSolid ? "#3d2c24" : "#fffaf2" }} />
+              <span className="block h-px w-6" style={{ backgroundColor: menuOpen ? "#fffaf2" : showSolid ? "#3d2c24" : "#fffaf2" }} />
+            </button>
+          </nav>
+        </div>
+        <div className="flex items-center justify-between px-5 py-4 lg:hidden">
+          <Link href="/"><span className="font-serif text-lg tracking-[0.08em]" style={{ color: menuOpen ? "#fffaf2" : showSolid ? "#3d2c24" : "#fffaf2" }}>QUEEN ST BB</span></Link>
+          <button onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu" className="relative z-10 flex flex-col items-end gap-1.5">
+            <span className="block h-px w-6" style={{ backgroundColor: menuOpen ? "#fffaf2" : showSolid ? "#3d2c24" : "#fffaf2" }} />
+            <span className="block h-px w-4" style={{ backgroundColor: menuOpen ? "#fffaf2" : showSolid ? "#3d2c24" : "#fffaf2" }} />
+            <span className="block h-px w-6" style={{ backgroundColor: menuOpen ? "#fffaf2" : showSolid ? "#3d2c24" : "#fffaf2" }} />
           </button>
         </div>
       </header>
 
-      {/* Full-screen Menu Overlay */}
       <AnimatePresence>
         {menuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="fixed inset-0 z-40 flex items-center justify-center"
-            style={{ backgroundColor: "oklch(0.30 0.04 45)" }}
-          >
-            <nav className="flex flex-col items-center gap-5 md:gap-7">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 flex items-center justify-center bg-[#3d2c24] px-8 pt-20">
+            <nav className="grid w-full max-w-xl grid-cols-2 gap-x-8 gap-y-5 md:grid-cols-3">
               {allLinks.map((link, i) => (
-                <motion.div
-                  key={link.href}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ delay: i * 0.05, duration: 0.4 }}
-                >
+                <motion.div key={link.href} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.035 }}>
                   <Link href={link.href} onClick={() => setMenuOpen(false)}>
-                    <span
-                      className="text-2xl md:text-3xl transition-opacity duration-300 hover:opacity-40"
-                      style={{
-                        fontFamily: "var(--font-display)",
-                        fontWeight: 500,
-                        letterSpacing: "0.01em",
-                        color:
-                          location === link.href
-                            ? "oklch(0.82 0.04 72)"
-                            : "#FFFFFF",
-                      }}
-                    >
-                      {link.label}
-                    </span>
+                    <span className={`font-serif text-2xl italic transition-opacity hover:opacity-50 ${location === link.href ? "text-[#d9b27f]" : "text-[#fffaf2]"}`}>{link.label}</span>
                   </Link>
                 </motion.div>
               ))}
-
-              <motion.div
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ delay: 0.5, duration: 0.6 }}
-                className="mt-4 h-[1px] w-12"
-                style={{ backgroundColor: "rgba(255,255,255,0.3)" }}
-              />
             </nav>
           </motion.div>
         )}
       </AnimatePresence>
     </>
   );
+}
+
+function NavItem({ link, location, color }: { link: { label: string; href: string }; location: string; color: string }) {
+  return <Link href={link.href}><span className="text-[10px] uppercase tracking-[0.08em] transition-opacity hover:opacity-50" style={{ color: location === link.href ? "#3d2c24" : color }}>{link.label}</span></Link>;
 }
