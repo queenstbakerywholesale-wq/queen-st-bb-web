@@ -94,7 +94,7 @@ export default function Objects() {
       return [];
     }
   });
-  const [cartOpen, setCartOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(() => new URLSearchParams(window.location.search).get("cart") === "1");
   const [checkoutStep, setCheckoutStep] = useState<"cart" | "details" | "pickup">("cart");
   const [fulfillmentType, setFulfillmentType] = useState<"shipping" | "pickup">("shipping");
   const [checkoutForm, setCheckoutForm] = useState({
@@ -226,6 +226,21 @@ export default function Objects() {
       });
     return sorted;
   }, [liveProducts, liveCategories]);
+
+  useEffect(() => {
+    if (!liveProducts || !liveCategories) return;
+    const params = new URLSearchParams(window.location.search);
+    const requestedId = Number(params.get("product"));
+    if (!Number.isSafeInteger(requestedId) || requestedId <= 0) return;
+    const group = displayData.find(category => category.items.some(item => item.id === requestedId));
+    const item = group?.items.find(item => item.id === requestedId);
+    if (!item || !group) return;
+    setActiveCategory(group.category);
+    if (item.stock > 0) setSelectedProduct({ ...item, category: group.category });
+    else toast.info(`${item.name} is currently sold out`);
+    params.delete("product");
+    window.history.replaceState(null, "", `${window.location.pathname}${params.size ? `?${params}` : ""}`);
+  }, [liveProducts, liveCategories, displayData]);
 
   // Available categories for filter tabs
   const availableCategories = useMemo(() => {

@@ -1,103 +1,80 @@
-/**
- * Admin Page Images — Visual layout showing where each image appears on the site
- * Grouped by page with wireframe-style previews showing exact placement
- */
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import ImageEditor from "@/components/ImageEditor";
+import { PACKAGE_IMAGE_SLOTS } from "@shared/packageImageSlots";
 
-// ─── Slot definitions with layout context ────────────────────────────
-interface SlotDef {
+type LayoutHint = "full-width" | "half" | "third";
+
+type SlotDef = {
   pageSlug: string;
   slotKey: string;
   label: string;
   description: string;
-  aspectRatio: string; // CSS aspect-ratio
-  layoutHint: "full-width" | "half" | "third";
-}
+  aspectRatio: string;
+  layoutHint: LayoutHint;
+  fallback?: string;
+};
 
-const PAGE_CONFIG: {
-  slug: string;
-  title: string;
-  description: string;
-  slots: SlotDef[];
-}[] = [
-  {
-    slug: "home",
-    title: "Homepage",
-    description: "Full-screen scrolling sections — each section fills the viewport",
-    slots: [
-      { pageSlug: "home", slotKey: "hero-main", label: "Section 1 — Hero", description: "Full-screen hero with brand title overlay", aspectRatio: "16/9", layoutHint: "full-width" },
-      { pageSlug: "home", slotKey: "hero-tiramisu", label: "Section 2 — Tiramisu", description: "Full-screen tiramisu showcase", aspectRatio: "16/9", layoutHint: "full-width" },
-      { pageSlug: "home", slotKey: "hero-gelato", label: "Section 3 — Gelato", description: "Full-screen gelato showcase", aspectRatio: "16/9", layoutHint: "full-width" },
-      { pageSlug: "home", slotKey: "hero-space", label: "Section 4 — The Space", description: "Full-screen café interior", aspectRatio: "16/9", layoutHint: "full-width" },
-    ],
-  },
+const OTHER_PAGE_CONFIG: { slug: string; title: string; description: string; slots: SlotDef[] }[] = [
   {
     slug: "tiramisu",
     title: "Tiramisu Page",
     description: "Hero image at the top of the tiramisu product page",
-    slots: [
-      { pageSlug: "tiramisu", slotKey: "hero", label: "Hero Image", description: "Full-width hero banner at page top", aspectRatio: "21/9", layoutHint: "full-width" },
-    ],
+    slots: [{ pageSlug: "tiramisu", slotKey: "hero", label: "Hero Image", description: "Full-width hero banner at page top", aspectRatio: "21/9", layoutHint: "full-width" }],
   },
   {
     slug: "gelato",
     title: "Gelato Page",
     description: "Hero image at the top of the gelato product page",
-    slots: [
-      { pageSlug: "gelato", slotKey: "hero", label: "Hero Image", description: "Full-width hero banner at page top", aspectRatio: "21/9", layoutHint: "full-width" },
-    ],
+    slots: [{ pageSlug: "gelato", slotKey: "hero", label: "Hero Image", description: "Full-width hero banner at page top", aspectRatio: "21/9", layoutHint: "full-width" }],
   },
   {
     slug: "space",
     title: "Space / Experience Page",
     description: "Hero image showcasing the café interior and atmosphere",
-    slots: [
-      { pageSlug: "space", slotKey: "hero", label: "Hero Image", description: "Full-width hero showing café interior", aspectRatio: "21/9", layoutHint: "full-width" },
-    ],
+    slots: [{ pageSlug: "space", slotKey: "hero", label: "Hero Image", description: "Full-width hero showing café interior", aspectRatio: "21/9", layoutHint: "full-width" }],
   },
   {
     slug: "objects",
     title: "Objects (Shop) Page",
     description: "Hero image for the merchandise/goods shop page",
-    slots: [
-      { pageSlug: "objects", slotKey: "hero", label: "Hero Image", description: "Full-width hero for the shop section", aspectRatio: "21/9", layoutHint: "full-width" },
-    ],
+    slots: [{ pageSlug: "objects", slotKey: "hero", label: "Hero Image", description: "Full-width hero for the shop section", aspectRatio: "21/9", layoutHint: "full-width" }],
   },
   {
     slug: "wholesale",
     title: "Wholesale & Franchise Page",
     description: "Hero image for the wholesale enquiry page",
-    slots: [
-      { pageSlug: "wholesale", slotKey: "hero", label: "Hero Image", description: "Full-width hero banner", aspectRatio: "21/9", layoutHint: "full-width" },
-    ],
+    slots: [{ pageSlug: "wholesale", slotKey: "hero", label: "Hero Image", description: "Full-width hero banner", aspectRatio: "21/9", layoutHint: "full-width" }],
   },
   {
     slug: "cake-booking",
     title: "Cake Booking Page",
     description: "Hero image for the cake order/booking page",
-    slots: [
-      { pageSlug: "cake-booking", slotKey: "hero", label: "Hero Image", description: "Full-width hero showing cakes", aspectRatio: "21/9", layoutHint: "full-width" },
-    ],
+    slots: [{ pageSlug: "cake-booking", slotKey: "hero", label: "Hero Image", description: "Full-width hero banner", aspectRatio: "21/9", layoutHint: "full-width" }],
   },
   {
     slug: "about",
     title: "About Page",
     description: "Hero image for the about/story page",
-    slots: [
-      { pageSlug: "about", slotKey: "hero", label: "Hero Image", description: "Full-width hero banner", aspectRatio: "21/9", layoutHint: "full-width" },
-    ],
+    slots: [{ pageSlug: "about", slotKey: "hero", label: "Hero Image", description: "Full-width hero banner", aspectRatio: "21/9", layoutHint: "full-width" }],
   },
   {
     slug: "customer-care",
     title: "Customer Care Page",
     description: "Hero image for the customer care/contact page",
-    slots: [
-      { pageSlug: "customer-care", slotKey: "hero", label: "Hero Image", description: "Full-width hero banner", aspectRatio: "21/9", layoutHint: "full-width" },
-    ],
+    slots: [{ pageSlug: "customer-care", slotKey: "hero", label: "Hero Image", description: "Full-width hero banner", aspectRatio: "21/9", layoutHint: "full-width" }],
   },
+];
+
+const PAGE_CONFIG = [
+  {
+    slug: "home",
+    title: "홈 패키지 이미지",
+    description: "새 홈 디자인에서 사용하는 로고·소개·맛·굿즈 이미지 슬롯입니다.",
+    slots: PACKAGE_IMAGE_SLOTS as SlotDef[],
+  },
+  ...OTHER_PAGE_CONFIG,
 ];
 
 interface PendingEdit {
@@ -110,16 +87,11 @@ export default function AdminPageImages() {
   const [expandedPage, setExpandedPage] = useState<string | null>("home");
   const [pendingEdit, setPendingEdit] = useState<PendingEdit | null>(null);
   const [uploadingSlot, setUploadingSlot] = useState<string | null>(null);
-
+  const [altDrafts, setAltDrafts] = useState<Record<string, string>>({});
+  const utils = trpc.useUtils();
   const { data: allImages = [], refetch } = trpc.adminPageImages.list.useQuery({});
-
   const uploadImage = trpc.adminUpload.uploadImage.useMutation();
-  const upsertImage = trpc.adminPageImages.upsert.useMutation({
-    onSuccess: () => {
-      toast.success("Image updated successfully");
-      refetch();
-    },
-  });
+  const upsertImage = trpc.adminPageImages.upsert.useMutation();
 
   const imageMap = useMemo(() => {
     const map: Record<string, any> = {};
@@ -129,416 +101,209 @@ export default function AdminPageImages() {
     return map;
   }, [allImages]);
 
-  const getImage = (pageSlug: string, slotKey: string) => {
-    return imageMap[`${pageSlug}/${slotKey}`];
+  const getImage = (pageSlug: string, slotKey: string) => imageMap[`${pageSlug}/${slotKey}`];
+  const slotIdFor = (slot: SlotDef) => `${slot.pageSlug}/${slot.slotKey}`;
+  const altFor = (slot: SlotDef, image?: any) => altDrafts[slotIdFor(slot)] ?? image?.altText ?? slot.label;
+
+  const refreshAfterSave = async (pageSlug: string) => {
+    await Promise.all([
+      refetch(),
+      utils.publicPageImages.getByPage.invalidate({ pageSlug }),
+    ]);
+  };
+
+  const saveSlot = async (slot: SlotDef, imageUrl: string, storageKey?: string, current?: any) => {
+    await upsertImage.mutateAsync({
+      id: current?.id,
+      pageSlug: slot.pageSlug,
+      slotKey: slot.slotKey,
+      imageUrl,
+      storageKey,
+      altText: altFor(slot, current).trim() || slot.label,
+    });
+    await refreshAfterSave(slot.pageSlug);
   };
 
   const handleUpload = async (file: File, pageSlug: string, slotKey: string) => {
+    const slot = PAGE_CONFIG.flatMap((page) => page.slots).find(
+      (candidate) => candidate.pageSlug === pageSlug && candidate.slotKey === slotKey,
+    );
+    if (!slot) return;
+
     const slotId = `${pageSlug}/${slotKey}`;
     setUploadingSlot(slotId);
     try {
-      const reader = new FileReader();
       const base64 = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
+        const reader = new FileReader();
+        reader.onload = () => resolve((reader.result as string).split(",")[1] ?? "");
+        reader.onerror = () => reject(new Error("파일을 읽을 수 없습니다."));
         reader.readAsDataURL(file);
       });
-
       const result = await uploadImage.mutateAsync({
-        base64: base64.split(",")[1],
+        base64,
         filename: file.name,
-        contentType: file.type,
+        contentType: file.type as "image/jpeg" | "image/png" | "image/gif" | "image/webp" | "image/avif",
+        applyWatermark: false,
       });
-
-      const existing = getImage(pageSlug, slotKey);
-      await upsertImage.mutateAsync({
-        id: existing?.id,
-        pageSlug,
-        slotKey,
-        imageUrl: result.url,
-        storageKey: result.key,
-        altText: `${pageSlug} ${slotKey}`,
-      });
+      await saveSlot(slot, result.url, result.key, getImage(pageSlug, slotKey));
+      toast.success("이미지가 저장되어 홈 미리보기에 반영되었습니다.");
     } catch (err: any) {
-      toast.error(err.message || "Upload failed");
+      toast.error(err.message || "업로드에 실패했습니다.");
     } finally {
       setUploadingSlot(null);
     }
   };
 
-  const handleFileSelected = (file: File, pageSlug: string, slotKey: string) => {
-    setPendingEdit({ file, pageSlug, slotKey });
-  };
-
   const handleEditorConfirm = (editedFile: File) => {
     if (!pendingEdit) return;
+    const { pageSlug, slotKey } = pendingEdit;
     setPendingEdit(null);
-    handleUpload(editedFile, pendingEdit.pageSlug, pendingEdit.slotKey);
+    void handleUpload(editedFile, pageSlug, slotKey);
   };
 
-  const handleEditorCancel = () => {
-    setPendingEdit(null);
+  const saveAltText = async (slot: SlotDef, image: any) => {
+    if (!image?.imageUrl) return;
+    try {
+      await saveSlot(slot, image.imageUrl, image.storageKey ?? undefined, image);
+      toast.success("대체 텍스트가 저장되었습니다.");
+    } catch (err: any) {
+      toast.error(err.message || "대체 텍스트 저장에 실패했습니다.");
+    }
   };
 
-  // Count images set per page
-  const getPageImageCount = (slug: string) => {
-    const page = PAGE_CONFIG.find((p) => p.slug === slug);
-    if (!page) return { set: 0, total: 0 };
-    const total = page.slots.length;
-    const set = page.slots.filter((s) => getImage(s.pageSlug, s.slotKey)).length;
-    return { set, total };
+  const saveUrl = async (slot: SlotDef, image: any) => {
+    const url = window.prompt("https URL 또는 /manus-storage/ 이미지 경로를 입력하세요.", image?.imageUrl ?? "");
+    if (!url?.trim()) return;
+    try {
+      await saveSlot(slot, url.trim(), undefined, image);
+      toast.success("이미지 URL이 저장되었습니다.");
+    } catch (err: any) {
+      toast.error(err.message || "안전한 이미지 URL을 입력하세요.");
+    }
   };
+
+  const getPageImageCount = (page: (typeof PAGE_CONFIG)[number]) => ({
+    set: page.slots.filter((slot) => Boolean(getImage(slot.pageSlug, slot.slotKey)?.imageUrl)).length,
+    total: page.slots.length,
+  });
 
   return (
     <div className="space-y-6">
-      {/* Image Editor Modal */}
       {pendingEdit && (
         <ImageEditor
           file={pendingEdit.file}
           onConfirm={handleEditorConfirm}
-          onCancel={handleEditorCancel}
+          onCancel={() => setPendingEdit(null)}
         />
       )}
 
-      {/* Header */}
-      <div>
-        <h1
-          className="text-2xl font-medium"
-          style={{ fontFamily: "var(--font-display)", color: "oklch(0.34 0.05 45)" }}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-medium" style={{ fontFamily: "var(--font-display)", color: "oklch(0.34 0.05 45)" }}>
+            페이지 이미지
+          </h1>
+          <p className="mt-1 text-sm font-medium" style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45 / 0.6)" }}>
+            홈 디자인에 쓰이는 사진을 즉시 교체하거나 안전한 이미지 URL로 저장할 수 있습니다.
+          </p>
+        </div>
+        <a
+          href="/"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex w-fit items-center rounded px-3 py-2 text-[10px] uppercase tracking-[0.12em] transition-opacity hover:opacity-70"
+          style={{ fontFamily: "var(--font-body)", color: "white", backgroundColor: "oklch(0.34 0.05 45)" }}
         >
-          Page Images
-        </h1>
-        <p
-          className="mt-1 text-sm font-medium"
-          style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45 / 0.5)" }}
-        >
-          각 페이지의 이미지 슬롯을 시각적으로 확인하고 업로드하세요. 이미지가 사이트에서 어디에 표시되는지 미리 볼 수 있습니다.
-        </p>
+          홈 라이브 미리보기 열기
+        </a>
       </div>
 
-      {/* Page Accordion */}
+      <div className="rounded p-4 text-xs leading-5" style={{ backgroundColor: "oklch(0.94 0.03 80)", border: "1px solid oklch(0.84 0.025 72 / 0.65)", color: "oklch(0.34 0.05 45 / 0.75)" }}>
+        <strong>안내:</strong> 사진을 고르면 <strong>원본 바로 업로드</strong> 또는 기존 편집기에서 자르기·회전 후 업로드를 선택할 수 있습니다. 홈 굿즈 썸네일만 바꾸며, 상품의 가격·재고·상품 원본 사진은 <strong>Products</strong>에서 별도로 관리됩니다.
+      </div>
+
       <div className="space-y-3">
         {PAGE_CONFIG.map((page) => {
           const isExpanded = expandedPage === page.slug;
-          const { set, total } = getPageImageCount(page.slug);
-          const isComplete = set === total;
-
+          const { set, total } = getPageImageCount(page);
           return (
-            <div
-              key={page.slug}
-              className="overflow-hidden transition-all duration-200"
-              style={{
-                border: "1px solid oklch(0.84 0.025 72 / 0.5)",
-                backgroundColor: isExpanded ? "oklch(0.97 0.008 80)" : "oklch(0.94 0.015 80)",
-              }}
-            >
-              {/* Page Header (clickable) */}
-              <button
-                onClick={() => setExpandedPage(isExpanded ? null : page.slug)}
-                className="w-full flex items-center justify-between p-4 text-left hover:opacity-80 transition-opacity"
-              >
-                <div className="flex items-center gap-3">
-                  {/* Status indicator */}
-                  <div
-                    className="w-2.5 h-2.5 rounded-full"
-                    style={{
-                      backgroundColor: isComplete
-                        ? "oklch(0.55 0.15 145)"
-                        : set > 0
-                        ? "oklch(0.7 0.15 80)"
-                        : "oklch(0.75 0.02 80)",
-                    }}
-                  />
-                  <div>
-                    <span
-                      className="text-sm font-medium"
-                      style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45)" }}
-                    >
-                      {page.title}
-                    </span>
-                    <span
-                      className="ml-2 text-[10px] uppercase"
-                      style={{
-                        fontFamily: "var(--font-body)",
-                        letterSpacing: "0.1em",
-                        color: "oklch(0.34 0.05 45 / 0.4)",
-                      }}
-                    >
-                      {set}/{total} images
-                    </span>
-                  </div>
-                </div>
-                <svg
-                  className="w-4 h-4 transition-transform duration-200"
-                  style={{
-                    transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
-                    color: "oklch(0.34 0.05 45 / 0.4)",
-                  }}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+            <section key={page.slug} className="overflow-hidden" style={{ border: "1px solid oklch(0.84 0.025 72 / 0.5)", backgroundColor: isExpanded ? "oklch(0.97 0.008 80)" : "oklch(0.94 0.015 80)" }}>
+              <button onClick={() => setExpandedPage(isExpanded ? null : page.slug)} className="flex w-full items-center justify-between p-4 text-left hover:opacity-80">
+                <span>
+                  <span className="text-sm font-medium" style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45)" }}>{page.title}</span>
+                  <span className="ml-2 text-[10px] uppercase tracking-[0.1em]" style={{ color: "oklch(0.34 0.05 45 / 0.45)" }}>{set}/{total} 직접 저장됨</span>
+                </span>
+                <span className="text-sm" style={{ transform: isExpanded ? "rotate(180deg)" : undefined, color: "oklch(0.34 0.05 45 / 0.5)" }}>⌄</span>
               </button>
 
-              {/* Expanded Content */}
               {isExpanded && (
-                <div className="px-4 pb-4 space-y-4">
-                  {/* Page description */}
-                  <p
-                    className="text-xs"
-                    style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45 / 0.5)" }}
-                  >
-                    {page.description}
-                  </p>
-
-                  {/* Visual Layout Preview */}
-                  <div className="space-y-3">
-                    {/* Mini wireframe showing page structure */}
-                    <div
-                      className="p-3 rounded"
-                      style={{ backgroundColor: "oklch(0.92 0.01 80)", border: "1px dashed oklch(0.8 0.02 72 / 0.5)" }}
-                    >
-                      <p
-                        className="text-[9px] uppercase mb-2"
-                        style={{
-                          fontFamily: "var(--font-body)",
-                          letterSpacing: "0.15em",
-                          color: "oklch(0.34 0.05 45 / 0.3)",
-                        }}
-                      >
-                        Page Layout Preview
-                      </p>
-                      <div className="space-y-1">
-                        {page.slots.map((slot, idx) => {
-                          const img = getImage(slot.pageSlug, slot.slotKey);
-                          return (
-                            <div
-                              key={slot.slotKey}
-                              className="flex items-center gap-2 p-1.5 rounded"
-                              style={{
-                                backgroundColor: img ? "oklch(0.55 0.15 145 / 0.08)" : "oklch(0.85 0.01 80)",
-                                border: img ? "1px solid oklch(0.55 0.15 145 / 0.2)" : "1px solid oklch(0.8 0.02 72 / 0.3)",
-                              }}
-                            >
-                              <div
-                                className="w-12 h-6 rounded overflow-hidden flex-shrink-0"
-                                style={{ backgroundColor: "oklch(0.88 0.02 75)" }}
-                              >
-                                {img?.imageUrl ? (
-                                  <img src={img.imageUrl} alt="" className="w-full h-full object-cover" />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center">
-                                    <span className="text-[7px]" style={{ color: "oklch(0.34 0.05 45 / 0.2)" }}>
-                                      empty
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                              <span
-                                className="text-[10px]"
-                                style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45 / 0.6)" }}
-                              >
-                                {idx + 1}. {slot.label}
-                              </span>
-                              {img && (
-                                <span className="text-[8px] ml-auto" style={{ color: "oklch(0.55 0.15 145)" }}>
-                                  ✓
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Image Slots */}
-                  <div
-                    className={`grid gap-4 ${
-                      page.slots.length === 1
-                        ? "grid-cols-1"
-                        : page.slots.length <= 3
-                        ? "grid-cols-1 lg:grid-cols-2"
-                        : "grid-cols-1 md:grid-cols-2"
-                    }`}
-                  >
+                <div className="space-y-4 px-4 pb-4">
+                  <p className="text-xs" style={{ color: "oklch(0.34 0.05 45 / 0.6)" }}>{page.description}</p>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     {page.slots.map((slot) => {
-                      const img = getImage(slot.pageSlug, slot.slotKey);
-                      const slotId = `${slot.pageSlug}/${slot.slotKey}`;
+                      const image = getImage(slot.pageSlug, slot.slotKey);
+                      const slotId = slotIdFor(slot);
+                      const previewUrl = image?.imageUrl || slot.fallback;
                       const isUploading = uploadingSlot === slotId;
-
                       return (
-                        <div
-                          key={slotId}
-                          className="overflow-hidden rounded"
-                          style={{
-                            backgroundColor: "white",
-                            border: img
-                              ? "1px solid oklch(0.55 0.15 145 / 0.3)"
-                              : "1px dashed oklch(0.8 0.02 72 / 0.5)",
-                          }}
-                        >
-                          {/* Image Preview Area */}
-                          <div
-                            className="relative overflow-hidden"
-                            style={{
-                              aspectRatio: slot.aspectRatio,
-                              backgroundColor: "oklch(0.92 0.01 80)",
-                              maxHeight: "200px",
-                            }}
-                          >
-                            {img?.imageUrl ? (
-                              <img
-                                src={img.imageUrl}
-                                alt={slot.label}
-                                className="w-full h-full object-cover"
-                              />
+                        <article key={slotId} className="overflow-hidden rounded bg-white" style={{ border: image?.imageUrl ? "1px solid oklch(0.55 0.15 145 / 0.35)" : "1px dashed oklch(0.8 0.02 72 / 0.65)" }}>
+                          <div className="relative overflow-hidden" style={{ aspectRatio: slot.aspectRatio, maxHeight: "260px", backgroundColor: "oklch(0.92 0.01 80)" }}>
+                            {previewUrl ? (
+                              <img src={previewUrl} alt={altFor(slot, image)} className="h-full w-full object-cover" />
                             ) : (
-                              <div className="flex flex-col items-center justify-center h-full gap-2">
-                                <svg
-                                  className="w-8 h-8"
-                                  style={{ color: "oklch(0.34 0.05 45 / 0.15)" }}
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={1.5}
-                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                  />
-                                </svg>
-                                <span
-                                  className="text-[10px] uppercase"
-                                  style={{
-                                    fontFamily: "var(--font-body)",
-                                    letterSpacing: "0.1em",
-                                    color: "oklch(0.34 0.05 45 / 0.25)",
-                                  }}
-                                >
-                                  No image uploaded
-                                </span>
-                              </div>
+                              <div className="flex h-full items-center justify-center text-[10px] uppercase tracking-[0.1em]" style={{ color: "oklch(0.34 0.05 45 / 0.3)" }}>미리보기 없음</div>
                             )}
-
+                            <span className="absolute left-2 top-2 rounded px-2 py-0.5 text-[8px] uppercase tracking-[0.1em]" style={{ backgroundColor: "oklch(0.34 0.05 45 / 0.75)", color: "white" }}>
+                              {image?.imageUrl ? "저장된 이미지" : slot.fallback ? "기본 이미지" : "비어 있음"}
+                            </span>
                             {isUploading && (
-                              <div
-                                className="absolute inset-0 flex items-center justify-center"
-                                style={{ backgroundColor: "oklch(0.34 0.05 45 / 0.6)" }}
-                              >
-                                <div className="flex flex-col items-center gap-2">
-                                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                  <span
-                                    className="text-[10px] uppercase"
-                                    style={{
-                                      fontFamily: "var(--font-body)",
-                                      letterSpacing: "0.15em",
-                                      color: "oklch(0.94 0.015 80)",
-                                    }}
-                                  >
-                                    Uploading...
-                                  </span>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Position indicator overlay */}
-                            {img?.imageUrl && (
-                              <div
-                                className="absolute top-2 left-2 px-2 py-0.5 rounded"
-                                style={{ backgroundColor: "oklch(0.34 0.05 45 / 0.7)" }}
-                              >
-                                <span
-                                  className="text-[8px] uppercase"
-                                  style={{
-                                    fontFamily: "var(--font-body)",
-                                    letterSpacing: "0.1em",
-                                    color: "white",
-                                  }}
-                                >
-                                  {slot.label}
-                                </span>
-                              </div>
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/55 text-[10px] uppercase tracking-[0.12em] text-white">업로드 중…</div>
                             )}
                           </div>
 
-                          {/* Slot Info & Actions */}
-                          <div className="p-3 space-y-2">
+                          <div className="space-y-3 p-3">
                             <div>
-                              <p
-                                className="text-xs font-medium"
-                                style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45)" }}
-                              >
-                                {slot.label}
-                              </p>
-                              <p
-                                className="text-[10px] mt-0.5"
-                                style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45 / 0.45)" }}
-                              >
-                                {slot.description}
-                              </p>
+                              <h2 className="text-xs font-medium" style={{ fontFamily: "var(--font-body)", color: "oklch(0.34 0.05 45)" }}>{slot.label}</h2>
+                              <p className="mt-0.5 text-[10px] leading-4" style={{ color: "oklch(0.34 0.05 45 / 0.55)" }}>{slot.description}</p>
                             </div>
-
-                            {/* Action buttons */}
-                            <div className="flex gap-2">
-                              <label
-                                className="cursor-pointer text-[10px] uppercase py-1.5 px-3 transition-all duration-200 hover:opacity-70 rounded"
-                                style={{
-                                  fontFamily: "var(--font-body)",
-                                  letterSpacing: "0.1em",
-                                  backgroundColor: img ? "oklch(0.34 0.05 45)" : "oklch(0.55 0.15 145)",
-                                  color: "white",
-                                }}
-                              >
-                                {img ? "Replace" : "Upload Image"}
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) handleFileSelected(file, slot.pageSlug, slot.slotKey);
-                                    e.target.value = "";
-                                  }}
-                                />
+                            <div className="flex flex-wrap gap-2">
+                              <label className="cursor-pointer rounded px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] hover:opacity-70" style={{ fontFamily: "var(--font-body)", backgroundColor: "oklch(0.55 0.15 145)", color: "white" }}>
+                                원본 바로 업로드
+                                <input type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/avif" className="hidden" onChange={(event) => {
+                                  const file = event.target.files?.[0];
+                                  if (file) void handleUpload(file, slot.pageSlug, slot.slotKey);
+                                  event.target.value = "";
+                                }} />
                               </label>
-
-                              <button
-                                onClick={() => {
-                                  const url = prompt("Enter image URL:");
-                                  if (url) {
-                                    const existing = getImage(slot.pageSlug, slot.slotKey);
-                                    upsertImage.mutate({
-                                      id: existing?.id,
-                                      pageSlug: slot.pageSlug,
-                                      slotKey: slot.slotKey,
-                                      imageUrl: url,
-                                      altText: `${slot.pageSlug} ${slot.slotKey}`,
-                                    });
-                                  }
-                                }}
-                                className="text-[10px] uppercase py-1.5 px-3 transition-all duration-200 hover:opacity-70 rounded"
-                                style={{
-                                  fontFamily: "var(--font-body)",
-                                  letterSpacing: "0.1em",
-                                  color: "oklch(0.34 0.05 45 / 0.5)",
-                                  border: "1px solid oklch(0.84 0.025 72 / 0.5)",
-                                }}
-                              >
-                                URL
-                              </button>
+                              <label className="cursor-pointer rounded border px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] hover:opacity-70" style={{ fontFamily: "var(--font-body)", borderColor: "oklch(0.84 0.025 72 / 0.7)", color: "oklch(0.34 0.05 45 / 0.7)" }}>
+                                편집 후 업로드
+                                <input type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/avif" className="hidden" onChange={(event) => {
+                                  const file = event.target.files?.[0];
+                                  if (file) setPendingEdit({ file, pageSlug: slot.pageSlug, slotKey: slot.slotKey });
+                                  event.target.value = "";
+                                }} />
+                              </label>
+                              <button onClick={() => void saveUrl(slot, image)} className="rounded border px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] hover:opacity-70" style={{ fontFamily: "var(--font-body)", borderColor: "oklch(0.84 0.025 72 / 0.7)", color: "oklch(0.34 0.05 45 / 0.7)" }}>URL 저장</button>
+                            </div>
+                            <div className="flex gap-2">
+                              <input
+                                value={altFor(slot, image)}
+                                onChange={(event) => setAltDrafts((drafts) => ({ ...drafts, [slotId]: event.target.value }))}
+                                maxLength={500}
+                                aria-label={`${slot.label} 대체 텍스트`}
+                                placeholder="이미지 대체 텍스트"
+                                className="min-w-0 flex-1 rounded border px-2 py-1.5 text-xs"
+                                style={{ borderColor: "oklch(0.84 0.025 72 / 0.65)", color: "oklch(0.34 0.05 45)" }}
+                              />
+                              <button disabled={!image?.imageUrl || upsertImage.isPending} onClick={() => void saveAltText(slot, image)} className="rounded px-2 py-1.5 text-[10px] uppercase tracking-[0.08em] disabled:opacity-40" style={{ color: "white", backgroundColor: "oklch(0.34 0.05 45)" }}>텍스트 저장</button>
                             </div>
                           </div>
-                        </div>
+                        </article>
                       );
                     })}
                   </div>
                 </div>
               )}
-            </div>
+            </section>
           );
         })}
       </div>

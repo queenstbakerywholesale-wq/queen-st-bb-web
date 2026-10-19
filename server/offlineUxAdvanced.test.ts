@@ -158,10 +158,12 @@ describe("ProgressiveImage Usage in Pages", () => {
     expect(content).toContain("<ProgressiveImage");
   });
 
-  it("should be used in Home page for hero images", () => {
+  it("should prioritize the package Home hero and lazily load below-fold images", () => {
     const content = readFileSync(homePath, "utf-8");
-    expect(content).toContain('import ProgressiveImage from "@/components/ProgressiveImage"');
-    expect(content).toContain("<ProgressiveImage");
+    const template = readFileSync(resolve(__dirname, "../client/src/lib/packageHomeTemplate.ts"), "utf-8");
+    expect(content).toContain("renderPackageMarkup(PACKAGE_HOME_TEMPLATE, imageMap)");
+    expect(template).toContain('fetchpriority=\\"high\\"');
+    expect(template).toContain('loading=\\"lazy\\"');
   });
 
   it("should be used in PageLayout for hero images", () => {

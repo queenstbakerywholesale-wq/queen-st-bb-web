@@ -3,6 +3,8 @@ import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { usePageImage } from "@/hooks/usePageImage";
+import { PACKAGE_DEFAULT_IMAGES } from "@shared/packageImageSlots";
 
 const utilityLinks = [
   { label: "Our story", href: "/about" },
@@ -38,6 +40,7 @@ export default function Navigation({ variant = "solid" }: NavigationProps) {
   const [scrolled, setScrolled] = useState(false);
   const [location] = useLocation();
   const { isAuthenticated } = useAuth();
+  const logo = usePageImage("home", "brand-logo", PACKAGE_DEFAULT_IMAGES["brand-logo"]);
   const allLinks = useMemo(() => isAuthenticated ? [...menuLinks, { label: "My Page", href: "/my-page" }] : menuLinks, [isAuthenticated]);
   const isTransparent = variant === "transparent";
   const showSolid = !isTransparent || scrolled || menuOpen;
@@ -70,7 +73,7 @@ export default function Navigation({ variant = "solid" }: NavigationProps) {
             {mainLeft.map((link) => <NavLink key={link.href} link={link} location={location} color={ink} />)}
           </nav>
           <Link href="/" className="absolute left-1/2 top-0 z-10 flex h-[118px] w-[190px] -translate-x-1/2 items-center justify-center border-x border-b border-[#ead5a5]/20 bg-[#401e19] shadow-[0_12px_35px_rgba(24,8,5,0.25)]">
-            <span className="relative text-center font-serif text-2xl italic tracking-[0.02em] text-[#f4dfaf]">Queenst.bb<span className="mt-1 block text-[8px] not-italic uppercase tracking-[0.35em]">Tiramisu · Gelato</span></span>
+            <img src={logo} alt="Queenst.bb — Tiramisu · Gelato" className="h-full w-full object-contain" />
           </Link>
           <nav className="flex min-w-[370px] items-center justify-end gap-12">
             {mainRight.map((link) => <NavLink key={link.href} link={link} location={location} color={ink} />)}
@@ -81,7 +84,7 @@ export default function Navigation({ variant = "solid" }: NavigationProps) {
           </nav>
         </div>
         <div className="flex items-center justify-between px-5 py-4 lg:hidden">
-          <Link href="/" className="font-serif text-xl italic text-[#f4dfaf]">Queenst.bb</Link>
+          <Link href="/" aria-label="Queen St BB home"><img src={logo} alt="Queenst.bb" className="h-12 w-24 object-contain" /></Link>
           <div className="flex items-center gap-4">
             <Link href="/objects" aria-label="Open boutique" className="text-[#f1dfb8]"><ShoppingBag size={17} strokeWidth={1.3} /></Link>
             <button onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu" className="flex w-7 flex-col items-end gap-1.5"><span className="h-px w-7 bg-[#ead5a5]" /><span className="h-px w-5 bg-[#ead5a5]" /><span className="h-px w-7 bg-[#ead5a5]" /></button>
