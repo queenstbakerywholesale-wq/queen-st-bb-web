@@ -1,5 +1,5 @@
 export const PACKAGE_DEFAULT_IMAGES: Record<string, string> = {
-  "brand-logo": "/manus-storage/queenstbb-antique-logo_38e2dc63.png",
+  "brand-logo": "/manus-storage/queenstbb-antique-logo-transparent_88b672e4.png",
   "story-koala": "/manus-storage/queen-koala_f684aaaa.png",
   "boutique-hero": "/manus-storage/self-scoop_9a91aa59.png",
   "ritual-photo": "/manus-storage/self-scoop_9a91aa59.png",

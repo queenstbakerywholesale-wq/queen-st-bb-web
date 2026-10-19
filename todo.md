@@ -719,3 +719,4 @@
 - [x] TypeScript, 211 tests, production build, desktop/mobile browser checks 통과
 - [ ] 최신 체크포인트 라이브 게시 후 검증
 - [ ] www 도메인 연결: Vercel team scope 접근 403, 권한 해결 또는 DNS 소유자 설정 필요
+- [x] 관리자 실제 로그인·원본 업로드 바이트 보존·서버 저장·대체텍스트 저장·독립 브라우저 홈 반영 검증

@@ -72,7 +72,7 @@ export default function Navigation({ variant = "solid" }: NavigationProps) {
           <nav className="flex min-w-[370px] items-center gap-12">
             {mainLeft.map((link) => <NavLink key={link.href} link={link} location={location} color={ink} />)}
           </nav>
-          <Link href="/" className="absolute left-1/2 top-0 z-10 flex h-[118px] w-[190px] -translate-x-1/2 items-center justify-center border-x border-b border-[#ead5a5]/20 bg-[#401e19] shadow-[0_12px_35px_rgba(24,8,5,0.25)]">
+          <Link href="/" className="absolute left-1/2 top-0 z-10 flex h-[118px] w-[190px] -translate-x-1/2 items-center justify-center bg-transparent">
             <img src={logo} alt="Queenst.bb — Tiramisu · Gelato" className="h-full w-full object-contain" />
           </Link>
           <nav className="flex min-w-[370px] items-center justify-end gap-12">

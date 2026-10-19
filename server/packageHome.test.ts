@@ -17,7 +17,7 @@ describe("integrated package homepage", () => {
     const html = renderPackageMarkup(PACKAGE_HOME_TEMPLATE, { ...PACKAGE_DEFAULT_IMAGES, "boutique-hero": "https://example.com/new-hero.webp", "ritual-photo": "/manus-storage/new-ritual.png" });
     expect(html).toContain('src="https://example.com/new-hero.webp"');
     expect(html).toContain('src="/manus-storage/new-ritual.png"');
-    expect(html).toContain('src="/manus-storage/queenstbb-antique-logo_38e2dc63.png"');
+    expect(html).toContain('src="/manus-storage/queenstbb-antique-logo-transparent_88b672e4.png"');
     expect(html).not.toMatch(/\{\{[a-z-]+\}\}/);
   });
   it("provides ten unique admin image slots with production-safe default URLs", () => {
@@ -42,5 +42,12 @@ describe("integrated package homepage", () => {
     const css=readFileSync(new URL('../client/src/pages/packageHome.css', import.meta.url), 'utf8');
     expect(css).toContain('.bb-package .nav');
     expect(css).not.toMatch(/(?:^|\})\s*(?:body|:root|html)\s*\{/);
+  });
+  it("renders the wordmark and title without rectangular background panels", () => {
+    const css = readFileSync(new URL('../client/src/pages/packageHomeIntegration.css', import.meta.url), 'utf8');
+    expect(css).toMatch(/\.bb-package \.hero-title,\s*\.bb-package \.brand\s*\{ background: transparent; border: 0; box-shadow: none; \}/);
+    const navigation = readFileSync(new URL('../client/src/components/Navigation.tsx', import.meta.url), 'utf8');
+    expect(navigation).not.toContain('bg-[#401e19]');
+    expect(navigation).not.toContain('shadow-[0_12px_35px');
   });
 });

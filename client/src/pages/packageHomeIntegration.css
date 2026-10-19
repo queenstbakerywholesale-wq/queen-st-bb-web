@@ -11,4 +11,7 @@
 .bb-package .mobile-panel a { line-height: 1.35; }
 .bb-package .flavour-copy .note a { border-bottom: 1px solid currentColor; }
 .bb-package dialog { margin: auto; }
+.bb-package .hero-title,
+.bb-package .brand { background: transparent; border: 0; box-shadow: none; }
+.bb-package .brand img { mix-blend-mode: normal; }
 @media (max-width:700px) { .bb-package .package-category-links { font-size:12px; gap:15px 22px; } .bb-package .object-art img { padding: 8px; } }
