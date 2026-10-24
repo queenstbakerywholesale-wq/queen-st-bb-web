@@ -10,3 +10,5 @@
 /* Keep POS navigation visible and large calendars inside their own scroll container. */
 .staff-calendar{min-height:0;overflow-x:hidden;box-sizing:border-box;width:100%}
 .sc-shift-block{display:block;align-content:start;justify-content:flex-start}
+
+.sc-shift-block{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start}
