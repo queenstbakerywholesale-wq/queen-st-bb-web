@@ -73,7 +73,7 @@ export default function Navigation({ variant = "solid" }: NavigationProps) {
             {mainLeft.map((link) => <NavLink key={link.href} link={link} location={location} color={ink} />)}
           </nav>
           <Link href="/" className="absolute left-1/2 top-0 z-10 flex h-[118px] w-[190px] -translate-x-1/2 items-center justify-center bg-transparent">
-            <img src={logo} alt="Queenst.bb — Tiramisu · Gelato" className="h-full w-full object-contain" />
+            <img src={logo} alt="Queenst.BB — Tiramisu · Gelato" className="h-full w-full object-contain" />
           </Link>
           <nav className="flex min-w-[370px] items-center justify-end gap-12">
             {mainRight.map((link) => <NavLink key={link.href} link={link} location={location} color={ink} />)}
@@ -84,7 +84,7 @@ export default function Navigation({ variant = "solid" }: NavigationProps) {
           </nav>
         </div>
         <div className="flex items-center justify-between px-5 py-4 lg:hidden">
-          <Link href="/" aria-label="Queen St BB home"><img src={logo} alt="Queenst.bb" className="h-12 w-24 object-contain" /></Link>
+          <Link href="/" aria-label="Queen St BB home"><img src={logo} alt="Queenst.BB" className="h-12 w-24 object-contain" /></Link>
           <div className="flex items-center gap-4">
             <Link href="/objects" aria-label="Open boutique" className="text-[#f1dfb8]"><ShoppingBag size={17} strokeWidth={1.3} /></Link>
             <button onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu" className="flex w-7 flex-col items-end gap-1.5"><span className="h-px w-7 bg-[#ead5a5]" /><span className="h-px w-5 bg-[#ead5a5]" /><span className="h-px w-7 bg-[#ead5a5]" /></button>

@@ -50,7 +50,7 @@ export default function StaffPOS() {
   const [receiptPhone, setReceiptPhone] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<"checkout" | "transactions" | "orders" | "shifts" | "attendance">("checkout");
+  const [activeTab, setActiveTab] = useState<"checkout" | "transactions" | "orders" | "shifts" | "attendance">(() => window.location.pathname === "/staff-schedule" || new URLSearchParams(window.location.search).get("tab") === "shifts" ? "shifts" : "checkout");
   const [sidebarMode, setSidebarMode] = useState<"keypad" | "library" | "favourites">("library");
   const [keypadValue, setKeypadValue] = useState("");
   const [modifierPopup, setModifierPopup] = useState<{ item: any; modifiers: any[] } | null>(null);
@@ -809,8 +809,8 @@ export default function StaffPOS() {
       ) : null}
 
       {/* Bottom Tab Bar (Square-style) */}
-      <div className="flex items-center justify-between px-4 py-2 bg-white border-t border-neutral-200">
-        <div className="flex items-center gap-6">
+      <div className="flex shrink-0 items-center justify-between gap-4 overflow-x-auto px-4 py-2 bg-white border-t border-neutral-200">
+        <div className="flex shrink-0 items-center gap-6">
           <button
             onClick={() => setActiveTab("checkout")}
             className={`flex items-center gap-1.5 py-1 text-xs ${activeTab === "checkout" ? "text-neutral-900 font-medium" : "text-neutral-400"}`}

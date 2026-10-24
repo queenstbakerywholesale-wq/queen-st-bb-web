@@ -153,6 +153,7 @@ function Router() {
 
       {/* Staff POS */}
       <Route path="/pos" component={StaffPOS} />
+      <Route path="/staff-schedule" component={StaffPOS} />
 
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
